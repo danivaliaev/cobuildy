@@ -35,9 +35,7 @@ h1,h2,h3,p{margin:0;font-weight:400}
 .app{height:100%;display:flex;flex-direction:column;gap:12px;max-width:1720px;margin:0 auto}
 /* top bar */
 .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-height:44px}
-.logo{font-family:var(--f-display);font-size:26px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink)}
-.logo i{width:12px;height:12px;border:1.5px solid var(--plan);position:relative;display:inline-block}
-.logo i::after{content:"";position:absolute;inset:2.5px;background:var(--plan)}
+.logo{font-family:"Instrument Sans","Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;font-size:21px;letter-spacing:-.02em;line-height:1;text-transform:uppercase;text-decoration:none;color:var(--ink);display:flex;align-items:center}
 .crumb{color:var(--ink-2);display:flex;gap:8px;align-items:center;min-width:0}
 .crumb b{color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp{flex:1}
@@ -341,7 +339,7 @@ textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:14px;back
 
 <div class="app" id="app" data-view="chat">
   <header class="top">
-    <a class="logo" href="https://claude.ai/artifact/RBkLb9DERx6BzHWDHq78RL" target="_blank" rel="noopener"><i></i>Cobuildy</a>
+    <a class="logo" href="https://claude.ai/artifact/RBkLb9DERx6BzHWDHq78RL" target="_blank" rel="noopener">Cobuildy</a>
     <div class="crumb"><span>Investor workspace</span><span>/</span><b id="crumb">Your mandate</b></div>
     <span class="sp"></span>
     <span class="pill plan">Prototype · example data</span>

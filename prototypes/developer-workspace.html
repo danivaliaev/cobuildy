@@ -35,9 +35,7 @@ h1,h2,h3,p{margin:0;font-weight:400}
 .app{height:100%;display:flex;flex-direction:column;gap:12px;max-width:1720px;margin:0 auto}
 /* top bar */
 .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-height:44px}
-.logo{font-family:var(--f-display);font-size:26px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink)}
-.logo i{width:12px;height:12px;border:1.5px solid var(--plan);position:relative;display:inline-block}
-.logo i::after{content:"";position:absolute;inset:2.5px;background:var(--plan)}
+.logo{font-family:"Instrument Sans","Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;font-size:21px;letter-spacing:-.02em;line-height:1;text-transform:uppercase;text-decoration:none;color:var(--ink);display:flex;align-items:center}
 .crumb{color:var(--ink-2);display:flex;gap:8px;align-items:center;min-width:0}
 .crumb b{color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp{flex:1}
@@ -352,6 +350,8 @@ button.pc{cursor:pointer} button.pc:hover{border-color:var(--ink-2)}
 .lad em{display:block;margin-top:5px;font:500 10px var(--f-mono);letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2);font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pc .next{border-top:1px solid var(--line);padding-top:10px;color:var(--ink-2);font-size:13.5px}
 .pc .next b{color:var(--ink);font-weight:500}
+.dchat .scroll{flex:none;height:min(50vh,390px);border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.dchat .msgs{padding:12px;gap:12px}.dchat .m{max-width:96%}.dchat .m .b{font-size:14px}
 .trow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
 .trow:first-of-type{border-top:0}
 .pt{font:500 10.5px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--plan)}
@@ -370,7 +370,7 @@ button.newp b{font:400 24px var(--f-display)}
 
 <div id="dash" hidden>
   <header class="top">
-    <a class="logo" href="#dashboard"><i></i>Cobuildy</a>
+    <a class="logo" href="#dashboard">Cobuildy</a>
     <span class="sp"></span>
     <span class="pill plan">Prototype · example data</span>
     <span class="pill">Alba Residences S.L.</span>
@@ -385,7 +385,11 @@ button.newp b{font:400 24px var(--f-display)}
       <div id="d-projects" class="dcol"></div>
     </div>
     <div class="dcol">
-      <section class="dcard" aria-label="Next 14 days"><div class="dhead"><h2>Next 14 days</h2><span class="mono muted">All projects</span></div><div id="d-tasks"></div></section>
+      <section class="dcard dchat" aria-label="Ask Cobuildy"><div class="dhead"><h2>Ask Cobuildy</h2><span class="mono muted">All projects</span></div>
+        <div class="scroll" id="dc-scroll"><div class="msgs" id="dc-msgs" aria-live="polite"></div></div>
+        <div class="chips" id="dc-chips"></div>
+        <div class="inrow"><textarea id="dc-inp" rows="1" placeholder="Ask about your projects, or tell me what to open" aria-label="Message to the agent"></textarea><button class="send" id="dc-send" data-act="dsend" type="button" aria-label="Send">↑</button></div>
+        <div class="mode"><span>Demo replies · answers from your project data</span></div></section>
       <section class="dcard" aria-label="Investor activity"><div class="dhead"><h2>Investor activity</h2><span class="pill plan" id="d-actpill">Example</span></div><div class="afeed" id="d-act"></div></section>
       <p class="muted" style="font-size:12.5px;padding:0 4px">Investor profiles are fictional. Nothing is sent from this prototype; sending and replies are simulated.</p>
     </div>
@@ -393,7 +397,7 @@ button.newp b{font:400 24px var(--f-display)}
 </div>
 <div class="app" id="app" data-view="chat" hidden>
   <header class="top">
-    <a class="logo" href="#dashboard"><i></i>Cobuildy</a>
+    <a class="logo" href="#dashboard">Cobuildy</a>
     <button class="btn sm" data-act="home" type="button">← Dashboard</button>
     <div class="crumb"><span>Projects</span><span>/</span><b id="crumb">Project</b></div>
     <select class="btn sm" id="psw" aria-label="Switch project"></select>
@@ -1251,7 +1255,7 @@ function metricsNow(id){
   const act=rs.map(([iid,r])=>{const inv=DB.find(x=>x.id===iid);return {p:title,who:inv?inv.id+' · '+inv.type:iid,s:(lab[r.s]||r.s)+(r.reason?' · '+r.reason:'')}});
   return {id,title,loc:((S.a_loc.st!=='empty'?S.a_loc.v:'Location not set')+(country()?', '+country():'')),asset:S.a_type.st!=='empty'?S.a_type.v:'',ask:S.k_ask.n,c,cnt,
     fit:m.list.filter(r=>r.bucket==='fit').map(r=>r.inv.id),poss:m.list.filter(r=>r.bucket==='possible').map(r=>r.inv.id),
-    interested,launched:launched[1],simulated,openFlags:open.length,ready,A,act,next:pl.ready[0]?taskOf(pl.ready[0].f).t:'Open the outreach plan'};
+    interested,launched:launched[1],simulated,openFlags:open.length,ready,A,act,blk:c.blockers.map(f=>({k:f.k,l:f.l,g:f.g})),next:pl.ready[0]?taskOf(pl.ready[0].f).t:'Open the outreach plan'};
 }
 const plural=(n,w)=>n+' '+w+(n===1?'':'s');
 function renderDash(){
@@ -1276,7 +1280,7 @@ function renderDash(){
 
   /* attention across projects */
   const w={bad:0,warn:1,good:2,plan:3};
-  const A=P.flatMap(x=>x.A.slice(0,5)).sort((x,y)=>w[x.t]-w[y.t]).slice(0,7);
+  const A=P.flatMap(x=>x.A.slice(0,5)).sort((x,y)=>w[x.t]-w[y.t]).slice(0,7);DP=P;DA=A;
   $('#d-attn').textContent=plural(A.length,'item');
   $('#d-att').innerHTML=A.length?A.map(a=>`<button type="button" data-act="dopen" data-id="${esc(a.p)}" data-tab="${a.tb}" ${a.ask?`data-ask="${esc(a.ask)}"`:''}><i class="${a.t}"></i><span><span class="pt">${esc(a.pt)}</span><b>${esc(a.h)}</b><span class="s">${esc(a.s)}</span></span><em>${esc(a.go)} →</em></button>`).join(''):'<p class="muted">Nothing needs you right now.</p>';
 
@@ -1289,16 +1293,83 @@ function renderDash(){
     <div class="next"><b>Next:</b> ${esc(x.next)} · ${plural(c.blockers.length,'blocker')} for the next stage</div></button>`};
   $('#d-projects').innerHTML=P.map(card).join('')+'<button class="pc newp" type="button" data-act="newproj"><b>+ New project</b><span class="muted">Tell the agent about it in your own words. The profile builds as you talk.</span></button>';
 
-  /* tasks */
-  const T=P.flatMap(x=>x.ready.filter(t=>t.d<=14).map(t=>({...t,pt:x.title}))).sort((x,y)=>x.d-y.d).slice(0,8);
-  $('#d-tasks').innerHTML=T.length?T.map(t=>`<div class="trow"><b style="font-weight:500">${esc(t.h)}</b><span class="mono muted">due ${fmtD(addD(t.d))}</span><span class="o">${esc(t.pt)} · ${esc(t.o)}${t.crit?' · critical path':''}</span></div>`).join(''):'<p class="muted">No tasks start in the next 14 days.</p>';
-
   /* activity */
   const E=P.flatMap(x=>x.act).slice(0,6);
   $('#d-actpill').textContent=E.length?'Simulated':'Example';
   $('#d-act').innerHTML=E.length?E.map(e=>`<div><span class="pt">${esc(e.p)}</span><b style="font-weight:500">${esc(e.who)}</b><small>${esc(e.s)}</small></div>`).join('')
    :[['Example fund A','Asked for the nota simple and line budget'],['Example lender B','Wants a call this week'],['Example family office C','Passed: ticket below minimum']].map(x=>`<div><b style="font-weight:500">${x[0]}</b><small>${x[1]}</small></div>`).join('');
+  dcInit(N,ready);
 }
+
+/* ---------- dashboard assistant ---------- */
+let DP=[],DA=[],DC=[],dcTyping=false,dcBusy=false;
+const DCT=[['investors',/investor|lender|fund|match|\bfit/],['outreach',/outreach|wave|teaser|send/],['roadmap',/roadmap|timeline|schedule|gantt/],['company',/company|track record|sponsor/],['docs',/document|docs|nota/],['profile',/profile|details|fields/]];
+const dcFirst=x=>x.title.split(/[^A-Za-zÀ-ſ]+/)[0]||x.title;
+const dcProj=q=>DP.find(x=>q.includes(x.id.toLowerCase()))||DP.find(x=>{const w=dcFirst(x).toLowerCase();return w.length>3&&q.includes(w)});
+const dcStage=['','teaser','outreach','data room'];
+function dcInit(N,ready){
+  if(DC.length)return dcRender();
+  const a=DA[0];
+  DC.push({r:'a',t:`I can see all ${plural(N,'project')}, ${ready} ready for outreach. `+(a?`Most urgent right now: ${a.pt}. ${a.h}.`:'Nothing needs you right now.')+' Ask me anything, or tell me what to open.',btns:a?[{l:`${a.go}: ${a.pt}`,id:a.p,tab:a.tb,ask:a.ask}]:[]});
+  dcRender();
+}
+function dcReply(raw){
+  const q=raw.toLowerCase(),p=dcProj(q);let tb=null;for(const [k,re] of DCT){if(re.test(q)){tb=k;break}}
+  const open=(id,tab,ask)=>({id,tab,ask});
+  if(/new project|add (a )?project|start (a )?project|another project/.test(q))return {t:'Opening a new project. Tell me about it in your own words and the profile builds as we talk.',newp:true};
+  if(/^\s*(open|show me|go to|take me|jump)\b/.test(q)||/\bopen\b/.test(q)){
+    if(p){const t=tb||'profile';return {t:`Opening ${p.title}${tb?` · ${t}`:''}.`,go:open(p.id,t)}}
+    return {t:'Which project should I open?',btns:DP.map(x=>({l:x.title,id:x.id,tab:tb||'profile'}))}
+  }
+  if(/attention|urgent|priorit|to ?do|what should i|first|need me/.test(q)){
+    if(!DA.length)return {t:'Nothing needs you right now.'};
+    const L=DA.slice(0,4);return {t:L.map((a,i)=>`${i+1}. ${a.pt}: ${a.h}`).join('\n'),btns:L.slice(0,3).map(a=>({l:`${a.go}: ${a.pt}`,id:a.p,tab:a.tb,ask:a.ask}))}
+  }
+  if(/missing|blocker|gap|what.*(need|lack)|incomplete/.test(q)){
+    const src=p?[p]:DP,L=src.flatMap(x=>x.blk.map(b=>({...b,x}))).sort((a,b)=>a.g-b.g).slice(0,5);
+    if(!L.length)return {t:p?`${p.title} has no open gaps for the next stage.`:'No open gaps in any project.'};
+    return {t:(p?`${p.title}: `:'')+'what is missing, most blocking first:\n'+L.map(b=>`• ${p?'':b.x.title+': '}${b.l} (blocks the ${dcStage[b.g]} stage)`).join('\n'),btns:L.slice(0,3).map(b=>({l:`Answer: ${b.l}`,id:b.x.id,tab:'profile',ask:b.k}))}
+  }
+  if(/investor|lender|fund|match|who fits|\bfit\b/.test(q)&&!/replied|interest|reply/.test(q)){
+    const src=p?[p]:DP;
+    return {t:src.map(x=>`${x.title}: ${x.fit.length} fit, ${x.poss.length} possible`).join('\n'),btns:src.slice(0,3).map(x=>({l:`Investors: ${x.title}`,id:x.id,tab:'investors'}))}
+  }
+  if(/14|next days|soon|this week|due|deadline|can start|start now|tasks?/.test(q)){
+    const T=(p?[p]:DP).flatMap(x=>x.ready.filter(t=>t.d<=14).map(t=>({...t,x}))).sort((a,b)=>a.d-b.d).slice(0,5);
+    if(!T.length)return {t:'No tasks can start in the next 14 days.'};
+    const ids=[...new Set(T.map(t=>t.x.id))];
+    return {t:'Ready to start, shortest first:\n'+T.map(t=>`• ${t.h} (${t.x.title}, about ${t.d} days, ${t.o})`).join('\n'),btns:ids.slice(0,3).map(id=>({l:`Roadmap: ${DP.find(x=>x.id===id).title}`,id,tab:'roadmap'}))}
+  }
+  if(/activity|repl|interest|responded|answers?/.test(q)){
+    const E=DP.flatMap(x=>x.act).slice(0,5);
+    return {t:E.length?E.map(e=>`• ${e.who} (${e.p}): ${e.s}`).join('\n'):'No replies yet. Once you send wave 1, investor replies appear here.'}
+  }
+  if(p){
+    const c=p.c;return {t:`${p.title}: ${NAMES[c.stage]||'not ready'}, readiness ${c.score}%, ${p.ask?eur(p.ask)+' sought':'no amount yet'}, ${p.fit.length} investors fit. Next: ${p.next}.`,
+      btns:[{l:'Open project',id:p.id,tab:'profile'},...(p.blk[0]?[{l:`Answer: ${p.blk[0].l}`,id:p.id,tab:'profile',ask:p.blk[0].k}]:[]),{l:'Roadmap',id:p.id,tab:'roadmap'}]}
+  }
+  if(/summary|status|how am i|overview|how are/.test(q))return {t:$('#d-sub').textContent+'\n'+DP.map(x=>`${x.title}: ${x.c.score}% ready`).join('\n')}
+  return {t:'I can show what needs your attention, what is missing in a project, which investors fit, what can start in the next 14 days, or open a project. Try one of these.'}
+}
+function dcRender(){
+  const box=$('#dc-msgs');if(!box)return;
+  box.innerHTML=DC.map(m=>m.r==='u'?`<div class="m u"><div class="b">${esc(m.t)}</div></div>`:
+    `<div class="m a"><div class="who"><i></i>Cobuildy agent</div><div class="b">${esc(m.t)}</div>${m.btns&&m.btns.length?`<div class="chips">${m.btns.map(b=>`<button class="chip doc" type="button" data-act="dopen" data-id="${esc(b.id)}" data-tab="${esc(b.tab||'profile')}" ${b.ask?`data-ask="${esc(b.ask)}"`:''}>${esc(b.l)}</button>`).join('')}</div>`:''}</div>`).join('')+
+    (dcTyping?'<div class="m a"><div class="who"><i></i>Cobuildy agent</div><div class="b typing"><i></i><i></i><i></i></div></div>':'');
+  const sc=$('#dc-scroll');sc.scrollTop=sc.scrollHeight;
+  const first=DP[0]?dcFirst(DP[0]):'my project';
+  $('#dc-chips').innerHTML=dcBusy?'':['What needs my attention?',`What is missing for ${first}?`,'Which investors fit?','What can start in the next 14 days?','New project'].map(t=>`<button class="chip" type="button" data-act="dchip" data-t="${esc(t)}">${esc(t)}</button>`).join('');
+  $('#dc-send').disabled=dcBusy;$('#dc-inp').disabled=dcBusy;
+}
+async function dcSend(text){
+  text=(text||'').trim();if(!text||dcBusy)return;
+  $('#dc-inp').value='';DC.push({r:'u',t:text});dcBusy=true;dcTyping=true;dcRender();
+  await sleep(450);const r=dcReply(text);
+  dcTyping=false;dcBusy=false;DC.push({r:'a',t:r.t,btns:r.btns||[]});dcRender();
+  if(r.go)setTimeout(()=>openWs(r.go.id,r.go.tab,r.go.ask),800);
+  if(r.newp)setTimeout(newProject,800);
+}
+document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='dc-inp'&&e.key==='Enter'&&!e.shiftKey){e.preventDefault();dcSend(e.target.value)}});
 function whenIdle(fn){const t=()=>busy?setTimeout(t,120):fn();t()}
 function go(h){location.hash=h;route()}
 function openWs(id,t,askKey){whenIdle(()=>{wantAsk=askKey||null;wantTab=t||null;go('#project-'+id)})}
@@ -1361,6 +1432,8 @@ document.addEventListener('click',e=>{
   else if(a==='home') whenIdle(()=>go('#dashboard'))
   else if(a==='dopen') openWs(b.dataset.id,b.dataset.tab,b.dataset.ask)
   else if(a==='newproj') newProject()
+  else if(a==='dsend') dcSend($('#dc-inp').value)
+  else if(a==='dchip') dcSend(b.dataset.t)
   else if(a==='reset') scratch();
   else if(a==='preset') preset();
   else if(a==='gotab'){tab=b.dataset.t;renderMain();if(innerWidth<=1180)setView('main')}

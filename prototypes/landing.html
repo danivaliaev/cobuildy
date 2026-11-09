@@ -47,9 +47,7 @@ p{margin:0}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
 .nav{display:flex;align-items:center;gap:22px;height:68px}
-.logo{font-family:var(--f-display);font-size:30px;letter-spacing:-.02em;text-decoration:none;display:flex;align-items:center;gap:8px}
-.logo i{width:14px;height:14px;border:1.5px solid var(--plan);display:inline-block;position:relative}
-.logo i::after{content:"";position:absolute;inset:3px;background:var(--plan)}
+.logo{font-family:"Instrument Sans","Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;font-size:21px;letter-spacing:-.02em;line-height:1;text-transform:uppercase;text-decoration:none;color:var(--ink);display:flex;align-items:center}
 .nav nav{display:flex;gap:22px;margin-left:12px;font-size:14.5px}
 .nav nav a{text-decoration:none;color:var(--ink-2)}
 .nav nav a:hover{color:var(--ink)}
@@ -289,7 +287,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 
 <header>
   <div class="wrap nav">
-    <a class="logo" href="#top"><i></i>Cobuildy</a>
+    <a class="logo" href="#top">Cobuildy</a>
     <nav aria-label="Main">
       <a href="#agent">Your agent</a>
       <a href="#automation">Automation</a>
@@ -468,7 +466,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 <footer>
   <div class="wrap">
     <div class="foot">
-      <div><a class="logo" href="#top" style="font-size:26px;color:var(--ink)"><i></i>Cobuildy</a><p style="margin-top:10px;max-width:32ch">An AI agent for real estate capital in Spain and Portugal. Paid on success.</p></div>
+      <div><a class="logo" href="#top" style="font-size:23px">Cobuildy</a><p style="margin-top:10px;max-width:32ch">An AI agent for real estate capital in Spain and Portugal. Paid on success.</p></div>
       <div><h4>Developers</h4><a href="#top">Try the agent</a><a href="#fee">Success fee</a><a href="#how">How it works</a></div>
       <div><h4>Investors</h4><a href="#top">Set your mandate</a><a href="#agent">Your agent</a><a href="#faq">FAQ</a></div>
       <div><h4>Company</h4><span>info@cobuildy.com</span><span style="display:block">+34 931 702 287</span><span style="display:block;margin-top:8px">Carrer de Calàbria 149, Entresòl 1a, 08015 Barcelona</span></div>
