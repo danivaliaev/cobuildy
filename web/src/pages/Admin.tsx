@@ -6,14 +6,14 @@ import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components
 import { GEO, ASSET, type Invitation, type Investor, type Project, type Role } from '../lib/types'
 
 
-function Invitations() {
+function Invitations({ reloadKey }: { reloadKey: number }) {
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
   const list = useLoad(async () => {
     const { data, error } = await supabase.from('invitations').select('*').order('created_at', { ascending: false })
     if (error) throw error
     return data as Invitation[]
-  })
+  }, [reloadKey])
   const act = useAction(list.reload)
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<Role>('developer')
@@ -54,6 +54,38 @@ function Invitations() {
             </tr>))}</tbody>
         </table></div>
       )}
+    </section>
+  )
+}
+
+
+interface Req { id: string; name: string; email: string; role: 'developer' | 'investor'; context: string | null; created_at: string }
+function Requests({ onInvited }: { onInvited: () => void | Promise<void> }) {
+  const { profile } = useAuth()
+  const list = useLoad(async () => {
+    const { data, error } = await supabase.from('access_requests').select('*').eq('status', 'new').order('created_at')
+    if (error) throw error
+    return data as Req[]
+  })
+  const act = useAction(async () => { await list.reload(); await onInvited() })
+  const invite = (r: Req) => void act.run(async () => {
+    const { error } = await supabase.from('invitations').insert({ email: r.email, role: r.role, company_name: r.name, invited_by: profile!.id, status: 'pending' })
+    if (error && !/duplicate|unique/i.test(error.message)) throw error
+    const { error: e2 } = await supabase.from('access_requests').update({ status: 'invited' }).eq('id', r.id)
+    if (e2) throw e2
+  })
+  const dismiss = (r: Req) => void act.run(async () => { const { error } = await supabase.from('access_requests').update({ status: 'dismissed' }).eq('id', r.id); if (error) throw error })
+  return (
+    <section className="card">
+      <h2>Requests from the website</h2>
+      <ErrorLine error={act.error ?? list.error} />
+      {list.data && list.data.length === 0 ? <Empty>No new requests.</Empty> : list.data?.map(r => (
+        <div className="row card soft" key={r.id}>
+          <div className="sp"><b>{r.name}</b> · {r.email} <Pill>{r.role}</Pill><div className="muted">{r.context ?? ''} · {when(r.created_at)}</div></div>
+          <button className="btn sm pri" disabled={act.busy} onClick={() => invite(r)}>Create invitation</button>
+          <button className="btn sm" disabled={act.busy} onClick={() => dismiss(r)}>Dismiss</button>
+        </div>
+      ))}
     </section>
   )
 }
@@ -111,5 +143,6 @@ function Investors() {
 }
 
 export function Admin() {
-  return <><h1>Admin</h1><Invitations /><Teasers /><Investors /></>
+  const [k, setK] = useState(0)
+  return <><h1>Admin</h1><Requests onInvited={() => setK(k + 1)} /><Invitations reloadKey={k} /><Teasers /><Investors /></>
 }
