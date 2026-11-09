@@ -16,7 +16,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <header className="top">
-        <a className="logo" href="/"><i />Cobuildy</a>
+        <a className="logo" href="/" aria-label="Cobuildy">Cobuildy</a>
         <nav className="nav">
           {staff && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'on' : '')}>Admin</NavLink>}
           {profile?.role === 'developer' && <NavLink to="/developer" className={({ isActive }) => (isActive ? 'on' : '')}>My projects</NavLink>}
