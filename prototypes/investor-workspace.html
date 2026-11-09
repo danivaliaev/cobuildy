@@ -1,0 +1,782 @@
+<title>Cobuildy Investor Workspace</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+
+/* Layout: three cards on a warm ground. Left: agent conversation. Centre: matches, mandate, deal review, pipeline. Right: mandate strength, proposals waiting for approval, access steps. Same ink / off-white / site-plan blue identity as the Cobuildy site; semantic green, amber, red only for state. */
+:root{
+  --bg:#f3f1ec; --surface:#ffffff; --soft:#f9f9f6; --ink:#100f0f; --ink-2:#5b5954; --line:#e5e3dd;
+  --plan:#1d3fd1; --plan-soft:#e8ecfb;
+  --good:#1f7a4d; --good-soft:#e2f1e8; --warn:#9a6a12; --warn-soft:#f6ecd6; --bad:#b3261e; --bad-soft:#f9e3e1;
+  --f-display:'Instrument Serif',Georgia,'Times New Roman',serif;
+  --f-body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e0e0d; --surface:#181816; --soft:#1f1f1c; --ink:#f3f2ee; --ink-2:#a9a79f; --line:#2c2b28;
+  --plan:#8ea2ff; --plan-soft:#20264a; --good:#6fcf9b; --good-soft:#15291e; --warn:#e0b45a; --warn-soft:#2c2412; --bad:#f08a82; --bad-soft:#331a18; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e0e0d; --surface:#181816; --soft:#1f1f1c; --ink:#f3f2ee; --ink-2:#a9a79f; --line:#2c2b28;
+  --plan:#8ea2ff; --plan-soft:#20264a; --good:#6fcf9b; --good-soft:#15291e; --warn:#e0b45a; --warn-soft:#2c2412; --bad:#f08a82; --bad-soft:#331a18; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 14.5px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+button{font:inherit;color:inherit;cursor:pointer}
+h1,h2,h3,p{margin:0;font-weight:400}
+:focus-visible{outline:2px solid var(--plan);outline-offset:2px;border-radius:8px}
+.mono{font:500 11px var(--f-mono);letter-spacing:.05em;text-transform:uppercase}
+.muted{color:var(--ink-2)}
+.serif{font-family:var(--f-display)}
+
+.app{height:100%;display:flex;flex-direction:column;gap:12px;max-width:1720px;margin:0 auto}
+/* top bar */
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-height:44px}
+.logo{font-family:var(--f-display);font-size:26px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink)}
+.logo i{width:12px;height:12px;border:1.5px solid var(--plan);position:relative;display:inline-block}
+.logo i::after{content:"";position:absolute;inset:2.5px;background:var(--plan)}
+.crumb{color:var(--ink-2);display:flex;gap:8px;align-items:center;min-width:0}
+.crumb b{color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font:500 11px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line);color:var(--ink-2);background:var(--surface)}
+.pill.good{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.plan{background:var(--plan-soft);color:var(--plan);border-color:transparent}
+.btn{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:500;font-size:13.5px}
+.btn:hover{border-color:var(--ink-2)}
+.btn.dark{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.sm{height:28px;padding:0 11px;font-size:12.5px}
+.vnav{display:none}
+
+/* columns */
+.cols{display:grid;grid-template-columns:minmax(330px,0.9fr) minmax(0,1.6fr) minmax(300px,0.85fr);grid-template-rows:minmax(0,1fr);gap:12px;min-height:0;flex:1}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.scroll{overflow:auto;min-height:0;flex:1}
+
+/* chat */
+.stages{display:flex;gap:4px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.stg{flex:1;min-width:0}
+.stg i{display:block;height:4px;border-radius:3px;background:var(--line)}
+.stg.done i{background:var(--ink)} .stg.now i{background:var(--plan)}
+.stg span{display:block;margin-top:6px;font:500 10px var(--f-mono);letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stg.now span{color:var(--plan)}
+.stg-head{padding:12px 16px 0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.msgs{padding:16px;display:flex;flex-direction:column;gap:14px}
+.m{max-width:92%;display:flex;flex-direction:column;gap:6px}
+.m.u{align-self:flex-end;align-items:flex-end}
+.m .b{padding:9px 13px;border-radius:16px;white-space:pre-wrap}
+.m.a .b{background:var(--soft);border:1px solid var(--line);border-top-left-radius:6px}
+.m.u .b{background:var(--ink);color:var(--bg);border-top-right-radius:6px}
+.who{font:500 10.5px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);display:flex;gap:6px;align-items:center}
+.who i{width:9px;height:9px;border:1.4px solid var(--plan);display:inline-block;position:relative}
+.who i::after{content:"";position:absolute;inset:1.5px;background:var(--plan)}
+.saved{display:flex;flex-wrap:wrap;gap:5px}
+.saved button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 9px;font-size:12px;color:var(--ink-2)}
+.saved button b{color:var(--good);font-weight:600;margin-right:4px}
+.saved button:hover{border-color:var(--plan);color:var(--ink)}
+.typing{display:inline-flex;gap:4px;padding:12px 14px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--ink-2);animation:dot 1s infinite ease-in-out}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.composer{border-top:1px solid var(--line);padding:12px 14px 14px;display:grid;gap:10px;background:var(--surface)}
+.asking{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:6px 12px;font-size:13px;text-align:left}
+.chip:hover{border-color:var(--plan)}
+.chip.doc{border-color:var(--plan);color:var(--plan);background:var(--plan-soft)}
+.chip.un{color:var(--ink-2);border-style:dashed;background:transparent}
+.inrow{display:flex;gap:8px;align-items:flex-end}
+textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:14px;background:var(--soft);color:var(--ink);padding:10px 12px;font:inherit;min-height:44px;max-height:110px}
+.send{height:44px;width:44px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font-size:18px;flex:none}
+.send:disabled{opacity:.4;cursor:default}
+.mode{font-size:12px;color:var(--ink-2);display:flex;gap:8px;align-items:center;justify-content:space-between}
+.mode label{display:flex;gap:6px;align-items:center;cursor:pointer}
+
+/* main */
+.tabs{display:flex;gap:2px;padding:10px 12px 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tab{white-space:nowrap;border:0;background:transparent;padding:9px 14px;border-radius:10px 10px 0 0;color:var(--ink-2);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.kpi{background:var(--surface);padding:12px 14px;min-width:0}
+.kpi .v{font:400 26px/1.1 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi .v.na{color:var(--ink-2)}
+.kpi .l{font:500 10.5px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin-top:3px}
+.kpi .s{font-size:12px;color:var(--ink-2)}
+.content{padding:16px;display:grid;gap:14px;align-content:start}
+.sec{border:1px solid var(--line);border-radius:16px;overflow:hidden;scroll-margin-top:8px}
+.sec-h{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--soft);border-bottom:1px solid var(--line)}
+.sec-h h3{font:400 22px var(--f-display);letter-spacing:-.01em}
+.bar{flex:0 0 70px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink)}
+.row{display:grid;grid-template-columns:20px minmax(110px,0.8fr) minmax(0,1.6fr) 86px;gap:4px 12px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:start}
+.row:last-child{border-bottom:0}
+.row .ic{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;margin-top:1px;border:1.5px solid var(--line);color:var(--ink-2)}
+.row .ic.f{background:var(--good);border-color:var(--good);color:var(--bg)}
+.row .ic.p{border-color:var(--warn);color:var(--warn)}
+.row .ic.u{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
+.row .lab{color:var(--ink-2)}
+.row .val{min-width:0;overflow-wrap:anywhere}
+.row .val.empty{color:var(--ink-2);font-style:italic}
+.row .src{display:block;font:400 11px var(--f-mono);color:var(--ink-2);margin-top:2px}
+.row .src.doc{color:var(--plan)}
+.row .gap{display:block;font-size:12.5px;color:var(--warn);margin-top:2px}
+.row .act{border:1px solid var(--line);background:var(--surface);border-radius:999px;font-size:12px;padding:2px 10px;white-space:nowrap}
+.row .act:hover{border-color:var(--plan);color:var(--plan)}
+.row.flash{animation:fl 2.4s ease-out}
+@keyframes fl{0%{background:var(--plan-soft)}100%{background:transparent}}
+.su{padding:12px 14px;border-top:1px solid var(--line);display:grid;gap:8px}
+.su-bar{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--line)}
+.su-bar span{display:block;height:100%}
+.su-leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink-2)}
+.su-leg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+
+/* ready panel */
+.verdict{padding:18px 18px 14px;display:grid;gap:14px;border-bottom:1px solid var(--line)}
+.vtop{display:flex;gap:16px;align-items:center}
+.ring{position:relative;width:92px;height:92px;flex:none}
+.ring svg{width:92px;height:92px;transform:rotate(-90deg)}
+.ring .n{position:absolute;inset:0;display:grid;place-items:center;font:400 30px var(--f-display);font-variant-numeric:tabular-nums}
+.vtxt h2{font:400 24px/1.1 var(--f-display);letter-spacing:-.01em;margin:6px 0 4px}
+.ladder{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.ladder div{font:500 10px var(--f-mono);letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2)}
+.ladder i{display:block;height:6px;border-radius:3px;background:var(--line);margin-bottom:5px}
+.ladder .on i{background:var(--good)} .ladder .on{color:var(--ink)}
+.blk{padding:14px 18px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.blk h3{font:500 11px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);display:flex;justify-content:space-between;gap:8px}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:start;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:var(--soft);text-align:left;width:100%}
+.item:hover{border-color:var(--plan)}
+.item b{font-weight:500}
+.item p{grid-column:1/-1;font-size:12.5px;color:var(--ink-2)}
+.item.flag{background:var(--bad-soft);border-color:transparent}
+.item.todo{grid-template-columns:22px 1fr}
+.item.todo .n{width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font:500 12px var(--f-mono)}
+.item .meta{grid-column:2;font:400 11px var(--f-mono);color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap}
+.secbars{display:grid;gap:7px}
+.sb{display:grid;grid-template-columns:112px 1fr 34px;gap:8px;align-items:center;font-size:13px;background:transparent;border:0;padding:0;text-align:left}
+.sb:hover b{color:var(--plan)}
+.sb .bar{flex:1;height:6px}
+.sb em{font:500 11px var(--f-mono);font-style:normal;color:var(--ink-2);text-align:right}
+.disc{padding:12px 18px 16px;font-size:12px;color:var(--ink-2)}
+
+
+/* match strip: always visible */
+.matchbar{display:flex;align-items:center;gap:18px;padding:10px 16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;flex:none}
+.mb-main{display:flex;align-items:center;gap:12px;min-width:0;flex:0 1 auto}
+.mb-n{font:400 40px/1 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mb-n small{font:400 17px var(--f-display);color:var(--ink-2);margin-left:5px}
+.mb-t{display:grid;gap:1px;min-width:0}
+.mb-t b{font-weight:500}
+.mb-t span{font-size:12.5px;color:var(--ink-2)}
+.mb-mid{flex:1;min-width:140px;display:grid;gap:6px}
+.mb-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line);gap:2px}
+.mb-bar span{display:block;min-width:3px}
+.mb-bar .f,.mb-leg .f{background:var(--good)}.mb-bar .p,.mb-leg .p{background:var(--plan)}.mb-bar .l,.mb-leg .l{background:var(--warn)}.mb-bar .o,.mb-leg .o{background:var(--ink-2);opacity:.35}
+.mb-leg{display:flex;gap:4px 14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
+.mb-leg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+
+/* investors */
+.note-line{font-size:12.5px;color:var(--ink-2)}
+.fseg{display:flex;gap:6px;flex-wrap:wrap}
+.fseg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-weight:500;font-size:13px;display:flex;gap:8px;align-items:center}
+.fseg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.fseg b{font:500 11px var(--f-mono)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.box{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--soft);display:grid;gap:8px;align-content:start}
+.box h3{font:500 11px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+.box li{margin:0 0 4px;list-style:none;display:flex;gap:8px;justify-content:space-between;align-items:baseline;font-size:13.5px}
+.box ul{margin:0;padding:0}
+.box li b{font:500 12px var(--f-mono);color:var(--plan);white-space:nowrap}
+.box li button{background:none;border:0;padding:0;text-align:left;color:inherit}
+.box li button:hover{color:var(--plan)}
+.inv{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface)}
+.inv-h{display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:12px 14px;width:100%;text-align:left;background:none;border:0}
+.inv-h:hover{background:var(--soft)}
+.inv-h b{font-weight:500;font-size:15px}
+.inv-h .meta{grid-column:1/-1;font-size:12.5px;color:var(--ink-2)}
+.inv-b{border-top:1px solid var(--line);padding:12px 14px;display:grid;gap:12px;background:var(--soft)}
+.inv-b h4{margin:0 0 6px;font:500 11px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+.ck{display:grid;grid-template-columns:18px 1fr;gap:8px;font-size:13px;padding:2px 0}
+.ck i{font-style:normal;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:10px;margin-top:2px}
+.ck .pass{background:var(--good);color:var(--bg)} .ck .fail{background:var(--bad);color:var(--bg)} .ck .unk{border:1.5px solid var(--warn);color:var(--warn)}
+.ck em{font-style:normal;color:var(--ink-2)}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* outreach */
+.banner{border-radius:16px;padding:14px 16px;display:grid;gap:6px}
+.banner.good{background:var(--good-soft)}.banner.warn{background:var(--warn-soft)}.banner.bad{background:var(--bad-soft)}
+.banner b{font-weight:500;font-size:15px}
+.seq{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.sq{border:1px solid var(--line);border-radius:14px;padding:11px 12px;background:var(--soft);display:grid;gap:4px;align-content:start}
+.sq.now{border-color:var(--plan);background:var(--plan-soft)}
+.sq.done{border-color:var(--good)}
+.sq b{font-weight:500;font-size:13.5px}
+.sq p{font-size:12px;color:var(--ink-2)}
+.tz{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.tz-h{padding:11px 14px;background:var(--soft);border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tz-b{padding:14px 16px;display:grid;gap:10px}
+.tz-b h3{font:400 24px/1.15 var(--f-display)}
+.tz-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 22px;font-size:13.5px}
+.tz-grid div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding:4px 0}
+.tz-grid span:first-child{color:var(--ink-2)}
+.tz-f{padding:12px 14px;border-top:1px solid var(--line);display:grid;gap:10px;background:var(--soft)}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.wave{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.wave-h{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:11px 14px;background:var(--soft);border-bottom:1px solid var(--line)}
+.wave-h h3{font:400 22px var(--f-display)}
+.wl{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px}
+.wchip{border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12.5px;background:var(--surface);display:flex;gap:8px;align-items:center}
+.wchip.x{text-decoration:line-through;color:var(--ink-2);background:transparent}
+.wchip button{border:0;background:none;color:var(--ink-2);padding:0;font-size:14px;line-height:1}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.bcol{border:1px solid var(--line);border-radius:14px;background:var(--soft);padding:10px;display:grid;gap:7px;align-content:start;min-height:110px}
+.bcol h4{margin:0;font:500 11px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);display:flex;justify-content:space-between}
+.bcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 9px;font-size:12.5px}
+.bcard b{font-weight:500;display:block}
+.bcard span{color:var(--ink-2)}
+
+/* roadmap */
+.rm-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.rm-sum>div{border:1px solid var(--line);border-radius:14px;padding:11px 13px;background:var(--soft)}
+.rm-sum .v{font:400 24px/1.1 var(--f-display)}
+.gwrap{border:1px solid var(--line);border-radius:16px;overflow:auto}
+.gchart{min-width:760px}
+.grow{display:grid;grid-template-columns:270px 1fr;border-bottom:1px solid var(--line);align-items:center}
+.grow:last-child{border-bottom:0}
+.grow.head{background:var(--soft);position:sticky;top:0;z-index:1}
+.gl{padding:6px 12px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:0;text-align:left;width:100%}
+.gl:hover{color:var(--plan)}
+.gt{position:relative;height:30px;
+  background:linear-gradient(var(--g1c),var(--g1c)) var(--g1) 0/1px 100% no-repeat,linear-gradient(var(--g2c),var(--g2c)) var(--g2) 0/1px 100% no-repeat,linear-gradient(var(--g3c),var(--g3c)) var(--g3) 0/1px 100% no-repeat}
+.gb{position:absolute;top:7px;height:16px;border-radius:5px;background:var(--line);border:0;padding:0;min-width:4px}
+.gb.c{background:var(--plan)}
+.gb.sel{outline:2px solid var(--ink);outline-offset:1px}
+.gt.ticks span{position:absolute;top:8px;font:400 10.5px var(--f-mono);color:var(--ink-2);transform:translateX(2px)}
+.gt.ticks span.g{color:var(--ink);font-weight:500}
+.leg{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
+.leg i{display:inline-block;width:14px;height:8px;border-radius:3px;margin-right:6px;background:var(--line)}
+.leg i.c{background:var(--plan)}
+.detail{border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:10px;background:var(--soft)}
+.detail h3{font:400 24px/1.15 var(--f-display)}
+.dl{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:13.5px}
+.dl dt{color:var(--ink-2)} .dl dd{margin:0}
+
+/* documents */
+.doc-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line)}
+.doc-row:last-child{border-bottom:0}
+.doc-list{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+
+@media (max-width:1180px){
+  .cols{grid-template-columns:1fr}
+  .vnav{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--surface);border:1px solid var(--line);width:fit-content;max-width:100%}
+  .vnav button{border:0;background:transparent;padding:7px 14px;border-radius:999px;color:var(--ink-2);font-weight:500}
+  .vnav button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .app[data-view="chat"] #p-main,.app[data-view="chat"] #p-ready,
+  .app[data-view="main"] #p-chat,.app[data-view="main"] #p-ready,
+  .app[data-view="ready"] #p-chat,.app[data-view="ready"] #p-main{display:none}
+}
+@media (max-width:640px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .matchbar{flex-wrap:wrap;gap:8px 12px;padding:10px 12px}
+  .mb-t span,.mb-leg{display:none}
+  .mb-n{font-size:32px}
+  .mb-mid{flex:1 1 100%;order:3}
+  .two,.cols2,.seq,.board,.tz-grid{grid-template-columns:1fr}
+  .row{grid-template-columns:20px 1fr;}
+  .row .lab{grid-column:2}.row .val{grid-column:2}.row .act{grid-column:2;justify-self:start}
+  .rm-sum{grid-template-columns:1fr}
+  .doc-row{grid-template-columns:1fr}
+  .crumb,.top .pill:not(.plan){display:none}
+  .stg span{display:none}
+}
+
+@media (prefers-reduced-motion:reduce){.row.flash,.typing i{animation:none}}
+
+/* investor workspace additions */
+.pj{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+.pj.sel{border-color:var(--plan)}
+.pj-h{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;padding:13px 14px 8px;width:100%;text-align:left;background:none;border:0}
+.pj-h:hover b{text-decoration:underline}
+.pj-h b{font-weight:500;font-size:16px}
+.pj-h .meta{grid-column:1/-1;font-size:13px;color:var(--ink-2)}
+.why{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 10px}
+.why span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--ink-2)}
+.why span.ok::before{content:"✓ ";color:var(--good)}
+.why span.no{border-color:var(--warn);color:var(--warn)}
+.why span.no::before{content:"! "}
+.why span.q::before{content:"? ";color:var(--warn)}
+.pj-f{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 14px;border-top:1px solid var(--line);background:var(--soft)}
+.pj-f .sp{flex:1}
+.btn2{height:30px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:500;font-size:13px}
+.btn2:hover{border-color:var(--ink-2)}
+.btn2.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn2.plan{background:var(--plan);color:var(--bg);border-color:var(--plan)}
+.btn2:disabled{opacity:.45;cursor:default}
+.stp{font:500 11px var(--f-mono);letter-spacing:.04em;text-transform:uppercase}
+.flow{display:flex;gap:4px;flex-wrap:wrap}
+.flow span{flex:1;min-width:64px;font:500 10px var(--f-mono);letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2)}
+.flow span i{display:block;height:4px;border-radius:3px;background:var(--line);margin-bottom:5px}
+.flow .d{color:var(--ink)}.flow .d i{background:var(--ink)}.flow .n{color:var(--plan)}.flow .n i{background:var(--plan)}
+.qs{display:grid;gap:6px}
+.qs label{display:grid;grid-template-columns:20px 1fr;gap:8px;font-size:13.5px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.qa-a{font-size:13px;color:var(--ink-2);margin-top:4px;padding-left:2px}
+.doc-row .lk{font:500 11px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.logl{display:grid;gap:0;font-size:12.5px}
+.logl div{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:6px 0;border-top:1px solid var(--line);color:var(--ink-2)}
+.logl div:first-child{border-top:0}
+.logl time{font:500 11px var(--f-mono)}
+.acc{display:grid;grid-template-columns:22px 1fr auto;gap:2px 10px;align-items:center;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:var(--soft)}
+.acc .n{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:11px}
+.acc.ok .n{background:var(--good);border-color:var(--good);color:var(--bg)}
+.acc small{grid-column:2/-1;color:var(--ink-2);font-size:12.5px}
+.empty{padding:26px;text-align:center;color:var(--ink-2);border:1px dashed var(--line);border-radius:16px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13.5px;z-index:50;max-width:calc(100vw - 32px)}
+.vchips{display:flex;flex-wrap:wrap;gap:6px}.vc{display:inline-flex;gap:5px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px;color:var(--ink-2)}.vc.ok{color:var(--good);border-color:var(--good)}
+.cof{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}.cof label{display:grid;gap:4px;font-size:12.5px;color:var(--ink-2)}.cof input{height:38px;border:1px solid var(--line);border-radius:10px;padding:0 11px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px}.cof input:focus{outline:2px solid var(--plan);outline-offset:1px}
+@media(max-width:700px){.cof{grid-template-columns:1fr}}
+</style>
+
+<div class="app" id="app" data-view="chat">
+  <header class="top">
+    <a class="logo" href="https://claude.ai/artifact/RBkLb9DERx6BzHWDHq78RL" target="_blank" rel="noopener"><i></i>Cobuildy</a>
+    <div class="crumb"><span>Investor workspace</span><span>/</span><b id="crumb">Your mandate</b></div>
+    <span class="sp"></span>
+    <span class="pill plan">Prototype · example data</span>
+    <span class="pill">AI recommends · you decide</span>
+    <button class="btn sm" data-act="presetP" type="button">Private example</button>
+    <button class="btn sm" data-act="presetI" type="button">Lender example</button>
+    <button class="btn sm" data-act="reset" type="button">Start over</button>
+  </header>
+  <div class="matchbar" id="matchbar" aria-live="polite"></div>
+  <nav class="vnav" aria-label="Views">
+    <button data-act="view" data-v="chat" aria-pressed="true" type="button">Agent</button>
+    <button data-act="view" data-v="main" aria-pressed="false" type="button">Workspace</button>
+    <button data-act="view" data-v="ready" aria-pressed="false" type="button">Status</button>
+  </nav>
+
+  <div class="cols">
+    <section class="card" id="p-chat" aria-label="Agent conversation">
+      <div class="stg-head"><span class="mono">Mandate progress</span><span class="mono" id="stg-now" style="color:var(--plan)"></span></div>
+      <div class="stages" id="stages"></div>
+      <div class="scroll" id="msgscroll"><div class="msgs" id="msgs" aria-live="polite"></div></div>
+      <div class="composer">
+        <div class="asking"><span class="mono" id="asking"></span></div>
+        <div class="chips" id="chips"></div>
+        <div class="inrow">
+          <textarea id="inp" rows="1" placeholder="Type your answer" aria-label="Message to the agent"></textarea>
+          <button class="send" id="send" data-act="send" type="button" aria-label="Send">↑</button>
+        </div>
+        <div class="mode"><span>Demo mode reads common phrases. The full product reads any text.</span></div>
+      </div>
+    </section>
+
+    <section class="card" id="p-main" aria-label="Workspace">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-act="tab" data-t="feed" aria-selected="true" type="button">Matches</button>
+        <button class="tab" role="tab" data-act="tab" data-t="deal" aria-selected="false" type="button">Deal review</button>
+        <button class="tab" role="tab" data-act="tab" data-t="pipe" aria-selected="false" type="button">Pipeline</button>
+        <button class="tab" role="tab" data-act="tab" data-t="mandate" aria-selected="false" type="button">Mandate</button>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="scroll"><div class="content" id="content"></div></div>
+    </section>
+
+    <aside class="card" id="p-ready" aria-label="Status">
+      <div class="scroll" id="ready"></div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const eur=n=>n==null?'—':(n>=1e6?'€'+(Math.round(n/1e5)/10).toString().replace(/\.0$/,'')+'M':'€'+Math.round(n/1e3)+'k');
+const plural=(n,w)=>n+' '+w+(n===1?'':'s');
+const pc=x=>Math.round(x*100)+'%';
+const GEO={CS:'Costa del Sol',BCN:'Barcelona',MAD:'Madrid',VLC:'Valencia',ISL:'Balearics / Canaries',LIS:'Lisbon',OPO:'Porto',ALG:'Algarve'};
+const AS={RES:'Residential',BTR:'Build-to-rent',HOS:'Hospitality'};
+const INS={senior:'Senior loan',mezz:'Mezzanine',equity:'Equity'};
+const LICN=['No permit yet','Permit submitted','Permit granted'];
+const LICMIN=['any stage','permit submitted or better','permit granted'];
+const GEORX=[[/costa del sol|marbella|estepona|m[aá]laga|mijas|benahav|fuengirola|sotogrande/i,'CS'],[/barcelona|sitges|girona|catalu/i,'BCN'],[/madrid/i,'MAD'],[/valencia|alicante|denia/i,'VLC'],[/mallorca|ibiza|palma|balear|tenerife|canar/i,'ISL'],[/lisbon|lisboa|cascais|sintra/i,'LIS'],[/porto|oporto/i,'OPO'],[/algarve|faro|lagos|albufeira|vilamoura/i,'ALG']];
+const geosIn=t=>GEORX.filter(([r])=>r.test(t)).map(x=>x[1]);
+
+/* ---------- illustrative live projects (fictional) ---------- */
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=rng(20261109),pick=a=>a[Math.floor(R()*a.length)],rr=(a,b)=>a+R()*(b-a);
+const pool=['CS','CS','CS','CS','CS','BCN','BCN','BCN','MAD','MAD','VLC','ISL','LIS','LIS','LIS','LIS','OPO','OPO','ALG'];
+const CITY={CS:['Marbella','Estepona','Málaga','Mijas'],BCN:['Barcelona','Sitges','Girona'],MAD:['Madrid','Pozuelo'],VLC:['Valencia','Alicante'],ISL:['Palma','Ibiza','Tenerife'],LIS:['Lisbon','Cascais'],OPO:['Porto','Matosinhos'],ALG:['Lagos','Albufeira','Faro']};
+const PRJ=[];
+for(let i=0;i<72;i++){
+  const geo=pick(pool),as=pick(['RES','RES','RES','BTR','HOS']),ins=pick(['senior','senior','senior','mezz','equity','equity']);
+  const band=pick([[.4,1],[1,3],[1,3],[1,3],[3,6],[3,6],[6,12]]),ask=Math.round(rr(band[0]*1e6,band[1]*1e6)/5e4)*5e4;
+  const ltc=ins==='equity'?+rr(.3,.5).toFixed(2):+rr(.45,.75).toFixed(2);
+  PRJ.push({id:'P-'+String(i+1).padStart(2,'0'),geo,city:pick(CITY[geo]),as,ins,ask,ltc,cost:Math.round(ask/ltc/5e4)*5e4,lic:pick([2,2,2,1,1,0]),margin:+rr(.14,.32).toFixed(2),
+    track:Math.round(rr(1,12)),units:Math.round(rr(6,40)),pre:as==='RES'?+rr(.05,.6).toFixed(2):null,ret:ins==='equity'?Math.round(rr(15,24)):Math.round(rr(8,13)),
+    term:pick([12,18,24,24,30,36]),docs:+rr(.3,1).toFixed(2),age:Math.round(rr(0,20)),sp:'S-'+String(10+Math.round(rr(0,80)))});
+}
+PRJ.forEach(p=>{p.gdv=Math.round(p.cost*(1+p.margin)/5e4)*5e4});
+const byId=id=>PRJ.find(p=>p.id===id);
+const pname=p=>`${AS[p.as]} · ${p.city}`;
+function flagsOf(p){const f=[];
+  if(p.lic<2)f.push({t:p.lic?'Permit submitted, not yet granted':'No permit yet',q:'When do you expect the building licence, and what is the fallback if it is delayed?'});
+  if(p.ins!=='equity'&&p.ltc>.68)f.push({t:`High LTC (${pc(p.ltc)})`,q:`Can you add sponsor equity or a second layer to bring the loan below ${pc(Math.max(.55,p.ltc-.1))} of cost?`});
+  if(p.pre!=null&&p.pre<.2)f.push({t:`Low pre-sales (${pc(p.pre)})`,q:'How many units are reserved, at what deposit, and at what price against your budget?'});
+  if(p.docs<.6)f.push({t:'Data room incomplete',q:'Please upload the missing documents listed in the data room.'});
+  if(p.margin<.18)f.push({t:`Thin margin (${pc(p.margin)})`,q:'What is the margin after a 10% cost overrun and a 5% fall in prices?'});
+  if(p.track<3)f.push({t:`Short sponsor track record (${p.track})`,q:'Which comparable projects has the team delivered? Please share references.'});
+  return f}
+const DOCS=['Nota simple','Planning certificate','Building licence','Line budget','Construction contract','Valuation report','Sponsor accounts','Sales evidence'];
+function docState(p){const n=Math.round(p.docs*DOCS.length);return DOCS.map((d,i)=>({d,ok:i<n&&!(i===2&&p.lic<2)}))}
+
+/* ---------- sponsor profile (shared between the developer account and the investor view) ---------- */
+const NOWY=2026;
+function spLevel(s){const n=Object.values(s.ver).filter(Boolean).length;return n===4&&s.refs>=2&&s.delivered>=3?['Strong','good']:n>=2?['Verified','plan']:['Self-declared','warn']}
+function spCard(s,reveal){
+  const lv=spLevel(s),yrs=Math.max(0,NOWY-s.founded);
+  const chk=[['registry','Company registry'],['web','Website'],['fin','Annual accounts'],['refs','References']];
+  return `<div class="tz"><div class="tz-h"><b>${reveal?esc(s.name):'Sponsor '+esc(s.code)}</b><span class="pill ${lv[1]}">${lv[0]}</span></div>
+  <div class="tz-b"><div class="tz-grid"><div><span>Years on market</span><span>${yrs||'<1'}</span></div><div><span>Projects delivered</span><span>${s.delivered}</span></div><div><span>Delivered volume (GDV)</span><span>€${s.volume}M</span></div><div><span>Units delivered</span><span>${s.units}</span></div><div><span>Projects in progress</span><span>${s.active}</span></div><div><span>Team</span><span>${s.team} people</span></div></div>
+  <div class="vchips">${chk.map(([k,l])=>`<span class="vc ${s.ver[k]?'ok':''}">${s.ver[k]?'✓':'○'} ${l}${s.ver[k]?'':' not checked'}</span>`).join('')}</div>
+  ${reveal?`<div class="tz-grid"><div><span>Website</span><span>${esc(s.web)}</span></div><div><span>Founded</span><span>${s.founded}</span></div><div><span>References</span><span>${s.refs} can be called</span></div></div>
+  <div class="doc-list" style="border-radius:12px">${s.listed.map(l=>`<div class="doc-row"><span>${esc(l.n)}</span><span class="muted">${l.yr} · ${l.units} units</span><span>€${l.gdv}M</span></div>`).join('')}</div>`
+  :`<p class="note-line">Name, website, references and project list are shown after the investor signs the NDA.</p>`}</div></div>`}
+
+function sponsorOf(p){const n=+p.sp.slice(2),nm=['Costa','Atlantic','Meridian','Solana','Norte','Levante','Tejo','Bética'],yrs=Math.round(p.track*1.4+2+n%3),vol=Math.round(p.track*Math.max(2,p.cost/1e6)*1.1),lvl=p.docs>.8&&p.track>=5?3:p.docs>.55?2:1,pt=['LIS','OPO','ALG'].includes(p.geo),nm0=nm[n%8];
+  return {code:p.sp,name:nm0+' Developments '+(pt?'Lda':'S.L.'),web:nm0.toLowerCase().replace('é','e')+'-dev.example',founded:NOWY-yrs,delivered:p.track,volume:vol,units:Math.round(vol*1e6/2.5e5),active:1+n%3,team:4+p.track+n%4,refs:Math.min(3,Math.floor(p.track/3)),ver:{registry:true,web:lvl>=2,fin:lvl>=3,refs:lvl>=3&&p.track>=5},
+   listed:[0,1,2].slice(0,Math.max(1,Math.min(3,p.track))).map(i=>({n:CITY[p.geo][i%CITY[p.geo].length]+' '+['Residences','Gardens','Court'][i],yr:2025-i*2,units:Math.round(p.units*(1.1-i*.25)),gdv:Math.max(2,Math.round(vol/Math.max(1,p.track)*(1.3-i*.3)))}))}}
+/* ---------- mandate model ---------- */
+const GEOCH=Object.keys(GEO).map(k=>({l:GEO[k],v:k}));
+const SECS=[['profile','You'],['where','What you invest in'],['size','Size and stage'],['risk','Risk and return'],['sponsor','Sponsor and deal quality']];
+const NOPREF={l:'No preference',v:null},NS={l:'Not sure yet',u:1};
+const F=[
+ {k:'type',s:'profile',l:'Investor type',w:1,q:'Do you invest as a private investor or family office, or as an institutional lender or fund?',chips:()=>[{l:'Private investor / family office',v:'priv'},{l:'Institutional lender / fund',v:'inst'}]},
+ {k:'geo',s:'where',l:'Regions',w:2,multi:1,q:'Which regions do you invest in? Pick all that apply.',chips:()=>GEOCH},
+ {k:'asset',s:'where',l:'Asset types',w:2,multi:1,q:'Which asset types?',chips:()=>[{l:'Residential',v:'RES'},{l:'Build-to-rent',v:'BTR'},{l:'Hospitality',v:'HOS'}]},
+ {k:'ins',s:'where',l:'Instruments',w:2,multi:1,q:'Which instruments do you write?',chips:()=>[{l:'Senior loan',v:'senior'},{l:'Mezzanine',v:'mezz'},{l:'Equity',v:'equity'}]},
+ {k:'tk',s:'size',l:'Ticket size',w:2,q:'What ticket size fits?',chips:()=>V.type==='inst'?[{l:'€3–6M',v:{lo:3e6,hi:6e6}},{l:'€6–10M',v:{lo:6e6,hi:1e7}},{l:'€10M and above',v:{lo:1e7,hi:3e7}}]:[{l:'€0.3–1M',v:{lo:3e5,hi:1e6}},{l:'€1–3M',v:{lo:1e6,hi:3e6}},{l:'€3–6M',v:{lo:3e6,hi:6e6}}]},
+ {k:'stage',s:'size',l:'Earliest stage',w:2,q:'What is the earliest project stage you accept?',chips:()=>[{l:'Permit granted only',v:2},{l:'Permit submitted or better',v:1},{l:'Any stage',v:0}]},
+ {k:'ltc',s:'risk',l:'Maximum LTC',w:1,q:'What is the highest loan-to-cost you accept on debt?',chips:()=>[{l:'Up to 55%',v:.55},{l:'Up to 65%',v:.65},{l:'Up to 75%',v:.75},NOPREF,NS]},
+ {k:'ret',s:'risk',l:'Minimum return',w:1,q:'What minimum return do you need (interest for debt, IRR for equity)?',chips:()=>V.type==='inst'?[{l:'8% or more',v:8},{l:'10% or more',v:10},{l:'12% or more',v:12},NOPREF,NS]:[{l:'8% or more',v:8},{l:'12% or more',v:12},{l:'18% or more',v:18},NOPREF,NS]},
+ {k:'term',s:'risk',l:'Maximum duration',w:1,q:'How long can your capital be tied up?',chips:()=>[{l:'Up to 12 months',v:12},{l:'Up to 24 months',v:24},{l:'Up to 36 months',v:36},NOPREF,NS]},
+ {k:'track',s:'sponsor',l:'Sponsor track record',w:1,q:'How much sponsor track record do you require?',chips:()=>[{l:'3+ projects delivered',v:3},{l:'5+ projects delivered',v:5},NOPREF,NS]},
+ {k:'margin',s:'sponsor',l:'Minimum developer margin',w:1,q:'What minimum margin on cost should the developer show?',chips:()=>[{l:'15% or more',v:.15},{l:'20% or more',v:.2},{l:'25% or more',v:.25},NOPREF,NS]},
+ {k:'pre',s:'sponsor',l:'Minimum pre-sales',w:1,q:'What share of units should be pre-sold on residential projects?',chips:()=>[{l:'30% or more',v:.3},{l:'50% or more',v:.5},NOPREF,NS]}
+];
+const FK=Object.fromEntries(F.map(f=>[f.k,f]));
+let V={},STt={},M=[],cur=null,busy=false,tmp=[],tab='feed',sel=null,filter='all',P={},A={decl:false,kyc:false},LOG=[],dismissed=[],isTyping=false;
+const known=k=>STt[k]==='filled'&&V[k]!=null;
+const open_=k=>STt[k]!=='filled'&&STt[k]!=='na';
+function fmt(k){
+  if(STt[k]==='na')return 'Not asked for this mandate';if(STt[k]==='unknown')return '';if(STt[k]!=='filled')return '';
+  const v=V[k];if(v==null)return 'No preference';
+  switch(k){case 'type':return v==='priv'?'Private investor / family office':'Institutional lender / fund';
+    case 'geo':return v.map(g=>GEO[g]).join(', ');case 'asset':return v.map(a=>AS[a]).join(', ');case 'ins':return v.map(i=>INS[i]).join(', ');
+    case 'tk':return eur(v.lo)+' to '+eur(v.hi);case 'stage':return v===2?'Permit granted only':v===1?'Permit submitted or better':'Any stage';
+    case 'ltc':return 'Up to '+pc(v);case 'ret':return v+'% or more';case 'term':return 'Up to '+v+' months';case 'track':return v+'+ projects delivered';case 'margin':return pc(v)+' or more';case 'pre':return pc(v)+' or more'}
+  return String(v)}
+function setF(k,v){V[k]=v;STt[k]='filled';
+  if(k==='ins'||k==='type'){ if(V.ins&&!V.ins.some(i=>i!=='equity')){V.ltc=null;STt.ltc='na'} else if(STt.ltc==='na'){delete STt.ltc;delete V.ltc}
+    if(V.type==='priv'){V.pre=null;STt.pre='na'} else if(V.type==='inst'&&STt.pre==='na'){delete STt.pre;delete V.pre}}}
+function setU(k){V[k]=undefined;STt[k]='unknown'}
+const applies=k=>!(STt[k]==='na');
+function nextField(){return F.find(f=>STt[f.k]===undefined)||null}
+
+/* ---------- matching ---------- */
+function crit(p){
+  const o=[],add=(k,hard,r,d)=>o.push({k,hard,r,d,l:FK[k].l});
+  const chk=(k,hard,test,pass,fail,applicable=true)=>{if(!applicable||STt[k]==='na')return;if(known(k)){test?add(k,hard,'pass',pass):add(k,hard,'fail',fail)}else if(V[k]===undefined||STt[k]!=='filled'){add(k,hard,'unk','Not set in your mandate yet')}};
+  chk('geo',1,V.geo&&V.geo.includes(p.geo),`${GEO[p.geo]} is in your regions`,`${GEO[p.geo]} is outside your regions`);
+  chk('asset',1,V.asset&&V.asset.includes(p.as),`${AS[p.as]} matches your asset types`,`${AS[p.as]} is not in your asset types`);
+  chk('ins',1,V.ins&&V.ins.includes(p.ins),`${INS[p.ins]} is an instrument you write`,`Offers ${INS[p.ins].toLowerCase()}`);
+  chk('tk',1,V.tk&&p.ask>=V.tk.lo&&p.ask<=V.tk.hi,`Ask ${eur(p.ask)} is in your ${fmt('tk')} range`,`Ask ${eur(p.ask)} is outside ${fmt('tk')}`);
+  chk('stage',1,p.lic>=V.stage,LICN[p.lic],`${LICN[p.lic]}; you need ${LICMIN[V.stage]}`);
+  chk('ltc',0,p.ltc<=V.ltc,`LTC ${pc(p.ltc)} is within your ${pc(V.ltc)} cap`,`LTC ${pc(p.ltc)} is above your ${pc(V.ltc)} cap`,p.ins!=='equity');
+  chk('ret',0,p.ret>=V.ret,`Return ${p.ret}% meets your ${V.ret}% minimum`,`Return ${p.ret}% is below your ${V.ret}% minimum`);
+  chk('term',0,p.term<=V.term,`${p.term} months fits within ${V.term}`,`${p.term} months is longer than your ${V.term}`);
+  chk('track',0,p.track>=V.track,`Sponsor delivered ${p.track} projects`,`Sponsor delivered ${p.track}, you need ${V.track}+`);
+  chk('margin',0,p.margin>=V.margin,`Developer margin ${pc(p.margin)}`,`Developer margin ${pc(p.margin)} is below ${pc(V.margin)}`);
+  chk('pre',0,p.pre>=V.pre,`Pre-sales ${pc(p.pre)}`,`Pre-sales ${pc(p.pre)} are below ${pc(V.pre)}`,p.pre!=null);
+  return o}
+function evalP(p){
+  const c=crit(p);let T=0,Pw=0;c.forEach(x=>{const w=x.hard?2:1;T+=w;Pw+=x.r==='pass'?w:x.r==='unk'?w*.5:0});
+  const hardFail=c.some(x=>x.hard&&x.r==='fail'),softFail=c.filter(x=>!x.hard&&x.r==='fail');
+  return {p,c,fit:T?Math.round(100*Pw/T):50,bucket:hardFail?'out':softFail.length?'near':'match',soft:softFail,unk:c.filter(x=>x.r==='unk').length}}
+function match(){
+  const all=PRJ.map(evalP),m=all.filter(x=>x.bucket==='match').sort((a,b)=>b.fit-a.fit||a.p.age-b.p.age),near=all.filter(x=>x.bucket==='near').sort((a,b)=>b.fit-a.fit);
+  const unlock={};near.filter(x=>x.soft.length===1).forEach(x=>{unlock[x.soft[0].k]=(unlock[x.soft[0].k]||0)+1});
+  return {all,m,near,out:all.length-m.length-near.length,unlock}}
+const stOf=id=>(P[id]||{status:'new'}).status;
+const FLOW=['new','short','interest','room','qa','answered','decision'];
+const FLOWN={new:'New',short:'Shortlisted',interest:'Interest',room:'Data room',qa:'Questions sent',answered:'Answers in',decision:'Term sheet talk',passed:'Passed'};
+function pset(id,o){P[id]=Object.assign({status:'new',qs:[],reason:''},P[id]||{},o)}
+function log(t){LOG.unshift({t,at:new Date()});LOG=LOG.slice(0,12);save()}
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>el.hidden=true,2600)}
+
+/* ---------- scoring of the mandate ---------- */
+function clarity(){let W=0,Pw=0;F.forEach(f=>{if(STt[f.k]==='na')return;W+=f.w;if(STt[f.k]==='filled')Pw+=f.w});const core=['geo','asset','ins','tk','stage'].every(k=>STt[k]==='filled');
+  const all=F.every(f=>STt[f.k]==='filled'||STt[f.k]==='na');return {score:W?Math.round(100*Pw/W):0,level:all?2:core?1:0}}
+const LEVEL=['Mandate not set','Screening is on','Sharp mandate'];
+
+/* ---------- chat ---------- */
+function say(t,saved){M.push({r:'a',t,saved:saved||[]});renderChat()}
+async function sayLater(t,saved,ms=520){isTyping=true;renderChat();await sleep(ms);isTyping=false;say(t,saved)}
+async function ask(k,pre){
+  cur=k;renderChat();
+  if(!k){await sayLater('Your mandate is complete. Open the Matches tab to review projects. I recommend, you decide. Nothing is sent to a sponsor without your approval.');return}
+  await sayLater((pre?pre+'\n\n':'')+FK[k].q);renderChat()}
+function curChips(){if(!cur)return [{l:'Open top match →',go:'top'},{l:'Show close projects →',go:'near'},{l:'Change my mandate',go:'change'}];
+  const f=FK[cur],c=f.chips().map(x=>({...x}));
+  if(f.multi){c.forEach(x=>x.on=tmp.includes(x.v));c.push({l:'Continue →',go:'cont',dis:!tmp.length});c.push(NS)}else if(!c.some(x=>x.u))c.push(NS);
+  return c}
+function savedChips(keys){return keys.map(k=>({k,t:FK[k].l,st:STt[k]}))}
+function renderChat(){
+  $('#msgs').innerHTML=M.map(m=>m.r==='u'?`<div class="m u"><div class="b">${esc(m.t)}</div></div>`:`<div class="m a"><div class="who"><i></i>Cobuildy agent</div><div class="b">${esc(m.t)}</div>${m.saved&&m.saved.length?`<div class="saved">${m.saved.map(s=>`<button type="button" data-act="jump" data-k="${s.k}"><b>${s.st==='unknown'?'!':'✓'}</b>${esc(s.t)}</button>`).join('')}</div>`:''}</div>`).join('')+(isTyping?'<div class="m a"><div class="who"><i></i>Cobuildy agent</div><div class="b typing"><i></i><i></i><i></i></div></div>':'');
+  const sc=$('#msgscroll');sc.scrollTop=sc.scrollHeight;
+  const ch=busy?[]:curChips();
+  $('#chips').innerHTML=ch.map((c,i)=>`<button class="chip ${c.go==='cont'?'doc':''} ${c.u?'un':''}" ${c.on?'style="background:var(--plan);color:var(--bg);border-color:var(--plan)"':''} ${c.dis?'disabled':''} data-act="chip" data-i="${i}" type="button">${esc(c.l)}</button>`).join('');
+  $('#asking').textContent=cur?'Asking about · '+FK[cur].l:'Mandate complete';
+  $('#send').disabled=busy;$('#inp').disabled=busy;
+}
+function renderStages(){
+  const g=k=>STt[k]==='filled'||STt[k]==='na',cl=clarity();
+  const steps=[['You',g('type')],['Where',g('geo')&&g('asset')&&g('ins')],['Size',g('tk')&&g('stage')],['Risk',['ltc','ret','term'].every(g)],['Sponsor',['track','margin','pre'].every(g)],['Screening',cl.level>=1],['Reviewing',Object.values(P).some(p=>p.status!=='new')]];
+  let nowI=steps.findIndex(x=>!x[1]);if(nowI<0)nowI=steps.length-1;
+  $('#stages').innerHTML=steps.map((s,i)=>`<div class="stg ${s[1]?'done':i===nowI?'now':''}"><i></i><span>${s[0]}</span></div>`).join('');
+  $('#stg-now').textContent=steps[nowI][0]}
+
+/* ---------- parsing (demo mode) ---------- */
+const num=s=>+String(s).replace(',','.');
+function parseTk(t){
+  let m=t.match(/(\d+(?:[.,]\d+)?)\s*(?:-|–|to)\s*(\d+(?:[.,]\d+)?)\s*(m|mm|million|k)\b/i);
+  if(m){const u=m[3].toLowerCase()==='k'?1e3:1e6;return {lo:num(m[1])*u,hi:num(m[2])*u}}
+  if(m=t.match(/up to\s*€?\s*(\d+(?:[.,]\d+)?)\s*(m|mm|million|k)\b/i)){const u=m[2].toLowerCase()==='k'?1e3:1e6;return {lo:3e5,hi:num(m[1])*u}}
+  if(m=t.match(/(?:from|min(?:imum)?)\s*€?\s*(\d+(?:[.,]\d+)?)\s*(m|mm|million|k)\b/i)){const u=m[2].toLowerCase()==='k'?1e3:1e6;return {lo:num(m[1])*u,hi:3e7}}
+  if(m=t.match(/(\d+(?:[.,]\d+)?)\s*(m|mm|million|k)\b/i)){const u=m[2].toLowerCase()==='k'?1e3:1e6,v=num(m[1])*u;return {lo:v*.5,hi:v*1.5}}
+  return null}
+function xAll(t){
+  const o={};let m;
+  if(/family office|private investor|\bangel\b|individual/i.test(t))o.type='priv';else if(/\bfund\b|\bbank\b|lender|institution|credit/i.test(t)&&/\b(i am|we are|i'm|we're|as an?)\b/i.test(t))o.type='inst';
+  const g=geosIn(t);if(g.length)o.geo=g;
+  const as=[];if(/villa|residential|apartment|housing/i.test(t))as.push('RES');if(/build.to.rent|btr|rental/i.test(t))as.push('BTR');if(/hotel|hospitality/i.test(t))as.push('HOS');if(/all assets|any asset/i.test(t))as.push('RES','BTR','HOS');if(as.length)o.asset=[...new Set(as)];
+  const ins=[];if(/senior|\bloans?\b|\bdebt/i.test(t))ins.push('senior');if(/mezz/i.test(t))ins.push('mezz');if(/equity|\bjv\b/i.test(t))ins.push('equity');if(/all instruments|any instrument/i.test(t))ins.push('senior','mezz','equity');if(ins.length)o.ins=[...new Set(ins)];
+  const tk=parseTk(t);if(tk&&/ticket|cheque|check|invest|write|from|up to|€|\d\s*(?:-|–|to)/i.test(t))o.tk=tk;
+  if(/only permit|permit(ted)? only|permit granted|granted only|only granted/i.test(t))o.stage=2;else if(/submitted/i.test(t))o.stage=1;else if(/any stage|early stage|land only/i.test(t))o.stage=0;
+  if(m=t.match(/(?:ltc|loan.to.cost)[^\d]{0,14}(\d{2})/i)||t.match(/(\d{2})\s*%\s*(?:ltc|of cost|loan.to.cost)/i))o.ltc=num(m[1])/100;
+  if(m=t.match(/(?:return|irr|yield|interest|rate)[^\d]{0,16}(\d{1,2}(?:[.,]\d)?)\s*%/i)||t.match(/(\d{1,2}(?:[.,]\d)?)\s*%\s*(?:\+|or more)?\s*(?:return|irr|yield)/i))o.ret=num(m[1]);
+  if(m=t.match(/(?:up to|max(?:imum)?|within|duration|term)[^\d]{0,12}(\d{1,2})\s*(months?|years?)/i))o.term=num(m[1])*(/year/i.test(m[2])?12:1);
+  if(m=t.match(/(\d{1,2})\+?\s*(?:projects|deals)/i))o.track=+m[1];
+  if(m=t.match(/margin[^\d]{0,14}(\d{1,2})\s*%/i))o.margin=num(m[1])/100;
+  if(m=t.match(/pre-?sales?[^\d]{0,14}(\d{1,3})\s*%/i))o.pre=num(m[1])/100;
+  return o}
+function focusParse(f,t){
+  if(f.k==='tk'){return parseTk(t)}
+  const m=t.match(/(\d+(?:[.,]\d+)?)/);if(!m)return undefined;const n=num(m[1]);
+  return {ltc:n>1?n/100:n,ret:n,term:/year/i.test(t)?n*12:n,track:n,margin:n>1?n/100:n,pre:n>1?n/100:n}[f.k]}
+async function answer(text,chip){
+  if(busy)return;text=(text||'').trim();if(!text)return;
+  busy=true;M.push({r:'u',t:text});renderChat();
+  const before=match().m.length,keys=[];
+  try{
+    if(chip&&chip.go==='change'){await sayLater('Tell me what to change, for example "only Lisbon", "minimum return 12%" or "tickets of €1–3M". You can also pick a field in the Mandate tab.');busy=false;renderAll();return}
+    if(chip&&chip.u){setU(cur);keys.push(cur)}
+    else if(chip&&chip.v!==undefined&&cur){const f=FK[cur];setF(cur,chip.v);keys.push(cur)}
+    else{
+      let x=xAll(text);
+      if(cur&&x[cur]===undefined&&!/(don'?t know|not sure|no idea|skip|later)/i.test(text)){const v=focusParse(FK[cur],text);if(v!=null)x[cur]=v}
+      if(cur&&/(don'?t know|not sure|no idea|skip|later)/i.test(text)&&!Object.keys(x).length){setU(cur);keys.push(cur)}
+      Object.keys(x).forEach(k=>{if(FK[k]){setF(k,x[k]);keys.push(k)}});
+    }
+    if(!keys.length){await sayLater(cur?`I did not catch that. ${FK[cur].q}`:'I did not catch what to change. Try "only Lisbon", "minimum return 12%" or "tickets of €1–3M".');busy=false;renderAll();return}
+    renderStrip();renderMain();renderReady();renderStages();
+    const mt=match(),extra=[`${plural(mt.m.length,'project')} match your mandate now${mt.near.length?`, ${mt.near.length} more are close`:''}.`];
+    if(mt.m.length!==before)extra[0]+=` (${mt.m.length-before>0?'+':''}${mt.m.length-before})`;
+    await sayLater(['Saved.',...extra].join(' '),savedChips(keys),620);
+    const nk=nextField();
+    if(cur&&nk&&nk.k!==cur||!cur&&nk)await ask(nk.k);
+    else if(!nk){cur=null;await sayLater(clarity().level===2?'Your mandate is complete. I screen every new project against it. Open the top match to review, or tighten the mandate.':'Core mandate saved. I am screening now. Answer the remaining questions to sharpen the matches.');renderChat()}
+    else await ask(nk.k);
+  }catch(e){console.error(e);await sayLater('Something went wrong saving that. Please try again.')}
+  tmp=[];busy=false;renderAll();
+}
+
+/* ---------- renderers ---------- */
+function renderStrip(){
+  const mt=match(),N=PRJ.length,c=clarity(),top=Object.entries(mt.unlock).sort((a,b)=>b[1]-a[1])[0];
+  const pct=n=>(n/N*100).toFixed(1)+'%';
+  const mname=V.type?`${V.type==='priv'?'Private investor':'Institutional lender'}${V.geo&&V.geo.length?' · '+V.geo.slice(0,2).map(g=>GEO[g]).join(', ')+(V.geo.length>2?' +'+(V.geo.length-2):''):''}`:'Your mandate';
+  $('#crumb').textContent=mname;
+  $('#matchbar').innerHTML=`<div class="mb-main"><div class="mb-n">${mt.m.length}<small>/ ${N}</small></div><div class="mb-t"><b>${mt.m.length===1?'live project matches':'live projects match'} your mandate</b><span>${c.level===0?'Answer a few questions to start screening':'Updates with every answer · open criteria never exclude a project'}</span></div></div>
+  <div class="mb-mid"><div class="mb-bar"><span class="f" style="width:${pct(mt.m.length)}"></span><span class="l" style="width:${pct(mt.near.length)}"></span><span class="o" style="width:${pct(mt.out)}"></span></div>
+  <div class="mb-leg"><span><i class="f"></i>${mt.m.length} match</span><span><i class="l"></i>${mt.near.length} close, miss one soft criterion</span><span><i class="o"></i>${mt.out} outside</span></div></div>
+  ${top?`<div class="mb-t" style="flex:0 1 220px"><b>+${top[1]} if you relax</b><span>${esc(FK[top[0]].l)}</span></div>`:''}`}
+function renderKpis(){
+  const mt=match(),vals=Object.entries(P),dd=vals.filter(([,p])=>['interest','room','qa','answered'].includes(p.status)).length,sl=vals.filter(([,p])=>p.status==='short').length;
+  const nw=mt.m.filter(x=>x.p.age<=7&&stOf(x.p.id)==='new').length,pr=props().length;
+  $('#kpis').innerHTML=[[mt.m.length,'Matching','of '+PRJ.length+' live'],[nw,'New this week','not reviewed'],[sl,'Shortlisted',''],[dd,'In diligence',''],[pr,'Awaiting you','agent proposals']].map(k=>`<div class="kpi"><div class="v">${k[0]}</div><div class="l">${k[1]}</div><div class="s">${k[2]||'&nbsp;'}</div></div>`).join('')}
+function flowBar(id){const s=stOf(id);if(s==='passed')return `<span class="pill">Passed</span>`;const i=FLOW.indexOf(s);return `<div class="flow">${FLOW.slice(1).map((n,j)=>`<span class="${j+1<i?'d':j+1===i?'n':''}"><i></i>${FLOWN[n]}</span>`).join('')}</div>`}
+function pjCard(x){
+  const p=x.p,s=stOf(p.id),good=x.c.filter(c=>c.r==='pass').slice(0,3),bad=x.c.filter(c=>c.r==='fail'),unk=x.c.filter(c=>c.r==='unk');
+  const meta=`${INS[p.ins]} ${eur(p.ask)} · ${p.ins==='equity'?'equity '+pc(p.ltc)+' of cost':'LTC '+pc(p.ltc)} · ${p.ret}% ${p.ins==='equity'?'IRR':'interest'} · ${p.term} months · ${LICN[p.lic].toLowerCase()}`;
+  return `<article class="pj ${sel===p.id?'sel':''}"><button class="pj-h" data-act="open" data-id="${p.id}" type="button"><b>${esc(pname(p))} <span class="muted" style="font-weight:400">· ${p.id}</span></b><span class="pill ${x.bucket==='match'?'':'plan'}">Fit ${x.fit}%</span><span class="meta">${meta}</span></button>
+  <div class="why">${good.map(c=>`<span class="ok">${esc(c.l)}</span>`).join('')}${bad.map(c=>`<span class="no">${esc(c.d)}</span>`).join('')}${unk.length?`<span class="q">${unk.length} criteria open</span>`:''}</div>
+  <div class="pj-f">${s==='new'?`<button class="btn2" data-act="short" data-id="${p.id}" type="button">Shortlist</button><button class="btn2" data-act="pass" data-id="${p.id}" type="button">Pass</button>`:`<span class="stp">${FLOWN[s]}</span>`}<span class="sp"></span><button class="btn2 pri" data-act="open" data-id="${p.id}" type="button">Open review →</button></div></article>`}
+function renderFeed(){
+  const mt=match(),c=clarity();
+  if(c.level===0)return `<div class="empty"><b style="color:var(--ink);font-weight:500">Screening has not started.</b><br>Tell the agent where, what and how much you invest. Matches appear here as you answer.</div>`;
+  const nm=x=>stOf(x.p.id);
+  const sets={all:mt.m.filter(x=>nm(x)!=='passed'),new:mt.m.filter(x=>nm(x)==='new'&&x.p.age<=7),short:mt.m.filter(x=>nm(x)!=='new'&&nm(x)!=='passed'),near:mt.near.filter(x=>nm(x)!=='passed'),passed:mt.all.filter(x=>nm(x)==='passed')};
+  const lab=[['all','Matching'],['new','New this week'],['short','In progress'],['near','Close'],['passed','Passed']];
+  const list=sets[filter]||sets.all;
+  return `<p class="note-line">Ranked by fit with your mandate. I recommend, you decide. Nothing goes to a sponsor without your confirmation. Projects are fictional examples.</p>
+  <div class="fseg">${lab.map(([k,l])=>`<button data-act="filter" data-f="${k}" aria-pressed="${filter===k}" type="button">${l} <b>${sets[k].length}</b></button>`).join('')}</div>
+  ${list.length?list.slice(0,20).map(pjCard).join(''):`<div class="empty">Nothing here yet.${filter==='near'?' Projects that miss only one soft criterion appear here.':''}</div>`}`}
+function renderDeal(){
+  if(!sel)return `<div class="empty">Pick a project in Matches to review it here: fit with your mandate, numbers, flags, data room and questions for the sponsor.</div>`;
+  const p=byId(sel),x=evalP(p),s=stOf(p.id),st=P[p.id]||{qs:[]},fl=flagsOf(p),docs=docState(p),room=['room','qa','answered','decision'].includes(s);
+  const qs=fl.map(f=>f.q).concat(['What is the exit route if sales slow by six months?']).slice(0,4);
+  const good=x.c.filter(c=>c.r==='pass').slice(0,2).map(c=>c.d);
+  const read=[];if(good.length)read.push('Strengths: '+good.join('; ')+'.');
+  {const sx=sponsorOf(p),lx=spLevel(sx);read.push(`Sponsor: ${NOWY-sx.founded} years on market, ${sx.delivered} projects delivered, ${lx[0].toLowerCase()}.`)}read.push(fl.length?'Concerns: '+fl.map(f=>f.t.toLowerCase()).join('; ')+'.':'No major flags against your mandate.');
+  const miss=docs.find(d=>!d.ok);read.push(miss?`To verify: ${miss.d.toLowerCase()} is missing from the data room.`:'The data room looks complete.');
+  const money=[['Instrument',INS[p.ins]],['Ask',eur(p.ask)],[p.ins==='equity'?'Equity share':'LTC',pc(p.ltc)],['Total cost',eur(p.cost)],['Sales value (GDV)',eur(p.gdv)],['Developer margin',pc(p.margin)],[p.ins==='equity'?'Target IRR':'Interest',p.ret+'%'],['Duration',p.term+' months'],['Permit',LICN[p.lic]],['Units',p.units+(p.pre!=null?' · '+pc(p.pre)+' pre-sold':'')],['Sponsor','Sponsor '+p.sp+' · '+plural(p.track,'project')+' delivered'],['Posted',p.age?p.age+' days ago':'Today']];
+  const acts=[];
+  if(s==='new')acts.push(`<button class="btn2" data-act="short" data-id="${p.id}" type="button">Shortlist</button><button class="btn2 pri" data-act="interest" data-id="${p.id}" type="button">Express interest</button><button class="btn2" data-act="pass" data-id="${p.id}" type="button">Pass</button>`);
+  if(s==='short')acts.push(`<button class="btn2 pri" data-act="interest" data-id="${p.id}" type="button">Express interest</button><button class="btn2" data-act="pass" data-id="${p.id}" type="button">Pass</button>`);
+  if(s==='interest'){const ok=A.decl&&A.kyc;
+    if(!ok)acts.push(`<div style="flex:1 0 100%;border:1px solid var(--plan);border-radius:12px;padding:10px 12px;background:var(--plan-soft);display:grid;gap:8px"><b style="font-weight:500">Before you sign the NDA, two quick steps (simulated)</b><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="pill ${A.decl?'good':''}">${A.decl?'✓ ':'1 '}Qualified investor declaration</span>${A.decl?'':`<button class="btn2 plan" data-act="decl" type="button">Declare I am a qualified investor</button>`}</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="pill ${A.kyc?'good':''}">${A.kyc?'✓ ':'2 '}Identity check</span>${A.kyc?'':`<button class="btn2 ${A.decl?'plan':''}" data-act="kyc" type="button" ${A.decl?'':'disabled'}>Run identity check</button>`}</div></div>`);
+    acts.push(`<button class="btn2 plan" data-act="nda" data-id="${p.id}" type="button" ${ok?'':'disabled'}>Sign NDA and open the data room</button><button class="btn2" data-act="pass" data-id="${p.id}" type="button">Pass</button>`)}
+  if(s==='room')acts.push(`<button class="btn2 plan" data-act="sendq" data-id="${p.id}" type="button">Send ${plural((st.qs&&st.qs.length)||0,'question')} to the sponsor</button>`);
+  if(s==='qa')acts.push(`<button class="btn2" data-act="simr" data-id="${p.id}" type="button">Simulate the sponsor’s answers</button>`);
+  if(s==='answered')acts.push(`<button class="btn2 plan" data-act="decide" data-id="${p.id}" type="button">Request a term sheet discussion</button><button class="btn2" data-act="pass" data-id="${p.id}" type="button">Pass</button>`);
+  if(s==='decision')acts.push(`<span class="pill good">Introduction requested</span>`);
+  if(s==='passed')acts.push(`<button class="btn2" data-act="short" data-id="${p.id}" type="button">Reopen</button>`);
+  return `<div class="tz"><div class="tz-h"><span class="mono">${p.id} · ${esc(pname(p))}</span><span class="pill ${x.bucket==='match'?'':'plan'}">Fit ${x.fit}%</span></div>
+  <div class="tz-b"><h3>${esc(pname(p))}, ${INS[p.ins].toLowerCase()} ${eur(p.ask)}</h3>${flowBar(p.id)}
+  <div class="tz-grid">${money.map(m=>`<div><span>${m[0]}</span><span>${esc(m[1])}</span></div>`).join('')}</div></div>
+  <div class="tz-f"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${acts.join('')}</div>${s==='passed'?`<div class="chips"><span class="note-line">Tell the agent why, so it learns:</span>${['Price','Sponsor','Risk','Not my mandate'].map(r=>`<button class="chip ${st.reason===r?'doc':''}" data-act="reason" data-id="${p.id}" data-r="${r}" type="button">${r}</button>`).join('')}</div>`:''}</div></div>
+  <div class="cols2"><div class="box"><h3>Fit with your mandate</h3>${x.c.length?x.c.map(c=>`<div class="ck"><i class="${c.r==='pass'?'pass':c.r==='fail'?'fail':'unk'}">${c.r==='pass'?'✓':c.r==='fail'?'✕':'?'}</i><span>${esc(c.l)} <em>· ${esc(c.d)}</em></span></div>`).join(''):'<span class="muted">Set your mandate to see the check.</span>'}</div>
+  <div class="box"><h3>Agent’s read</h3><ul style="display:grid;gap:8px">${read.map(r=>`<li style="display:block;font-size:13.5px">${esc(r)}</li>`).join('')}</ul></div></div>
+  <div class="sec"><div class="sec-h"><h3>Sponsor</h3><span class="mono muted">${room?'Identity revealed under the NDA':'Anonymous until the NDA'}</span></div><div class="content" style="padding:12px;display:grid;gap:8px">${spCard(sponsorOf(p),room)}${known('track')?`<p class="note-line">${p.track>=V.track?'Meets':'Below'} your requirement of ${V.track}+ delivered projects.</p>`:''}</div></div>
+  <div class="sec"><div class="sec-h"><h3>Data room</h3><span class="mono muted">${room?'Open':'Locked until you sign the NDA'}</span></div><div class="doc-list" style="border:0;border-radius:0">${docs.map(d=>`<div class="doc-row"><span>${d.d}</span><span class="${d.ok?'':'muted'}">${room?(d.ok?'Received':'Missing, requested by agent'):'Hidden'}</span><span class="lk">${room?'':'Locked'}</span></div>`).join('')}</div></div>
+  <div class="sec"><div class="sec-h"><h3>Questions for the sponsor</h3><span class="mono muted">Drafted by the agent · you approve</span></div><div class="content" style="padding:12px">
+   ${['room','qa','answered','decision'].includes(s)||s==='interest'||s==='short'||s==='new'?`<div class="qs">${qs.map((q,i)=>{const sent=['qa','answered','decision'].includes(s);const on=sent?(st.qs||[]).includes(i):(st.qs||[]).includes(i);return `<label><input type="checkbox" ${on?'checked':''} ${sent||s!=='room'?'disabled':''} data-act="qchk" data-id="${p.id}" data-i="${i}"><span>${esc(q)}${s==='answered'||s==='decision'?`<div class="qa-a">${on?'Sponsor: '+['Confirmed in writing, uploaded to the data room.','Documents attached. Fallback plan shared.','Will confirm after the next site meeting.','Provided references for two comparable projects.'][i%4]:''}</div>`:''}</span></label>`}).join('')}</div>
+   <p class="note-line" style="margin-top:8px">${s==='room'?'Tick the questions to send, then confirm above.':s==='qa'?'Sent. Waiting for the sponsor.':s==='answered'||s==='decision'?'':'Questions unlock after the NDA and the data room.'}</p>`:''}
+  </div></div>`}
+function renderPipe(){
+  const cols=[['Shortlisted',['short','interest']],['Diligence',['room','qa','answered']],['Decision',['decision']],['Passed',['passed']]];
+  const items=Object.keys(P).filter(id=>P[id].status!=='new');
+  if(!items.length)return `<div class="empty">Your pipeline is empty. Shortlist a project in Matches to start.</div>`;
+  return `<p class="note-line">Every move is yours. The agent prepares the next step and waits for your confirmation.</p><div class="board">${cols.map(([n,ss])=>{const l=items.filter(id=>ss.includes(P[id].status));return `<div class="bcol"><h4>${n}<span>${l.length}</span></h4>${l.map(id=>{const p=byId(id);return `<button class="bcard" style="text-align:left;width:100%" data-act="open" data-id="${id}" type="button"><b>${esc(pname(p))}</b><span>${eur(p.ask)} · ${FLOWN[P[id].status]}</span></button>`}).join('')}</div>`}).join('')}</div>`}
+function renderMandate(){
+  const mt=match(),sum=[];
+  if(V.type)sum.push(V.type==='priv'?'private investor':'institutional lender');
+  const bits=['ins','geo','asset','tk','stage'].filter(known).map(k=>({ins:'writes '+fmt('ins').toLowerCase(),geo:'in '+fmt('geo'),asset:'for '+fmt('asset').toLowerCase(),tk:'ticket '+fmt('tk'),stage:fmt('stage').toLowerCase()}[k]));
+  return `<p class="note-line">${bits.length?'I look for: '+esc((sum.concat(bits)).join(', '))+'.':'The mandate is empty. Answer in the chat and it fills here.'}</p>`+SECS.map(([id,name])=>{
+    const fs=F.filter(f=>f.s===id),done=fs.filter(f=>STt[f.k]==='filled'||STt[f.k]==='na').length;
+    return `<div class="sec" id="s-${id}"><div class="sec-h"><h3>${name}</h3><span class="bar"><i style="width:${done/fs.length*100}%"></i></span><span class="mono muted">${done}/${fs.length}</span></div>`+fs.map(f=>{
+      const st=STt[f.k],v=fmt(f.k),ic=st==='filled'?'f':st==='na'?'':st==='unknown'?'u':'';
+      return `<div class="row ${justSaved===f.k?'flash':''}" id="f-${f.k}"><span class="ic ${ic}">${st==='filled'?'✓':st==='unknown'?'!':''}</span><span class="lab">${f.l}</span><span class="val ${v?'':'empty'}">${v?esc(v):st==='unknown'?'Not sure yet':'Not answered'}${mt.unlock[f.k]?`<span class="gap">Relaxing this adds ${plural(mt.unlock[f.k],'project')}</span>`:''}</span>${st==='na'?'<span></span>':`<button class="act" data-act="ask" data-k="${f.k}" type="button">${st==='filled'?'Change':'Answer'}</button>`}</div>`}).join('')+'</div>'}).join('')}
+let justSaved=null;
+function renderMain(){
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.t===tab));
+  renderKpis();
+  $('#content').innerHTML=tab==='feed'?renderFeed():tab==='deal'?renderDeal():tab==='pipe'?renderPipe():renderMandate();
+  save()}
+
+/* proposals: the agent recommends, the human confirms */
+function props(){
+  const out=[],mt=match();
+  const top=mt.m.find(x=>stOf(x.p.id)==='new'&&x.fit>=80);
+  if(top)out.push({id:'sl:'+top.p.id,h:`Shortlist ${top.p.id} · ${pname(top.p)}`,d:`Fit ${top.fit}% and nothing outside your mandate.`,a:'short',pid:top.p.id,b:'Approve'});
+  Object.keys(P).forEach(id=>{const s=P[id].status,p=byId(id);
+    if(s==='interest')out.push({id:'nda:'+id,h:`Sign the NDA for ${id}`,d:'Opens the data room. Needs your investor declaration and identity check.',a:'nda',pid:id,b:'Sign NDA'});
+    if(s==='room'&&(P[id].qs||[]).length)out.push({id:'q:'+id,h:`Send ${plural(P[id].qs.length,'question')} to the sponsor of ${id}`,d:'Drafted from the flags I found.',a:'sendq',pid:id,b:'Send'});
+    if(s==='answered')out.push({id:'ts:'+id,h:`Request a term sheet discussion for ${id}`,d:'Answers are in. I recommend a call with the sponsor.',a:'decide',pid:id,b:'Request'})});
+  return out.filter(x=>!dismissed.includes(x.id)).slice(0,4)}
+function renderReady(){
+  const c=clarity(),mt=match(),C=2*Math.PI*40,off=C*(1-c.score/100),pr=props();
+  const hints=Object.entries(mt.unlock).sort((a,b)=>b[1]-a[1]).slice(0,2),open=F.filter(f=>open_(f.k)).length;
+  const acc=[['Qualified investor declaration','You confirm you invest in your own name or for a firm and understand the risks.',A.decl,'decl','Declare'],['Identity and source-of-funds check','Simulated here. The full product uses a regulated provider.',A.kyc,'kyc','Run check']];
+  $('#ready').innerHTML=`<div class="verdict"><div class="vtop"><div class="ring"><svg viewBox="0 0 92 92"><circle cx="46" cy="46" r="40" fill="none" stroke="var(--line)" stroke-width="7"/><circle cx="46" cy="46" r="40" fill="none" stroke="var(--plan)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}"/></svg><div class="n">${c.score}</div></div>
+  <div class="vtxt"><span class="mono muted">Mandate clarity</span><h2>${LEVEL[c.level]}</h2><span class="note-line">Draft index, not a rating</span></div></div>
+  <div class="ladder">${['Mandate','Screening','Sharp','Access'].map((n,i)=>`<div class="${(i===0&&c.score>0)||(i===1&&c.level>=1)||(i===2&&c.level>=2)||(i===3&&A.decl&&A.kyc)?'on':''}"><i></i>${n}</div>`).join('')}</div></div>
+  <div class="blk"><h3>Waiting for your approval <span>${pr.length}</span></h3>${pr.length?pr.map(x=>`<div class="item todo"><span class="n">!</span><div><b>${esc(x.h)}</b><p style="font-size:12.5px;color:var(--ink-2)">${esc(x.d)}</p><div style="display:flex;gap:6px;margin-top:6px"><button class="btn2 pri" data-act="prop" data-id="${x.id}" type="button">${x.b}</button><button class="btn2" data-act="dismiss" data-id="${x.id}" type="button">Not now</button></div></div></div>`).join(''):'<p class="note-line">Nothing waiting. I will propose the next step when there is one.</p>'}</div>
+  <div class="blk"><h3>Sharpen your mandate</h3>${hints.map(([k,n])=>`<button class="item" data-act="ask" data-k="${k}" type="button"><b>Relax “${esc(FK[k].l)}”</b><span class="pill plan">+${n}</span><p>${plural(n,'project')} miss only on this criterion.</p></button>`).join('')}${open?`<p class="note-line">${open} open ${open===1?'criterion':'criteria'}. Open criteria never exclude a project.</p>`:''}${!hints.length&&!open?'<p class="note-line">Nothing to sharpen right now.</p>':''}</div>
+  <div class="blk"><h3>Access <span>Prototype</span></h3>${acc.map((a,i)=>`<div class="acc ${a[2]?'ok':''}"><span class="n">${a[2]?'✓':i+1}</span><b style="font-weight:500">${a[0]}</b>${a[2]?'<span class="pill">Done</span>':`<button class="btn2" data-act="${a[3]}" type="button">${a[4]}</button>`}<small>${a[1]}</small></div>`).join('')}<div class="acc"><span class="n">3</span><b style="font-weight:500">NDA for each project</b><span class="stp muted">${Object.values(P).filter(p=>['room','qa','answered','decision'].includes(p.status)).length} signed</span><small>Signed per project. Opens that data room only.</small></div></div>
+  <div class="blk"><h3>Agent log</h3><div class="logl">${LOG.length?LOG.slice(0,6).map(l=>`<div><time>${String(new Date(l.at).getHours()).padStart(2,'0')}:${String(new Date(l.at).getMinutes()).padStart(2,'0')}</time><span>${esc(l.t)}</span></div>`).join(''):'<span class="note-line">No actions yet.</span>'}</div></div>
+  <p class="disc">Prototype with fictional projects. The agent recommends and prepares. You confirm every step. Nothing is sent or signed for real. Cobuildy is an introducer and does not give investment advice.</p>`}
+function renderAll(){renderStages();renderStrip();renderChat();renderMain();renderReady()}
+
+/* ---------- pipeline actions (all simulated, all confirmed by a click) ---------- */
+function openDeal(id){sel=id;tab='deal';renderMain();if(innerWidth<=1180)setView('main')}
+function needAccess(){if(A.decl&&A.kyc)return false;toast('Complete the two access steps first');return true}
+function act(a,id){
+  const p=byId(id);
+  if(a==='short'){pset(id,{status:'short'});log(`Shortlisted ${id}`)}
+  else if(a==='pass'){pset(id,{status:'passed'});log(`Passed on ${id}`)}
+  else if(a==='interest'){pset(id,{status:'interest'});log(`Interest registered for ${id}. The sponsor sees your mandate summary only after the NDA.`)}
+  else if(a==='nda'){if(needAccess()){renderReady();return}pset(id,{status:'room',qs:flagsOf(p).concat([1]).slice(0,4).map((_,i)=>i)});log(`NDA signed for ${id}. Data room open.`)}
+  else if(a==='sendq'){if(!(P[id].qs||[]).length){toast('Tick at least one question');return}pset(id,{status:'qa'});log(`${plural(P[id].qs.length,'question')} sent to the sponsor of ${id}`)}
+  else if(a==='simr'){pset(id,{status:'answered'});log(`Sponsor of ${id} answered`)}
+  else if(a==='decide'){pset(id,{status:'decision'});log(`Term sheet discussion requested for ${id}. Cobuildy arranges the call.`)}
+  renderAll()}
+
+/* ---------- presets ---------- */
+function resetState(){V={};STt={};M=[];cur=null;tmp=[];P={};A={decl:false,kyc:false};LOG=[];dismissed=[];sel=null;filter='all';tab='feed'}
+async function preset(kind){
+  resetState();busy=true;isTyping=false;
+  if(kind==='priv'){setF('type','priv');setF('geo',['CS','LIS']);setF('asset',['RES','BTR']);setF('ins',['mezz','equity']);setF('tk',{lo:1e6,hi:3e6});setF('stage',1);setF('ltc',.7);setF('ret',12);setF('term',36);
+    M.push({r:'a',t:'Hi, I am your Cobuildy agent. Tell me where, what and how much you invest. I screen live projects against your mandate and you decide what to do with them.',saved:[]},{r:'u',t:'I am a family office. Mezzanine and equity in Costa del Sol and Lisbon, residential and build-to-rent, tickets of €1–3M, permit at least submitted.'},{r:'a',t:'Thanks, I saved your regions, asset types, instruments, ticket size and stage. I am screening now. Two more questions will sharpen the matches.',saved:savedChips(['geo','asset','ins','tk','stage'])})}
+  else{setF('type','inst');setF('geo',['CS','BCN','MAD','LIS']);setF('asset',['RES','BTR']);setF('ins',['senior']);setF('tk',{lo:3e6,hi:1e7});setF('stage',2);setF('ltc',.7);setF('ret',9);setF('term',24);setF('track',3);setF('margin',.18);
+    M.push({r:'a',t:'Hi, I am your Cobuildy agent. Tell me where, what and how much you invest. I screen live projects against your mandate and you decide what to do with them.',saved:[]},{r:'u',t:'We are a credit fund. Senior loans in Costa del Sol, Barcelona, Madrid and Lisbon, residential and build-to-rent, tickets of €3–10M, permit granted only, LTC up to 70%, return at least 9%, up to 24 months, sponsors with 3+ projects.'},{r:'a',t:'Thanks, your mandate is almost complete. I am screening now.',saved:savedChips(['geo','asset','ins','tk','stage','ltc','ret','term','track'])})}
+  tab='feed';busy=false;renderAll();await ask(nextField()?nextField().k:null);renderAll()}
+async function scratch(){
+  resetState();busy=true;isTyping=false;
+  M.push({r:'a',t:'Hi, I am your Cobuildy agent. Tell me about your mandate in your own words, or answer one question at a time. I screen live projects as we go. I recommend, you decide.',saved:[]});
+  renderAll();await ask('type');busy=false;renderAll()}
+
+/* ---------- persistence ---------- */
+const KEY='cobuildy-inv-ws-v1';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({V,STt,M,cur,tab,sel,filter,P,A,LOG,dismissed}))}catch(_){}}
+function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'null');if(!j||!j.STt||!j.M)return false;
+  V=j.V||{};STt=j.STt;M=j.M;cur=j.cur||null;tab=j.tab||'feed';sel=j.sel||null;filter=j.filter||'all';P=j.P||{};A=j.A||{decl:false,kyc:false};LOG=j.LOG||[];dismissed=j.dismissed||[];return true}catch(_){return false}}
+
+/* ---------- events ---------- */
+function setView(v){$('#app').dataset.view=v;document.querySelectorAll('.vnav button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===v))}
+function send(){const t=$('#inp').value.trim();if(!t||busy)return;$('#inp').value='';answer(t,null)}
+$('#inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+document.addEventListener('change',e=>{const b=e.target.closest('[data-act="qchk"]');if(!b)return;const id=b.dataset.id,i=+b.dataset.i,q=new Set(P[id].qs||[]);b.checked?q.add(i):q.delete(i);pset(id,{qs:[...q]});renderMain();renderReady()});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,id=b.dataset.id;
+  if(a==='tab'){tab=b.dataset.t;renderMain();if(innerWidth<=1180)setView('main')}
+  else if(a==='view')setView(b.dataset.v);
+  else if(a==='send')send();
+  else if(a==='chip'){const c=curChips()[+b.dataset.i];if(!c||busy)return;
+    if(c.go==='top'){const t=match().m[0];if(t)openDeal(t.p.id);else toast('No matches yet')}
+    else if(c.go==='near'){filter='near';tab='feed';renderMain();if(innerWidth<=1180)setView('main')}
+    else if(c.go==='change')answer('Change my mandate',c);
+    else if(c.go==='cont'){if(tmp.length){const f=FK[cur];answer(f.chips().filter(x=>tmp.includes(x.v)).map(x=>x.l).join(', '),{v:[...tmp]})}}
+    else if(FK[cur]&&FK[cur].multi&&c.v!==undefined){tmp=tmp.includes(c.v)?tmp.filter(x=>x!==c.v):[...tmp,c.v];renderChat()}
+    else answer(c.l,c)}
+  else if(a==='jump'){tab='mandate';renderMain();if(innerWidth<=1180)setView('main');const r=$('#f-'+b.dataset.k);if(r){r.scrollIntoView({block:'center',behavior:'smooth'});justSaved=b.dataset.k;r.classList.add('flash');setTimeout(()=>justSaved=null,2400)}}
+  else if(a==='ask'){if(busy)return;if(innerWidth<=1180)setView('chat');busy=true;tmp=[];const k=b.dataset.k;delete STt[k];renderChat();ask(k,'Let’s update this one.').then(()=>{busy=false;renderAll()})}
+  else if(a==='open')openDeal(id);
+  else if(['short','pass','interest','nda','sendq','simr','decide'].includes(a))act(a,id);
+  else if(a==='filter'){filter=b.dataset.f;renderMain()}
+  else if(a==='reason'){pset(id,{reason:b.dataset.r});log(`Noted why you passed on ${id}: ${b.dataset.r.toLowerCase()}. I will weigh this in future matches.`);renderAll()}
+  else if(a==='prop'){const x=props().find(y=>y.id===id);if(x)act(x.a,x.pid)}
+  else if(a==='dismiss'){dismissed.push(id);renderAll()}
+  else if(a==='decl'){A.decl=true;log('Qualified investor declaration confirmed');renderAll()}
+  else if(a==='kyc'){if(!A.decl){toast('Confirm the declaration first');return}A.kyc=true;log('Identity check passed (simulated)');renderAll()}
+  else if(a==='presetP')preset('priv');
+  else if(a==='presetI')preset('inst');
+  else if(a==='reset')scratch();
+});
+if(load()){busy=false;renderAll()}else preset('priv');
+</script>
