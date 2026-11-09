@@ -42,4 +42,4 @@ Vite + React + TypeScript SPA talking to Supabase directly (RLS + RPC, no server
 cd web && cp .env.example .env.local   # URL + publishable key
 npm install && npm run dev             # npm test, npm run build
 ```
-Hosting: Vercel or Cloudflare Pages, root `web/`, build `npm run build`, output `dist`. In Supabase Auth set Site URL and Redirect URLs to the deployed origin. Sign-in is a magic link; registration needs an approved invitation (Admin → Invitations). Invitation emails are not sent by the app yet.
+Hosting: Cloudflare Workers (static assets, see web/wrangler.jsonc) or Vercel, root `web/`, build `npm run build`, output `dist`. In Supabase Auth set Site URL and Redirect URLs to the deployed origin. Sign-in is a magic link; registration needs an approved invitation (Admin → Invitations). Invitation emails are not sent by the app yet.
