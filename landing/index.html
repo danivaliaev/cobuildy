@@ -786,7 +786,7 @@ $('su').addEventListener('submit',async e=>{
     const r=await fetch(SB_URL+'/rest/v1/access_requests',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
       body:JSON.stringify({name:n,email:m,role:role==='dev'?'developer':'investor',context:ctxText(role).join(' | ').slice(0,500)})});
     if(!r.ok&&r.status!==409)throw new Error('http '+r.status);
-  }catch(err){btn.disabled=false;$('su-err').textContent='Something went wrong. Please try again or write to hello@cobuildy.com.';$('su-err').hidden=false;return}
+  }catch(err){btn.disabled=false;$('su-err').textContent='Something went wrong. Please try again or write to info@cobuildy.com.';$('su-err').hidden=false;return}
   btn.disabled=false;$('dn-name').textContent=n.split(' ')[0];
   $('dn-steps').innerHTML=['We review your request, usually within one working day','You receive an email with a sign-in link','You sign in and continue with the details you entered here'].map(x=>`<li>${x}</li>`).join('');
   const t=ctxText(role);$('dn-carry').hidden=false;$('dn-carry').innerHTML='<span class="mono">Saved from this page</span>'+t.map(x=>`<div>${x}</div>`).join('');
