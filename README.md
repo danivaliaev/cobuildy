@@ -43,3 +43,9 @@ cd web && cp .env.example .env.local   # URL + publishable key
 npm install && npm run dev             # npm test, npm run build
 ```
 Hosting: Cloudflare Workers (static assets, see web/wrangler.jsonc) or Vercel, root `web/`, build `npm run build`, output `dist`. In Supabase Auth set Site URL and Redirect URLs to the deployed origin. Sign-in is a magic link; registration needs an approved invitation (Admin → Invitations). Invitation emails are not sent by the app yet.
+
+## AI agent (project chat)
+
+`supabase/functions/agent-chat` is an Edge Function that calls the Anthropic API with the caller's own JWT, so row-level security applies. It never writes to the database: it returns proposed field changes and the web app saves them only after the person confirms. Usage is logged in `agent_calls` (daily limit `AGENT_DAILY_LIMIT`, default 100).
+
+Secrets (Supabase → Edge Functions → Secrets): `ANTHROPIC_API_KEY` (required), `AGENT_MODEL` (optional, default `claude-sonnet-5-5`).

@@ -4,6 +4,7 @@ import { supabase, rpc } from '../lib/supabase'
 import { Checks, Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
 import { eur, fromNum, toNum } from '../lib/format'
 import { readiness } from '../lib/readiness'
+import { AgentChat } from '../components/AgentChat'
 import { ASSET, GEO, INSTRUMENT, LICENSE, STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
 const DOC_KINDS = ['Planning permit', 'Budget & cost plan', 'Sales plan', 'Valuation', 'Corporate documents', 'Other']
@@ -85,6 +86,8 @@ export function ProjectPage() {
         {p.status === 'teaser_review' && <span className="muted">Cobuildy is reviewing your teaser. Matching investors can be contacted once it is approved.</span>}
         <ErrorLine error={submit.error} />
       </section>
+
+      <AgentChat projectId={p.id} readOnly={!editable} onApplied={proj.reload} />
 
       <section className="card">
         <h2>Project details</h2>

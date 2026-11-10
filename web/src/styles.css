@@ -27,3 +27,9 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px 20px}.kv div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding:4px 0;font-size:14px}.kv span:first-child{color:var(--ink-2)}
 .login{min-height:100vh;display:grid;place-items:center;padding:24px}.login .card{width:min(440px,100%);padding:28px}
 .q{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--soft);font-size:14px}.q.a{background:var(--plan-soft);border-color:transparent}
+.chat{display:grid;gap:10px;max-height:420px;overflow-y:auto;padding:2px}
+.bub{max-width:86%;padding:10px 13px;border-radius:14px;font-size:14.5px;line-height:1.45;white-space:pre-wrap;display:grid;gap:8px}
+.bub.assistant{background:var(--soft);border:1px solid var(--line);justify-self:start}
+.bub.user{background:var(--plan-soft);justify-self:end}
+.prop{border:1px dashed var(--plan);border-radius:12px;padding:10px 12px;background:var(--surface);white-space:normal;display:grid;gap:6px}
+.prop ul{margin:0;padding-left:18px}
