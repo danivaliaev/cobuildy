@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
 import { configured } from './lib/supabase'
@@ -32,11 +33,20 @@ function Shell({ children }: { children: React.ReactNode }) {
   )
 }
 
+/** Signed-out visitors see the landing page; /login is the sign-in form. A returning magic link keeps its parameters and is not redirected. */
+function SignedOut() {
+  const { pathname, search, hash } = useLocation()
+  const returning = /[?&#](code|access_token|error)=/.test(search + hash)
+  const toLanding = pathname !== '/login' && !returning
+  useEffect(() => { if (toLanding) window.location.replace('/landing.html') }, [toLanding])
+  return toLanding ? <div className="login"><span className="muted">Loading…</span></div> : <Login />
+}
+
 export function App() {
   const { loading, session, profile } = useAuth()
   if (!configured) return <div className="login"><div className="card"><h2>Configuration missing</h2><p className="muted">Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY. See web/.env.example.</p></div></div>
   if (loading) return <div className="login"><span className="muted">Loading…</span></div>
-  if (!session) return <Login />
+  if (!session) return <SignedOut />
   if (!profile) return <div className="login"><div className="card"><h2>No access yet</h2><p className="muted">Your account has no role. Ask Cobuildy to check your invitation.</p></div></div>
   const home = HOME[profile.role]
   return (
