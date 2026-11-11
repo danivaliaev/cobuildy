@@ -25,7 +25,8 @@ function localAnswer(text: string, cur: string | null): { updates: Update[]; rep
     const n = firstInt(text)
     return n == null ? { updates: [], reply: 'I could not read a number. Try 18.' } : { updates: [{ key: d.key, status: 'filled', display: `${n} months`, amount: n }], reply: 'Saved.' }
   }
-  return { updates: [{ key: d.key, status: 'filled', display: text.slice(0, 80) }], reply: 'Saved as you wrote it. Tell me if part of it is still a gap.' }
+  // Free text cannot be understood without the agent, so nothing is saved rather than guessing which field it belongs to.
+  return { updates: [], reply: 'The agent is offline right now, so I could not read that. Pick one of the suggested answers, or try again in a minute.' }
 }
 
 export function ProfileChat({ projectId, fields, commit, editable, askReq }: {
