@@ -176,7 +176,7 @@ Deno.serve(async (req: Request) => {
   // This read goes through row-level security: only the project's owner (or staff) gets a row.
   const { data: project, error: pe } = await sb.from('projects').select('id,status,profile').eq('id', body.project_id).maybeSingle()
   if (pe || !project) return json({ error: 'Project not found.' }, 404)
-  if (project.status !== 'draft') return json({ error: 'This project is no longer a draft.' }, 409)
+  if (['discarded', 'closed_won', 'closed_lost'].includes(project.status)) return json({ error: 'This project is closed.' }, 409)
 
   const { count: today } = await sb.from('agent_calls').select('id', { count: 'exact', head: true })
     .eq('user_id', u.user.id).gte('created_at', new Date(Date.now() - 864e5).toISOString())
