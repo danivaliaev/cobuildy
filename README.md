@@ -12,7 +12,7 @@ An AI agent works for the developer and for the investor. Humans approve every s
 
 | Rule | Where |
 | --- | --- |
-| Registration only by approved invitation. Nobody can sign up uninvited. | trigger `enforce_invite` on `auth.users` |
+| Anyone can register (Google or email link) and picks developer or investor in `complete_signup`. admin and expert exist only through an approved invitation. | `handle_new_user`, `complete_signup` |
 | Invitation emails go out only after an admin approves them (`approve_invite`). | `invitations.status` |
 | Developers never read the `investors` table. Investor names are hidden until both sides signed the NDA. | RLS + `project_deals()` |
 | Investors see anonymised teasers only for deals sent to them, and the full project only after the NDA. | `list_teasers()`, RLS on `projects` |
@@ -42,7 +42,7 @@ Vite + React + TypeScript SPA talking to Supabase directly (RLS + RPC, no server
 cd web && cp .env.example .env.local   # URL + publishable key
 npm install && npm run dev             # npm test, npm run build
 ```
-Hosting: Cloudflare Workers (static assets, see web/wrangler.jsonc) or Vercel, root `web/`, build `npm run build`, output `dist`. In Supabase Auth set Site URL and Redirect URLs to the deployed origin. Sign-in is a magic link; registration needs an approved invitation (Admin → Invitations). Invitation emails are not sent by the app yet.
+Hosting: Cloudflare Workers (static assets, see web/wrangler.jsonc) or Vercel, root `web/`, build `npm run build`, output `dist`. In Supabase Auth set Site URL and Redirect URLs to the deployed origin. Sign-in is Google or a magic link; new accounts choose a role on first sign-in. Staff roles still need an approved invitation (Admin → Invitations). Google needs an OAuth client whose redirect URI is `https://<project>.supabase.co/auth/v1/callback`, entered under Supabase Auth → Providers → Google. Answers given to the landing agent are kept in the browser and imported into the first project (`web/src/lib/carry.ts`).
 
 ## AI agent (project chat)
 
