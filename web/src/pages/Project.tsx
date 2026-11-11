@@ -65,7 +65,6 @@ export function ProjectPage() {
   if (!proj.data || !fields) return <><ErrorLine error={proj.error} /><Link to="/developer">← Projects</Link></>
   const p = proj.data
   const editable = p.status !== 'discarded' && p.status !== 'closed_won' && p.status !== 'closed_lost'
-  const sent = p.status === 'approved' || p.status === 'live'
   const ask = (key: string) => { setAskReq({ key, n: Date.now() }); document.getElementById('agent-chat')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }
   const fitCount = (matches.data ?? []).filter(m => m.bucket === 'fit').length
   const edit = (key: string, next: FieldState) => commit({ ...fields, [key]: { ...blank(), ...next } })
@@ -74,9 +73,7 @@ export function ProjectPage() {
     <>
       <div className="row"><Link to="/developer">← Projects</Link><span className="sp" /><Pill tone={p.status === 'draft' ? undefined : 'good'}>{p.status.replace('_', ' ')}</Pill></div>
       <h1>{p.code} · {p.title}</h1>
-      {p.status === 'teaser_review' && <span className="muted">Cobuildy is reviewing your teaser. Matching investors can be contacted once it is approved.</span>}
-
-      {sent && <div className="ibanner" role="note"><span className="sp">The teaser is approved. You can keep editing. A change to the key figures (capital, cost, GDV, margin, units, licence, region, asset, instrument) asks you to confirm, because investors who hold this teaser and Cobuildy are notified.</span></div>}
+      {p.status === 'teaser_review' && <div className="ibanner" role="note"><span className="sp">Your teaser is waiting for Cobuildy approval. Matching investors can be contacted once it is approved.</span></div>}
       {confirm && (
         <div className="modal" role="dialog" aria-modal="true" aria-label="Confirm change"><div className="card">
           <h2>Change the teaser figures?</h2>
