@@ -175,7 +175,13 @@ function Board({ fits, onOpen }: { fits: Fit[]; onOpen: (id: string) => void }) 
       <p className="muted">Every move is yours. The developer moves their side, and the agent prepares what is next.</p>
       <div className="board">{PIPE.map(([n, ss]) => {
         const l = items.filter(f => ss.includes(f.t.stage))
-        return <div className="bcol" key={n}><h4>{n}<span>{l.length}</span></h4>{l.map(f => <button key={f.t.deal_id} type="button" className="bcard" onClick={() => onOpen(f.t.deal_id)}><b>{title(f.t)}</b><span>{eur(f.t.ask_eur)} · {STAGE_LABEL[f.t.stage]}</span></button>)}</div>
+        return (
+          <div className={`bcol${n === 'Passed' ? ' off' : ''}`} key={n}>
+            <h4>{n}<span>{l.length}</span></h4>
+            {l.length === 0 && <div className="none">No deals</div>}
+            {l.map(f => <button key={f.t.deal_id} type="button" className="bcard" onClick={() => onOpen(f.t.deal_id)}><b>{title(f.t)}</b><span>{eur(f.t.ask_eur)}</span><span className="st">{STAGE_LABEL[f.t.stage]}</span></button>)}
+          </div>
+        )
       })}</div>
     </section>
   )
