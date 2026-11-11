@@ -57,7 +57,7 @@ async function importDeveloper(userId: string, a: DevA) {
   const { data: existing } = await supabase.from('projects').select('id').eq('owner_id', userId).limit(1)
   if (existing && existing.length) return // never touch an account that already has projects
   const { data: co } = await supabase.from('companies').select('id').eq('owner_id', userId).maybeSingle()
-  const { next } = applyUpdates(emptyFields(), updates, 'form')
+  const { next } = applyUpdates(emptyFields(), updates, 'site')
   const title = [a.as ? ASSET_TEXT[a.as] : 'My project', a.geo ? GEO[a.geo] : ''].filter(Boolean).join(' · ').slice(0, 120)
   const { data: p, error } = await supabase.from('projects').insert({ title, owner_id: userId, company_id: co?.id ?? null, status: 'draft' }).select('id,profile').single()
   if (error || !p) return

@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { supabase, rpc } from '../lib/supabase'
 import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
 import { eur } from '../lib/format'
 import { ProfileChat } from '../components/ProfileChat'
 import { ProfileView } from '../components/ProfileView'
 import { ReadinessPanel } from '../components/ReadinessPanel'
-import { FIELDS, blank, hydrate, patchFor, type FieldState, type Fields } from '../lib/profile'
+import { FIELDS, GATE_NAMES, blank, columnsFor, hydrate, isDone, patchFor, type FieldState, type Fields } from '../lib/profile'
 import { STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
+type Tab = 'profile' | 'investors' | 'room'
 const DOC_KINDS = ['Planning permit', 'Budget & cost plan', 'Sales plan', 'Valuation', 'Corporate documents', 'Other']
 
 export function ProjectPage() {
@@ -28,6 +29,14 @@ export function ProjectPage() {
   const [flash, setFlash] = useState<string[]>([])
   const [askReq, setAskReq] = useState<{ key: string; n: number } | null>(null)
   const submit = useAction(async () => { await proj.reload() })
+  const [sp, setSp] = useSearchParams()
+  const tab: Tab = (['profile', 'investors', 'room'] as const).find(t => t === sp.get('tab')) ?? 'profile'
+  const setTab = (t: Tab) => setSp(t === 'profile' ? {} : { tab: t }, { replace: true })
+  // Investor matches are recalculated shortly after the profile changes, so the numbers on this page follow the answers.
+  const [mk, setMk] = useState('')
+  const cols = fields ? JSON.stringify(columnsFor(fields)) : ''
+  useEffect(() => { const t = setTimeout(() => setMk(cols), 900); return () => clearTimeout(t) }, [cols])
+  const matches = useLoad(() => rpc<Match[]>('match_project', { p_project: id }), [id, mk])
 
   // The profile is loaded once; after that this page is the source of truth and every change is saved straight away.
   useEffect(() => { if (proj.data && !fields) { setFields(hydrate(proj.data)); setDbStage(proj.data.stage) } }, [proj.data, fields])
@@ -50,6 +59,7 @@ export function ProjectPage() {
   const p = proj.data
   const editable = p.status === 'draft'
   const ask = (key: string) => { setAskReq({ key, n: Date.now() }); document.getElementById('agent-chat')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }
+  const fitCount = (matches.data ?? []).filter(m => m.bucket === 'fit').length
   const edit = (key: string, next: FieldState) => commit({ ...fields, [key]: { ...blank(), ...next } })
 
   return (
@@ -58,16 +68,68 @@ export function ProjectPage() {
       <h1>{p.code} · {p.title}</h1>
       {p.status === 'teaser_review' && <span className="muted">Cobuildy is reviewing your teaser. Matching investors can be contacted once it is approved.</span>}
 
+      <MatchBar matches={matches.data} />
+
       <div className="pgrid">
         <div id="agent-chat" className="pcol"><ProfileChat projectId={p.id} fields={fields} commit={commit} editable={editable} askReq={askReq} /></div>
-        <ProfileView fields={fields} flash={flash} editable={editable} onAsk={ask} onEdit={edit} />
-        <ReadinessPanel fields={fields} status={p.status} dbStage={dbStage} onAsk={ask} busy={submit.busy} error={submit.error}
+        <div className="pmain">
+          <div className="tabs" role="tablist">
+            <button type="button" role="tab" className="tab" aria-selected={tab === 'profile'} onClick={() => setTab('profile')}>Project profile</button>
+            <button type="button" role="tab" className="tab" aria-selected={tab === 'investors'} onClick={() => setTab('investors')}>Investors{fitCount > 0 && <em>{fitCount}</em>}</button>
+            <button type="button" role="tab" className="tab" aria-selected={tab === 'room'} onClick={() => setTab('room')}>Data room{(docs.data?.length ?? 0) > 0 && <em>{docs.data?.length}</em>}</button>
+          </div>
+          {tab === 'profile' && <ProfileView fields={fields} flash={flash} editable={editable} onAsk={ask} onEdit={edit} />}
+          {tab === 'investors' && <>
+            <Wave project={p} matches={matches} canSend={p.status === 'approved' || p.status === 'live'} />
+            {(p.status === 'live' || p.status === 'approved') && <Deals project={p} docs={docs.data ?? []} />}
+          </>}
+          {tab === 'room' && <DataRoom projectId={p.id} fields={fields} docs={docs.data ?? []} reload={docs.reload} editable={editable || p.status !== 'discarded'} error={docs.error} />}
+        </div>
+        <ReadinessPanel fields={fields} status={p.status} dbStage={dbStage} onAsk={a => { setTab('profile'); ask(a) }} busy={submit.busy} error={submit.error}
           onSubmit={() => void submit.run(() => rpc('submit_teaser', { p_project: p.id }))} />
       </div>
+    </>
+  )
+}
 
-      <Docs projectId={p.id} docs={docs.data ?? []} reload={docs.reload} editable={editable || p.status !== 'discarded'} error={docs.error} />
-      {(p.status === 'approved' || p.status === 'live') && <Wave project={p} />}
-      {(p.status === 'live' || p.status === 'approved') && <Deals project={p} docs={docs.data ?? []} />}
+const BUCKETS: Array<{ k: Match['bucket']; label: string }> = [
+  { k: 'fit', label: 'Fit' }, { k: 'possible', label: 'Possible' }, { k: 'later', label: 'After actions' }, { k: 'out', label: 'Out' },
+]
+
+/** Where the investor network stands for this project, recalculated as the profile changes. */
+function MatchBar({ matches }: { matches: Match[] | null }) {
+  if (!matches) return null
+  const n = (k: Match['bucket']) => matches.filter(m => m.bucket === k).length
+  const total = matches.length || 1
+  return (
+    <div className="mbar" aria-label="Investor matches">
+      <div className="mbar-t">{BUCKETS.map(b => <i key={b.k} className={`b-${b.k}`} style={{ width: `${(n(b.k) / total) * 100}%` }} />)}</div>
+      <div className="mbar-l">{BUCKETS.map(b => <span key={b.k}><i className={`b-${b.k}`} />{b.label} {n(b.k)}</span>)}<span className="muted">Unknown data never excludes an investor</span></div>
+    </div>
+  )
+}
+
+/** The documents lenders ask for, taken from the profile model, and the documents recorded for this project. */
+function DataRoom({ projectId, fields, docs, reload, editable, error }: { projectId: string; fields: Fields; docs: ProjectDoc[]; reload: () => void | Promise<void>; editable: boolean; error: string | null }) {
+  const need = FIELDS.filter(d => d.doc)
+  const ready = need.filter(d => fields[d.key]?.st === 'filled').length
+  return (
+    <>
+      <section className="card">
+        <div className="row"><h2>Documents lenders ask for</h2><span className="sp" /><span className="mono">{ready}/{need.length} backed by an answer</span></div>
+        <p className="muted">Each document supports a profile answer. A document is marked ready once its answer is recorded; file upload comes next.</p>
+        {need.map(d => {
+          const st = fields[d.key]?.st
+          return (
+            <div className="row" key={d.key}>
+              <Pill tone={st === 'filled' ? 'good' : isDone(fields[d.key]) ? 'warn' : undefined}>{st === 'filled' ? 'Answer recorded' : isDone(fields[d.key]) ? 'Partly' : 'Not yet'}</Pill>
+              <span className="sp">{d.doc}</span>
+              <span className="muted">needed for {GATE_NAMES[d.gate].toLowerCase()}</span>
+            </div>
+          )
+        })}
+      </section>
+      <Docs projectId={projectId} docs={docs} reload={reload} editable={editable} error={error} />
     </>
   )
 }
@@ -94,30 +156,32 @@ function Docs({ projectId, docs, reload, editable, error }: { projectId: string;
   )
 }
 
-function Wave({ project }: { project: Project }) {
-  const m = useLoad(() => rpc<Match[]>('match_project', { p_project: project.id }), [project.id])
+function Wave({ project, matches, canSend }: { project: Project; matches: { data: Match[] | null; error: string | null; reload: () => void | Promise<void> }; canSend: boolean }) {
+  const m = matches
   const [sel, setSel] = useState<string[] | null>(null)
   const act = useAction(async () => { setSel(null); await m.reload() })
   const sendable = (m.data ?? []).filter(x => x.bucket === 'fit' || x.bucket === 'possible')
   const chosen = sel ?? sendable.filter(x => x.bucket === 'fit').map(x => x.investor_id)
   const tone = (b: Match['bucket']) => (b === 'fit' ? 'good' : b === 'possible' ? 'plan' : b === 'later' ? 'warn' : undefined)
+  const shown = (m.data ?? []).filter(x => x.bucket !== 'out').sort((a, b) => b.score - a.score)
   return (
     <section className="card">
       <h2>Investor matches</h2>
       <p className="muted">Hard criteria decide who can see the project; margin, return and track record only rank. Investors stay anonymous to you until the data room opens.</p>
+      {!canSend && <p className="muted">This is a preview that follows your answers. You can send the teaser once Cobuildy has approved it.</p>}
       <ErrorLine error={act.error ?? m.error} />
-      {m.data && m.data.length === 0 ? <Empty>No investors in the network yet.</Empty> : (
+      {m.data && shown.length === 0 ? <Empty>No investor fits yet. Answer more questions or widen the ask.</Empty> : (
         <div className="scrollx"><table>
-          <thead><tr><th /><th>Investor</th><th>Match</th><th>Score</th></tr></thead>
-          <tbody>{m.data?.filter(x => x.bucket !== 'out').sort((a, b) => b.score - a.score).map(x => {
-            const can = x.bucket === 'fit' || x.bucket === 'possible'
+          <thead><tr>{canSend && <th />}<th>Investor</th><th>Match</th><th>Score</th></tr></thead>
+          <tbody>{shown.map(x => {
+            const can = canSend && (x.bucket === 'fit' || x.bucket === 'possible')
             return <tr key={x.investor_id}>
-              <td><input type="checkbox" aria-label={`Select ${x.code}`} disabled={!can} checked={chosen.includes(x.investor_id)} onChange={e => setSel(e.target.checked ? [...chosen, x.investor_id] : chosen.filter(i => i !== x.investor_id))} /></td>
+              {canSend && <td><input type="checkbox" aria-label={`Select ${x.code}`} disabled={!can} checked={chosen.includes(x.investor_id)} onChange={e => setSel(e.target.checked ? [...chosen, x.investor_id] : chosen.filter(i => i !== x.investor_id))} /></td>}
               <td>{x.code}</td><td><Pill tone={tone(x.bucket)}>{x.bucket}</Pill></td><td>{x.score}</td></tr>
           })}</tbody>
         </table></div>
       )}
-      <div className="row"><button className="btn plan" disabled={act.busy || chosen.length === 0} onClick={() => void act.run(() => rpc('launch_wave', { p_project: project.id, p_wave: 1, p_investors: chosen }))}>Send teaser to {chosen.length} investor{chosen.length === 1 ? '' : 's'}</button></div>
+      {canSend && <div className="row"><button className="btn plan" disabled={act.busy || chosen.length === 0} onClick={() => void act.run(() => rpc('launch_wave', { p_project: project.id, p_wave: 1, p_investors: chosen }))}>Send teaser to {chosen.length} investor{chosen.length === 1 ? '' : 's'}</button></div>}
     </section>
   )
 }

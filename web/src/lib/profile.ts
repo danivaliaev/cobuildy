@@ -4,7 +4,7 @@ import type { Project } from './types'
 
 /** The guided project profile: 30 fields in 8 sections, ported from the prototype. Single source: fields.json. */
 export type Status = 'empty' | 'filled' | 'partial' | 'unknown'
-export interface FieldState { st: Status; v: string; n: number | null; src: '' | 'chat' | 'edit' | 'form' }
+export interface FieldState { st: Status; v: string; n: number | null; src: '' | 'chat' | 'edit' | 'form' | 'site' }
 export type Fields = Record<string, FieldState>
 export interface Chip { label: string; value: string; amount?: number; partial: boolean; unknown: boolean; note?: string; task?: string }
 export interface FieldDef {

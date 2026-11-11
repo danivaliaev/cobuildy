@@ -4,7 +4,7 @@ import { ErrorLine } from './ui'
 import { FIELDS, GATE_NAMES, SECTIONS, derived, firstInt, isDone, parseMoney, type FieldDef, type FieldState, type Fields } from '../lib/profile'
 import { errText } from '../lib/supabase'
 
-const SRC: Record<string, string> = { chat: 'You · chat', edit: 'You · edited', form: 'From your earlier entry' }
+const SRC: Record<string, string> = { chat: 'You · chat', edit: 'You · edited', form: 'From your earlier entry', site: 'From the website' }
 
 function Kpis({ f }: { f: Fields }) {
   const d = derived(f)
