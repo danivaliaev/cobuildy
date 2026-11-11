@@ -1,4 +1,4 @@
-import { Navigate, NavLink, Route, Routes } from 'react-router-dom'
+import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
 import { configured } from './lib/supabase'
 import { Login } from './pages/Login'
@@ -12,6 +12,7 @@ const HOME: Record<Role, string> = { admin: '/admin', expert: '/admin', develope
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { profile, session, signOut } = useAuth()
+  const wide = useLocation().pathname.startsWith('/developer/projects/')
   const staff = profile?.role === 'admin' || profile?.role === 'expert'
   return (
     <>
@@ -26,7 +27,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <span className="muted">{session?.user.email}</span>
         <button className="btn sm" type="button" onClick={() => void signOut()}>Sign out</button>
       </header>
-      <main className="wrap">{children}</main>
+      <main className={`wrap${wide ? ' wide' : ''}`}>{children}</main>
     </>
   )
 }

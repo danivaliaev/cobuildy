@@ -1,39 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase, rpc } from '../lib/supabase'
-import { Checks, Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
-import { eur, fromNum, toNum } from '../lib/format'
-import { readiness } from '../lib/readiness'
-import { AgentChat } from '../components/AgentChat'
-import { ASSET, GEO, INSTRUMENT, LICENSE, STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
+import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
+import { eur } from '../lib/format'
+import { ProfileChat } from '../components/ProfileChat'
+import { ProfileView } from '../components/ProfileView'
+import { ReadinessPanel } from '../components/ReadinessPanel'
+import { FIELDS, blank, hydrate, patchFor, type FieldState, type Fields } from '../lib/profile'
+import { STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
 const DOC_KINDS = ['Planning permit', 'Budget & cost plan', 'Sales plan', 'Valuation', 'Corporate documents', 'Other']
-
-interface Form {
-  title: string; geo: string; city: string; asset: string; instrument: string[]; ask: string; cost: string; gdv: string; ltc: string; margin: string
-  license: string; presales: string; units: string; build: string; term: string; ret: string
-}
-const toForm = (p: Project): Form => ({
-  title: p.title, geo: p.geo ?? '', city: p.city ?? '', asset: p.asset ?? '', instrument: p.instrument ?? [],
-  ask: fromNum(p.ask_eur, 1e6), cost: fromNum(p.cost_eur, 1e6), gdv: fromNum(p.gdv_eur, 1e6),
-  ltc: fromNum(p.ltc == null ? null : p.ltc * 100), margin: fromNum(p.margin == null ? null : p.margin * 100),
-  license: p.license ?? '', presales: fromNum(p.presales == null ? null : p.presales * 100), units: fromNum(p.units), build: fromNum(p.build_months),
-  term: fromNum(p.term_months), ret: fromNum(p.expected_return == null ? null : p.expected_return * 100),
-})
-const frac = (s: string) => { const n = toNum(s); return n == null ? null : n / 100 }
-const mil = (s: string) => { const n = toNum(s); return n == null ? null : Math.round(n * 1e6) }
-
-function toRow(f: Form) {
-  const ask = mil(f.ask), cost = mil(f.cost), gdv = mil(f.gdv)
-  // Derived values are filled in only when left blank.
-  const ltc = frac(f.ltc) ?? (ask && cost ? Math.round((ask / cost) * 1000) / 1000 : null)
-  const margin = frac(f.margin) ?? (gdv && cost ? Math.round((gdv / cost - 1) * 1000) / 1000 : null)
-  return {
-    title: f.title.trim(), geo: f.geo || null, city: f.city.trim() || null, asset: f.asset || null, instrument: f.instrument,
-    ask_eur: ask, cost_eur: cost, gdv_eur: gdv, ltc, margin, license: (f.license || null) as Project['license'], presales: frac(f.presales),
-    units: toNum(f.units), build_months: toNum(f.build), term_months: toNum(f.term), expected_return: frac(f.ret),
-  }
-}
 
 export function ProjectPage() {
   const { id = '' } = useParams()
@@ -47,73 +23,47 @@ export function ProjectPage() {
     if (error) throw error
     return data as ProjectDoc[]
   }, [id])
-  const [f, setF] = useState<Form | null>(null)
-  const [saved, setSaved] = useState(false)
-  useEffect(() => { if (proj.data) setF(toForm(proj.data)) }, [proj.data])
-
-  const draftRow = useMemo(() => (f ? toRow(f) : null), [f])
-  const r = useMemo(() => (draftRow ? readiness(draftRow, docs.data?.length ?? 0) : null), [draftRow, docs.data])
-  const save = useAction(async () => { await proj.reload() })
+  const [fields, setFields] = useState<Fields | null>(null)
+  const [dbStage, setDbStage] = useState(0)
+  const [flash, setFlash] = useState<string[]>([])
+  const [askReq, setAskReq] = useState<{ key: string; n: number } | null>(null)
   const submit = useAction(async () => { await proj.reload() })
 
+  // The profile is loaded once; after that this page is the source of truth and every change is saved straight away.
+  useEffect(() => { if (proj.data && !fields) { setFields(hydrate(proj.data)); setDbStage(proj.data.stage) } }, [proj.data, fields])
+
+  const commit = useCallback(async (next: Fields) => {
+    if (!proj.data) return
+    const prev = fields
+    setFields(next)
+    const patch = patchFor(proj.data, next)
+    const { error } = await supabase.from('projects').update(patch).eq('id', id)
+    if (error) { setFields(prev); throw new Error(error.message) }
+    setDbStage(patch.stage)
+    const changed = FIELDS.map(d => d.key).filter(k => prev?.[k]?.v !== next[k]?.v || prev?.[k]?.st !== next[k]?.st)
+    setFlash(changed)
+    setTimeout(() => setFlash([]), 2400)
+  }, [proj.data, fields, id])
+
   if (proj.loading) return <span className="muted">Loading…</span>
-  if (!proj.data || !f || !r || !draftRow) return <><ErrorLine error={proj.error} /><Link to="/developer">← Projects</Link></>
+  if (!proj.data || !fields) return <><ErrorLine error={proj.error} /><Link to="/developer">← Projects</Link></>
   const p = proj.data
   const editable = p.status === 'draft'
-  const set = <K extends keyof Form>(k: K, v: Form[K]) => { setSaved(false); setF({ ...f, [k]: v }) }
-  const inp = (k: keyof Form, label: string, hint?: string) => (
-    <Field label={label + (hint ? ` (${hint})` : '')}><input disabled={!editable} inputMode="decimal" value={f[k] as string} onChange={e => set(k, e.target.value)} /></Field>
-  )
+  const ask = (key: string) => { setAskReq({ key, n: Date.now() }); document.getElementById('agent-chat')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }
+  const edit = (key: string, next: FieldState) => commit({ ...fields, [key]: { ...blank(), ...next } })
 
   return (
     <>
       <div className="row"><Link to="/developer">← Projects</Link><span className="sp" /><Pill tone={p.status === 'draft' ? undefined : 'good'}>{p.status.replace('_', ' ')}</Pill></div>
       <h1>{p.code} · {p.title}</h1>
+      {p.status === 'teaser_review' && <span className="muted">Cobuildy is reviewing your teaser. Matching investors can be contacted once it is approved.</span>}
 
-      <section className="card">
-        <div className="row"><h2>Readiness</h2><span className="sp" /><span className="mono">Stage {r.stage} of 3 · {r.pct}%</span></div>
-        <div className="bar"><i style={{ width: `${r.pct}%` }} /></div>
-        {r.blockers.length > 0 ? (
-          <div className="row">{r.blockers.slice(0, 8).map(b => <Pill key={b.label} tone="warn">{b.label}</Pill>)}</div>
-        ) : <span className="ok">Everything is in place.</span>}
-        {editable && (
-          <div className="row">
-            <button className="btn pri" disabled={submit.busy || r.stage < 1} onClick={() => void submit.run(() => rpc('submit_teaser', { p_project: p.id }))}>Submit teaser for review</button>
-            {r.stage < 1 && <span className="muted">Complete the teaser details first (and save).</span>}
-            {r.stage >= 1 && p.stage < 1 && <span className="muted">Save the project, then submit.</span>}
-          </div>
-        )}
-        {p.status === 'teaser_review' && <span className="muted">Cobuildy is reviewing your teaser. Matching investors can be contacted once it is approved.</span>}
-        <ErrorLine error={submit.error} />
-      </section>
-
-      <AgentChat projectId={p.id} readOnly={!editable} onApplied={proj.reload} />
-
-      <section className="card">
-        <h2>Project details</h2>
-        <div className="grid2">
-          <Field label="Project name"><input disabled={!editable} value={f.title} onChange={e => set('title', e.target.value)} /></Field>
-          <Field label="Region"><select disabled={!editable} value={f.geo} onChange={e => set('geo', e.target.value)}><option value="">Select…</option>{Object.entries(GEO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
-          <Field label="City / town"><input disabled={!editable} value={f.city} onChange={e => set('city', e.target.value)} /></Field>
-          <Field label="Asset type"><select disabled={!editable} value={f.asset} onChange={e => set('asset', e.target.value)}><option value="">Select…</option>{Object.entries(ASSET).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
-          <Field label="Permit"><select disabled={!editable} value={f.license} onChange={e => set('license', e.target.value)}><option value="">Select…</option>{Object.entries(LICENSE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
-        </div>
-        <Field label="Capital instrument sought"><Checks options={INSTRUMENT} value={f.instrument} onChange={v => set('instrument', v)} /></Field>
-        <div className="grid2">
-          {inp('ask', 'Capital sought', '€M')}{inp('cost', 'Total cost', '€M')}{inp('gdv', 'Sales value (GDV)', '€M')}
-          {inp('ltc', 'Loan to cost', '%, blank = ask ÷ cost')}{inp('margin', 'Developer margin', '%, blank = GDV ÷ cost − 1')}
-          {inp('units', 'Units')}{inp('build', 'Build programme', 'months')}{inp('term', 'Loan term', 'months')}
-          {inp('presales', 'Pre-sales', '%')}{inp('ret', 'Return offered', '%')}
-        </div>
-        <ErrorLine error={save.error} />
-        {editable && <div className="row">
-          <button className="btn pri" disabled={save.busy || !f.title.trim()} onClick={() => void save.run(async () => {
-            const { error } = await supabase.from('projects').update(draftRow).eq('id', p.id)
-            if (error) throw error
-            setSaved(true)
-          })}>Save</button>{saved && <span className="ok">Saved</span>}
-        </div>}
-      </section>
+      <div className="pgrid">
+        <div id="agent-chat" className="pcol"><ProfileChat projectId={p.id} fields={fields} commit={commit} editable={editable} askReq={askReq} /></div>
+        <ProfileView fields={fields} flash={flash} editable={editable} onAsk={ask} onEdit={edit} />
+        <ReadinessPanel fields={fields} status={p.status} dbStage={dbStage} onAsk={ask} busy={submit.busy} error={submit.error}
+          onSubmit={() => void submit.run(() => rpc('submit_teaser', { p_project: p.id }))} />
+      </div>
 
       <Docs projectId={p.id} docs={docs.data ?? []} reload={docs.reload} editable={editable || p.status !== 'discarded'} error={docs.error} />
       {(p.status === 'approved' || p.status === 'live') && <Wave project={p} />}

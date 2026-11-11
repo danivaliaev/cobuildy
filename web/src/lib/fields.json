@@ -1,0 +1,953 @@
+{
+ "sections": [
+  {
+   "id": "asset",
+   "title": "Property"
+  },
+  {
+   "id": "land",
+   "title": "Land"
+  },
+  {
+   "id": "dev",
+   "title": "Developer"
+  },
+  {
+   "id": "fin",
+   "title": "Financials"
+  },
+  {
+   "id": "perm",
+   "title": "Permits"
+  },
+  {
+   "id": "build",
+   "title": "Construction"
+  },
+  {
+   "id": "cap",
+   "title": "Capital structure"
+  },
+  {
+   "id": "exit",
+   "title": "Exit strategy"
+  }
+ ],
+ "gates": [
+  "",
+  "Teaser",
+  "Outreach",
+  "Data room"
+ ],
+ "fields": [
+  {
+   "key": "a_type",
+   "section": "asset",
+   "label": "Asset type",
+   "gate": 1,
+   "weight": 1,
+   "kind": "text",
+   "question": "What type of product are you building?",
+   "why": "Sets which lenders and investors are relevant.",
+   "chips": [
+    {
+     "label": "Residential for sale",
+     "value": "Residential for sale",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Build-to-rent",
+     "value": "Build-to-rent",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Hospitality",
+     "value": "Hospitality",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Mixed use",
+     "value": "Mixed use",
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Confirm asset type"
+  },
+  {
+   "key": "a_loc",
+   "section": "asset",
+   "label": "Location",
+   "gate": 1,
+   "weight": 1,
+   "kind": "text",
+   "question": "Where exactly is the project?",
+   "why": "Local market depth decides who will lend.",
+   "chips": [
+    {
+     "label": "Marbella, Costa del Sol",
+     "value": "Marbella, Costa del Sol",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Lisbon",
+     "value": "Lisbon",
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Confirm exact address and cadastral reference"
+  },
+  {
+   "key": "a_units",
+   "section": "asset",
+   "label": "Units and area",
+   "gate": 1,
+   "weight": 1,
+   "kind": "text",
+   "question": "How many units, and what total saleable area?",
+   "why": "Cost and revenue per m² are checked against this.",
+   "chips": [
+    {
+     "label": "12 apartments · ~1,250 m²",
+     "value": "12 apartments · ~1,250 m²",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "8 villas · ~1,600 m²",
+     "value": "8 villas · ~1,600 m²",
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Confirm unit count and saleable area from the design"
+  },
+  {
+   "key": "a_mix",
+   "section": "asset",
+   "label": "Unit mix and target prices",
+   "gate": 2,
+   "weight": 1,
+   "kind": "text",
+   "question": "What is the unit mix and the target price per m²?",
+   "why": "Investors test your prices against local comparables.",
+   "chips": [
+    {
+     "label": "2–3 bed apartments · ~€5,200/m²",
+     "value": "2–3 bed apartments · ~€5,200/m²",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Penthouses + 2 bed · ~€6,400/m²",
+     "value": "Penthouses + 2 bed · ~€6,400/m²",
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Price each unit type against 5–10 local comparables"
+  },
+  {
+   "key": "l_own",
+   "section": "land",
+   "label": "Land control",
+   "gate": 2,
+   "weight": 1,
+   "kind": "text",
+   "question": "Do you control the land today?",
+   "why": "Lenders fund land you own or can secure at closing.",
+   "chips": [
+    {
+     "label": "Owned, title in my group",
+     "value": "Owned, title in my group",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Purchase agreed (option / arras)",
+     "value": "Purchase agreed (option / arras)",
+     "partial": true,
+     "unknown": false,
+     "task": "Complete the purchase or extend the option"
+    },
+    {
+     "label": "Still negotiating",
+     "value": "Still negotiating",
+     "partial": true,
+     "unknown": false,
+     "task": "Sign a binding option or purchase agreement"
+    }
+   ],
+   "task": "Confirm land control with title or a signed option"
+  },
+  {
+   "key": "l_price",
+   "section": "land",
+   "label": "Land cost",
+   "gate": 2,
+   "weight": 1,
+   "kind": "money",
+   "question": "What did the land cost, or what will it cost?",
+   "why": "Land is usually the first number a lender compares with the valuation.",
+   "chips": [
+    {
+     "label": "€1.2M",
+     "value": "€1.2M",
+     "amount": 1200000,
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Confirm land price from the deed or option"
+  },
+  {
+   "key": "l_title",
+   "section": "land",
+   "label": "Title and charges",
+   "gate": 2,
+   "weight": 2,
+   "kind": "text",
+   "question": "Do you have a recent nota simple, and is the land free of charges?",
+   "why": "A lender’s lawyer checks this first. A mortgage or lien changes who ranks first.",
+   "chips": [
+    {
+     "label": "Yes, clean",
+     "value": "Nota simple recent, no charges",
+     "partial": false,
+     "unknown": false,
+     "note": "A clean nota simple removes the first thing a lender’s lawyer checks."
+    },
+    {
+     "label": "Yes, but there is a mortgage",
+     "value": "Nota simple shows an existing mortgage",
+     "partial": true,
+     "unknown": false,
+     "note": "An existing mortgage is workable if it is repaid from the new facility. I added it to your plan.",
+     "task": "Agree how the mortgage is repaid or refinanced at closing"
+    }
+   ],
+   "task": "Order a nota simple and review the charges",
+   "doc": "Nota simple (land registry extract)"
+  },
+  {
+   "key": "l_zone",
+   "section": "land",
+   "label": "Planning status",
+   "gate": 2,
+   "weight": 1,
+   "kind": "text",
+   "question": "What is the planning status of the plot?",
+   "why": "Decides whether a licence is realistic and how long it takes.",
+   "chips": [
+    {
+     "label": "Urban land, residential use confirmed",
+     "value": "Urban land, residential use confirmed",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Needs a planning change",
+     "value": "Needs a planning change",
+     "partial": true,
+     "unknown": false,
+     "note": "A planning change is a long item. Most lenders will wait for it before committing.",
+     "task": "Start the planning change with the town hall"
+    }
+   ],
+   "task": "Request the planning certificate (certificado urbanístico)",
+   "doc": "Planning certificate (certificado urbanístico)"
+  },
+  {
+   "key": "d_entity",
+   "section": "dev",
+   "label": "Project entity",
+   "gate": 2,
+   "weight": 1,
+   "kind": "text",
+   "question": "Which legal entity will own the project?",
+   "why": "Most lenders lend to a dedicated SPV with its own accounts.",
+   "chips": [
+    {
+     "label": "Dedicated SPV (S.L.)",
+     "value": "Dedicated SPV (S.L.)",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Existing company",
+     "value": "Existing company",
+     "partial": true,
+     "unknown": false,
+     "task": "Set up a dedicated SPV for this project"
+    }
+   ],
+   "task": "Set up the project SPV and share the cap table",
+   "doc": "SPV deed and cap table"
+  },
+  {
+   "key": "d_track",
+   "section": "dev",
+   "label": "Track record",
+   "gate": 2,
+   "weight": 2,
+   "kind": "text",
+   "question": "How many projects have you delivered, and what size?",
+   "why": "First-time sponsors usually need a stronger team or more equity.",
+   "chips": [
+    {
+     "label": "6 projects · €28M delivered",
+     "value": "6 projects · €28M delivered",
+     "partial": false,
+     "unknown": false,
+     "note": "A delivered track record is one of the strongest items in a lender’s file."
+    },
+    {
+     "label": "2 projects · €6M delivered",
+     "value": "2 projects · €6M delivered",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "This is my first project",
+     "value": "First project",
+     "partial": true,
+     "unknown": false,
+     "note": "First projects are financeable, but lenders will ask for a stronger team or more equity.",
+     "task": "Add an experienced partner or contractor to the sponsor team"
+    }
+   ],
+   "task": "Write a one-page track record: address, cost and result per project",
+   "doc": "Track record sheet"
+  },
+  {
+   "key": "d_team",
+   "section": "dev",
+   "label": "Core team",
+   "gate": 3,
+   "weight": 1,
+   "kind": "text",
+   "question": "Who is on the team: architect, project manager, contractor?",
+   "why": "Data room reviewers want names, roles and licences.",
+   "chips": [
+    {
+     "label": "Architect, PM and contractor named",
+     "value": "Architect, PM and contractor named",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Architect only",
+     "value": "Architect only",
+     "partial": true,
+     "unknown": false,
+     "task": "Name the project manager and contractor"
+    }
+   ],
+   "task": "List the team with roles and licences"
+  },
+  {
+   "key": "f_cost",
+   "section": "fin",
+   "label": "Total project cost",
+   "gate": 1,
+   "weight": 1,
+   "kind": "money",
+   "question": "What is the total project cost, all in: land, build, fees, taxes and finance?",
+   "why": "Every ratio a lender looks at starts here.",
+   "chips": [
+    {
+     "label": "€5.4M",
+     "value": "€5.4M",
+     "amount": 5400000,
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "€4.8M",
+     "value": "€4.8M",
+     "amount": 4800000,
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "€6.2M",
+     "value": "€6.2M",
+     "amount": 6200000,
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Estimate the all-in cost"
+  },
+  {
+   "key": "f_gdv",
+   "section": "fin",
+   "label": "Expected sales value (GDV)",
+   "gate": 1,
+   "weight": 1,
+   "kind": "money",
+   "question": "What do you expect to sell all units for, in total?",
+   "why": "Margin and loan-to-value are both measured against this.",
+   "chips": [
+    {
+     "label": "€6.5M",
+     "value": "€6.5M",
+     "amount": 6500000,
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "€7.2M",
+     "value": "€7.2M",
+     "amount": 7200000,
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "€5.9M",
+     "value": "€5.9M",
+     "amount": 5900000,
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Estimate total sales value from comparables"
+  },
+  {
+   "key": "f_budget",
+   "section": "fin",
+   "label": "Cost budget by line",
+   "gate": 2,
+   "weight": 2,
+   "kind": "text",
+   "question": "Do you have a line-by-line cost budget with a contingency?",
+   "why": "Lenders review the budget and the contingency before anything else.",
+   "chips": [
+    {
+     "label": "Yes, with 5%+ contingency",
+     "value": "Line budget with 5%+ contingency",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Yes, no contingency",
+     "value": "Line budget, no contingency",
+     "partial": true,
+     "unknown": false,
+     "note": "No contingency is a common finding. It takes days to fix, so I added it as a quick task.",
+     "task": "Add a contingency of at least 5% and re-run the budget"
+    },
+    {
+     "label": "Only a total number",
+     "value": "Total only",
+     "partial": true,
+     "unknown": false,
+     "task": "Build a line-by-line budget"
+    }
+   ],
+   "task": "Build a line-by-line budget with contingency",
+   "doc": "Cost budget with contingency"
+  },
+  {
+   "key": "f_model",
+   "section": "fin",
+   "label": "Financial model and sensitivities",
+   "gate": 3,
+   "weight": 1,
+   "kind": "text",
+   "question": "Do you have a financial model with price and cost sensitivities?",
+   "why": "Shows how the deal behaves if prices or costs move.",
+   "chips": [
+    {
+     "label": "Yes, with sensitivities",
+     "value": "Model with sensitivities",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Basic spreadsheet only",
+     "value": "Basic spreadsheet",
+     "partial": true,
+     "unknown": false,
+     "task": "Add price and cost sensitivities to the model"
+    }
+   ],
+   "task": "Build a financial model with price and cost sensitivities",
+   "doc": "Financial model"
+  },
+  {
+   "key": "p_design",
+   "section": "perm",
+   "label": "Design stage",
+   "gate": 2,
+   "weight": 1,
+   "kind": "text",
+   "question": "What stage is the design at?",
+   "why": "The basic project is the base for the licence and the budget.",
+   "chips": [
+    {
+     "label": "Basic project done",
+     "value": "Basic project (proyecto básico) done",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Sketch design only",
+     "value": "Sketch design only",
+     "partial": true,
+     "unknown": false,
+     "task": "Complete the basic project (proyecto básico)"
+    },
+    {
+     "label": "Not started",
+     "value": "Not started",
+     "partial": true,
+     "unknown": false,
+     "task": "Commission and complete the basic project"
+    }
+   ],
+   "task": "Complete the basic project (proyecto básico)",
+   "doc": "Basic project (proyecto básico)"
+  },
+  {
+   "key": "p_status",
+   "section": "perm",
+   "label": "Building licence",
+   "gate": 2,
+   "weight": 2,
+   "kind": "text",
+   "question": "What is the status of the building licence (licencia de obra)?",
+   "why": "Without a licence most senior lenders will not issue terms.",
+   "chips": [
+    {
+     "label": "Granted",
+     "value": "Granted",
+     "partial": false,
+     "unknown": false,
+     "note": "A granted licence is the single biggest de-risking item for a senior lender."
+    },
+    {
+     "label": "Submitted, waiting",
+     "value": "Submitted, waiting for the town hall",
+     "partial": true,
+     "unknown": false,
+     "note": "Waiting time depends on the town hall. I put it on the roadmap as 60 days. You can start preparing the lender pack in parallel.",
+     "task": "Track the licence and answer town hall requests"
+    },
+    {
+     "label": "Not submitted yet",
+     "value": "Not submitted",
+     "partial": true,
+     "unknown": false,
+     "note": "This is the longest item on most roadmaps, so I will put it first.",
+     "task": "Submit the licence application and track it"
+    }
+   ],
+   "task": "Submit the licence application and track it",
+   "doc": "Building licence (licencia de obra)"
+  },
+  {
+   "key": "p_other",
+   "section": "perm",
+   "label": "Utilities, fees and other approvals",
+   "gate": 3,
+   "weight": 1,
+   "kind": "text",
+   "question": "Are utilities, taxes (ICIO) and other approvals confirmed?",
+   "why": "Data room reviewers check that nothing else can stop the build.",
+   "chips": [
+    {
+     "label": "Yes, all confirmed",
+     "value": "Utilities, ICIO and approvals confirmed",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Partly",
+     "value": "Partly confirmed",
+     "partial": true,
+     "unknown": false,
+     "task": "Confirm the remaining utilities and fees"
+    }
+   ],
+   "task": "Confirm utilities, ICIO tax and the fees schedule"
+  },
+  {
+   "key": "c_contractor",
+   "section": "build",
+   "label": "Contractor",
+   "gate": 2,
+   "weight": 1,
+   "kind": "text",
+   "question": "Have you selected a contractor?",
+   "why": "Investors price the build risk by who builds.",
+   "chips": [
+    {
+     "label": "Selected and signed",
+     "value": "Selected and signed",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Tendering",
+     "value": "Tendering",
+     "partial": true,
+     "unknown": false,
+     "task": "Finish the tender and select a contractor"
+    },
+    {
+     "label": "Not chosen yet",
+     "value": "Not chosen",
+     "partial": true,
+     "unknown": false,
+     "task": "Tender to 3 contractors and select one"
+    }
+   ],
+   "task": "Tender the build to 3 contractors and select one"
+  },
+  {
+   "key": "c_sched",
+   "section": "build",
+   "label": "Build programme",
+   "gate": 2,
+   "weight": 1,
+   "kind": "number",
+   "question": "How many months will the build take?",
+   "why": "Interest cost and exit timing depend on it.",
+   "chips": [
+    {
+     "label": "18 months",
+     "value": "18 months",
+     "amount": 18,
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "22 months",
+     "value": "22 months",
+     "amount": 22,
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "26 months",
+     "value": "26 months",
+     "amount": 26,
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Agree a build programme with the contractor"
+  },
+  {
+   "key": "c_contract",
+   "section": "build",
+   "label": "Build contract",
+   "gate": 3,
+   "weight": 1,
+   "kind": "text",
+   "question": "What kind of build contract do you have or plan?",
+   "why": "A fixed price moves cost overrun risk to the contractor.",
+   "chips": [
+    {
+     "label": "Fixed price",
+     "value": "Fixed price",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Cost plus",
+     "value": "Cost plus",
+     "partial": true,
+     "unknown": false,
+     "task": "Negotiate a fixed price or a guaranteed maximum price"
+    },
+    {
+     "label": "Not signed",
+     "value": "Not signed",
+     "partial": true,
+     "unknown": false,
+     "task": "Sign a fixed-price build contract"
+    }
+   ],
+   "task": "Sign a fixed-price build contract",
+   "doc": "Build contract"
+  },
+  {
+   "key": "c_ins",
+   "section": "build",
+   "label": "Insurance and supervision",
+   "gate": 3,
+   "weight": 1,
+   "kind": "text",
+   "question": "Are decennial insurance and technical supervision arranged?",
+   "why": "Required in Spain for new residential. Lenders ask for proof.",
+   "chips": [
+    {
+     "label": "Both arranged",
+     "value": "Decennial insurance and supervision arranged",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Not yet",
+     "value": "Not arranged",
+     "partial": true,
+     "unknown": false,
+     "task": "Arrange decennial insurance and a technical supervisor"
+    }
+   ],
+   "task": "Arrange decennial insurance and technical supervision"
+  },
+  {
+   "key": "k_ask",
+   "section": "cap",
+   "label": "Capital sought",
+   "gate": 1,
+   "weight": 1,
+   "kind": "money",
+   "question": "How much capital do you need?",
+   "why": "The starting point for every match.",
+   "chips": [
+    {
+     "label": "€3M",
+     "value": "€3M",
+     "amount": 3000000,
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Confirm the amount needed"
+  },
+  {
+   "key": "k_instr",
+   "section": "cap",
+   "label": "Preferred instrument",
+   "gate": 1,
+   "weight": 1,
+   "kind": "text",
+   "question": "What kind of capital do you prefer?",
+   "why": "Debt and equity investors are different people.",
+   "chips": [
+    {
+     "label": "Senior loan",
+     "value": "Senior loan",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Senior + mezzanine",
+     "value": "Senior + mezzanine",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Equity partner",
+     "value": "Equity partner",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Not sure, advise me",
+     "value": "Open to advice",
+     "partial": false,
+     "unknown": false,
+     "note": "Good. I will compare options once cost, equity and exit are in."
+    }
+   ],
+   "task": "Choose the preferred instrument"
+  },
+  {
+   "key": "k_equity",
+   "section": "cap",
+   "label": "Your equity in the deal",
+   "gate": 2,
+   "weight": 2,
+   "kind": "money",
+   "question": "How much of your own capital goes in, including the land?",
+   "why": "Lenders want meaningful sponsor money at risk before theirs.",
+   "chips": [
+    {
+     "label": "€2.4M: land + €1.2M cash",
+     "value": "€2.4M (land + €1.2M cash)",
+     "amount": 2400000,
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "€1.2M: land only",
+     "value": "€1.2M (land only)",
+     "amount": 1200000,
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "€0.6M",
+     "value": "€0.6M",
+     "amount": 600000,
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Document your equity: land valuation and proof of cash",
+   "doc": "Proof of equity (land value + bank statement)"
+  },
+  {
+   "key": "k_repay",
+   "section": "cap",
+   "label": "Repayment and security",
+   "gate": 2,
+   "weight": 1,
+   "kind": "text",
+   "question": "How will the loan be repaid, and what security can you offer?",
+   "why": "Defines what the lender can fall back on.",
+   "chips": [
+    {
+     "label": "Unit sales + first mortgage on the land",
+     "value": "Unit sales proceeds + first mortgage on the land",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Refinance on completion",
+     "value": "Refinance on completion",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Not defined",
+     "value": "Not defined",
+     "partial": true,
+     "unknown": false,
+     "task": "Define the repayment waterfall and security package"
+    }
+   ],
+   "task": "Define the repayment waterfall and security package"
+  },
+  {
+   "key": "e_strategy",
+   "section": "exit",
+   "label": "Exit strategy",
+   "gate": 2,
+   "weight": 2,
+   "kind": "text",
+   "question": "How will you exit: who buys, and when?",
+   "why": "Lenders are repaid from the exit, so they underwrite it first.",
+   "chips": [
+    {
+     "label": "Sell units off-plan and on completion",
+     "value": "Sell units off-plan and on completion",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Sell the whole building to one investor",
+     "value": "Bulk sale to one investor",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "Build to rent, then refinance",
+     "value": "Build to rent, then refinance",
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Decide the exit route and timing"
+  },
+  {
+   "key": "e_presales",
+   "section": "exit",
+   "label": "Pre-sales",
+   "gate": 2,
+   "weight": 1,
+   "kind": "text",
+   "question": "How many units are reserved or pre-sold?",
+   "why": "Pre-sales are the strongest proof that your prices are real.",
+   "chips": [
+    {
+     "label": "None yet",
+     "value": "None yet",
+     "amount": 0,
+     "partial": true,
+     "unknown": false,
+     "task": "Open reservations with a deposit agreement"
+    },
+    {
+     "label": "3 of 12 reserved",
+     "value": "3 of 12 reserved",
+     "amount": 3,
+     "partial": true,
+     "unknown": false,
+     "task": "Convert reservations and open more"
+    },
+    {
+     "label": "6 of 12 signed",
+     "value": "6 of 12 signed",
+     "amount": 6,
+     "partial": false,
+     "unknown": false,
+     "note": "Half pre-sold is a strong signal to a lender."
+    }
+   ],
+   "task": "Open reservations with a deposit agreement"
+  },
+  {
+   "key": "e_comps",
+   "section": "exit",
+   "label": "Price evidence",
+   "gate": 3,
+   "weight": 1,
+   "kind": "text",
+   "question": "Do you have comparable sales to support your prices?",
+   "why": "Valuers and lenders will check prices against recent sales.",
+   "chips": [
+    {
+     "label": "5+ recent comparables",
+     "value": "5+ recent comparables",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "A few listings",
+     "value": "A few listings only",
+     "partial": true,
+     "unknown": false,
+     "task": "Collect 5–10 recent comparable sales"
+    }
+   ],
+   "task": "Collect 5–10 recent comparable sales",
+   "doc": "Comparable sales evidence"
+  },
+  {
+   "key": "e_timeline",
+   "section": "exit",
+   "label": "Sales timeline",
+   "gate": 3,
+   "weight": 1,
+   "kind": "text",
+   "question": "What is the sales timeline after completion?",
+   "why": "Sets how long the loan stays outstanding.",
+   "chips": [
+    {
+     "label": "Sell out within 6 months",
+     "value": "Sell out within 6 months of completion",
+     "partial": false,
+     "unknown": false
+    },
+    {
+     "label": "12 months",
+     "value": "Sell out within 12 months of completion",
+     "partial": false,
+     "unknown": false
+    }
+   ],
+   "task": "Write the sales timeline"
+  }
+ ]
+}

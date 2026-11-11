@@ -46,6 +46,8 @@ Hosting: Cloudflare Workers (static assets, see web/wrangler.jsonc) or Vercel, r
 
 ## AI agent (project chat)
 
-`supabase/functions/agent-chat` is an Edge Function that calls the Anthropic API with the caller's own JWT, so row-level security applies. It never writes to the database: it returns proposed field changes and the web app saves them only after the person confirms. Usage is logged in `agent_calls` (daily limit `AGENT_DAILY_LIMIT`, default 100).
+The project page is a guided profile: a chat, the profile it fills (30 fields in 8 sections) and a readiness panel. The field model (questions, answer options, gates, weights) lives in `web/src/lib/fields.json`. After changing it run `node scripts/sync-agent-fields.mjs` and redeploy the function.
+
+Answers are saved straight away (`profile` jsonb plus the matching columns, `stage` and `readiness`) and every answer can be undone. Suggested answers are saved without calling the model. Free text goes to `supabase/functions/agent-chat`, which runs with the caller's JWT, asks the Anthropic API which fields the text answers and returns validated updates; it never writes to the database. Usage is logged in `agent_calls` (`AGENT_DAILY_LIMIT`, default 300).
 
 Secrets (Supabase → Edge Functions → Secrets): `ANTHROPIC_API_KEY` (required), `AGENT_MODEL` (optional, default `claude-sonnet-5-5`).
