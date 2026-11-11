@@ -158,7 +158,7 @@ export function Developer() {
                   <div className="meta"><div><b>{p.ask_eur ? eur(p.ask_eur) : '—'}</b><small>sought</small></div><div><b>{c.score}%</b><small>readiness</small></div><div><b>{v.fit.length}</b><small>investors fit</small></div></div>
                   <div className="pbar" role="img" aria-label={`Readiness ${c.score}%`}><i style={{ width: `${c.score}%` }} /></div>
                   <div className="lad">{STEPS.map((n, i) => <span key={n} className={c.stage > i ? 'done' : c.stage === i ? 'now' : ''}><i /><em>{n}</em></span>)}</div>
-                  <div className="next"><b>Next:</b> {nextStep(v)} · {plural(c.blockers.length, 'blocker')} for the next stage <span className="muted">· {p.code}</span> {attention(v).length === 0 && <Pill tone={tone(p.status)}>{p.status}</Pill>}</div>
+                  <div className="next"><b>Next:</b> {nextStep(v)} · {plural(c.blockers.length, 'open question')} for the next stage <span className="muted">· {p.code}</span> {attention(v).length === 0 && <Pill tone={tone(p.status)}>{p.status}</Pill>}</div>
                 </button>)
             })}
             <button className="pc newp" type="button" onClick={() => setCreating(true)}><b>+ New project</b><span className="muted">Tell the agent about it in your own words. The profile builds as you talk.</span></button>

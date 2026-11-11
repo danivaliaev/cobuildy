@@ -9,6 +9,8 @@ export function ReadinessPanel({ fields, status, dbStage, onAsk, onSubmit, busy,
   const c = calc(fields)
   const verdict = c.stage === 0 ? 'Not ready for a teaser yet' : c.stage === 1 ? 'Teaser-ready' : c.stage === 2 ? 'Ready for lender outreach' : 'Data room complete'
   const draft = status === 'draft'
+  // Only the teaser gate is enforced, and only before the teaser is approved. Later stages are advice.
+  const hard = c.next === 1 && (status === 'draft' || status === 'teaser_review')
   const missing = FIELDS.filter(d => d.gate === 1 && fields[d.key]?.st !== 'filled')
   return (
     <aside className="card readycard" aria-label="Readiness">
@@ -29,7 +31,7 @@ export function ReadinessPanel({ fields, status, dbStage, onAsk, onSubmit, busy,
 
       {c.blockers.length > 0 && (
         <div className="blk">
-          <span className="mono">Blocking {GATE_NAMES[c.next].toLowerCase()} · {c.blockers.length}</span>
+          <span className="mono">{hard ? `Needed for ${GATE_NAMES[c.next].toLowerCase()}` : 'Next to strengthen your pitch'} · {c.blockers.length}</span>
           {c.blockers.slice(0, 7).map(d => (
             <button key={d.key} type="button" className="item" onClick={() => onAsk(d.key)}>
               <b>{d.label}</b><span className="muted">{d.why}</span>

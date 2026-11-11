@@ -36,7 +36,8 @@ export function attention(v: ProjView): Attn[] {
   const sent = v.deals.length
   if ((p.status === 'approved' || p.status === 'live') && sent === 0 && v.fit.length > 0) add('plan', `Send the teaser to ${plural(v.fit.length, 'matching investor')}`, 'Teaser approved. You confirm before anything goes out.', 'Open investors', 'investors')
   for (const d of v.deals) { const t = DEAL[d.stage]; if (t) add(t[0], `${who(d)} ${t[1]}`, t[2], t[3], t[4]) }
-  for (const f of c.blockers.slice(0, 2)) add('warn', `Missing: ${f.label}`, `Blocks the ${['', 'teaser', 'outreach', 'data room'][f.gate] ?? 'next'} stage.`, 'Answer', 'profile')
+  const hard = (p.status === 'draft' || p.status === 'teaser_review') && c.next === 1
+  for (const f of c.blockers.slice(0, 2)) add(hard ? 'warn' : 'plan', `Missing: ${f.label}`, hard ? 'Needed before the teaser can go out.' : 'Not required, but investors will ask for it.', 'Answer', 'profile')
   return out.sort(byTone)
 }
 
@@ -67,7 +68,7 @@ export function reply(q: string, vs: ProjView[]): string {
   if (/attention|todo|to do|urgent|next/.test(s)) return t.attn.length ? t.attn.slice(0, 4).map(a => `• ${a.project}: ${a.title}`).join('\n') : 'Nothing needs you right now.'
   if (/missing|blocker|need/.test(s)) {
     const v = vs.find(x => x.c.blockers.length) ?? vs[0]
-    return v.c.blockers.length ? `${v.p.title} still needs: ${v.c.blockers.slice(0, 5).map(f => f.label.toLowerCase()).join(', ')}.` : `${v.p.title} has nothing blocking the next stage.`
+    return v.c.blockers.length ? `${v.p.title} is still missing: ${v.c.blockers.slice(0, 5).map(f => f.label.toLowerCase()).join(', ')}.` : `${v.p.title} has nothing left to add for the next stage.`
   }
   if (/investor|fit|match/.test(s)) return `${plural(t.fit, 'investor')} fit at least one project, and ${t.poss} more are possible. ` + vs.map(v => `${v.p.title}: ${v.fit.length}`).join('; ') + '.'
   return `${plural(t.n, 'project')}, ${t.ready} ready for outreach or beyond. ${eur(t.ask)} sought. ` + vs.map(v => `${v.p.title}: ${v.c.score}% ready`).join('; ') + '.'
