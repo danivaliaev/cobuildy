@@ -196,10 +196,10 @@ function ProfileBox({ inv, reload, banner }: { inv: Inv; reload: () => void | Pr
   return (
     <section className="card">
       <div className="row"><h2>Your investor profile</h2><span className="sp" /><button className="chipbtn" type="button" onClick={() => setOpen(true)}>Edit</button></div>
-      <div className="prow"><span className="plab">Type</span><span className="pval">{kindLabel(inv.kind)}</span></div>
-      <div className="prow"><span className="plab">Country</span><span className="pval">{countryName(inv.country)}</span></div>
-      <div className="prow"><span className="plab">Name</span><span className="pval">{inv.name}</span></div>
-      <div className="prow"><span className="plab">Phone</span><span className="pval">{inv.phone ?? '—'}</span></div>
+      <div className="prow"><span className="pic f" aria-hidden="true">✓</span><span className="plab">Type</span><span className="pval">{kindLabel(inv.kind)}</span><span /></div>
+      <div className="prow"><span className="pic f" aria-hidden="true">✓</span><span className="plab">Country</span><span className="pval">{countryName(inv.country)}</span><span /></div>
+      <div className="prow"><span className="pic f" aria-hidden="true">✓</span><span className="plab">Name</span><span className="pval">{inv.name}</span><span /></div>
+      <div className="prow"><span className="pic f" aria-hidden="true">✓</span><span className="plab">Phone</span><span className="pval">{inv.phone ?? '—'}</span><span /></div>
     </section>
   )
 }

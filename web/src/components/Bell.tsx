@@ -24,7 +24,7 @@ export function Bell() {
   const box = useRef<HTMLDivElement>(null)
   const load = useCallback(async () => {
     const { data } = await supabase.from('notifications').select('id,kind,title,body,link,created_at,read_at').order('created_at', { ascending: false }).limit(30)
-    if (data) setNotes(data as Note[])
+    if (Array.isArray(data)) setNotes(data as Note[])
   }, [])
   useEffect(() => {
     if (!profile) return
