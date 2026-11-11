@@ -28,6 +28,7 @@ export interface Investor {
   max_ltc: number | null; min_return: number | null; max_term: number | null; min_track: number | null
   min_margin: number | null; min_presales: number | null
   declared_qualified_at: string | null; kyc_status: 'none' | 'pending' | 'passed' | 'failed'
+  mandate: { type?: 'priv' | 'inst' | null; st?: Record<string, string> } | null
 }
 export interface Match { investor_id: string; code: string; bucket: 'fit' | 'possible' | 'later' | 'out'; score: number }
 export interface ProjectDeal {
