@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { supabase, rpc } from '../lib/supabase'
 import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
-import { eur } from '../lib/format'
 import { ProfileChat } from '../components/ProfileChat'
 import { ProfileView } from '../components/ProfileView'
 import { ReadinessPanel } from '../components/ReadinessPanel'
@@ -230,7 +229,6 @@ function Deals({ project, docs: all }: { project: Project; docs: ProjectDoc[] })
           </div>
         )
       })}
-      <span className="muted">Ask {eur(project.ask_eur)}</span>
     </section>
   )
 }
