@@ -20,7 +20,7 @@ export interface Project {
   build_months: number | null; term_months: number | null; expected_return: number | null
   readiness: number; stage: number; profile: Record<string, unknown> | null
 }
-export interface ProjectDoc { id: string; project_id: string; kind: string; title: string }
+export interface ProjectDoc { id: string; project_id: string; kind: string; title: string; storage_path: string | null; file_name: string | null; size_bytes: number | null; field_key: string | null }
 export interface Investor {
   id: string; code: string; kind: string | null; country: string | null; phone: string | null; name: string; email: string | null; user_id: string | null
   instruments: string[]; geos: string[]; assets: string[]

@@ -6,12 +6,12 @@ import { eur } from '../lib/format'
 import { ProfileChat } from '../components/ProfileChat'
 import { ProfileView } from '../components/ProfileView'
 import { ReadinessPanel } from '../components/ReadinessPanel'
-import { FIELDS, GATE_NAMES, blank, columnsFor, hydrate, isDone, keyChanges, patchFor, type FieldState, type Fields } from '../lib/profile'
+import { DataRoom } from '../components/DataRoom'
+import { FIELDS, blank, columnsFor, hydrate, keyChanges, patchFor, type FieldState, type Fields } from '../lib/profile'
 import { kindLabel, countryName } from '../lib/investorKinds'
 import { STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
 type Tab = 'profile' | 'investors' | 'room'
-const DOC_KINDS = ['Planning permit', 'Budget & cost plan', 'Sales plan', 'Valuation', 'Corporate documents', 'Other']
 
 export function ProjectPage() {
   const { id = '' } = useParams()
@@ -21,7 +21,7 @@ export function ProjectPage() {
     return data as Project
   }, [id])
   const docs = useLoad(async () => {
-    const { data, error } = await supabase.from('project_docs').select('id,project_id,kind,title').eq('project_id', id).order('created_at')
+    const { data, error } = await supabase.from('project_docs').select('id,project_id,kind,title,storage_path,file_name,size_bytes,field_key').eq('project_id', id).order('created_at')
     if (error) throw error
     return data as ProjectDoc[]
   }, [id])
@@ -102,7 +102,7 @@ export function ProjectPage() {
             <Wave onFill={k => { setTab('profile'); ask(k) }} project={p} matches={matches} canSend={p.status === 'approved' || p.status === 'live'} onSent={async () => { await proj.reload(); setWave(w => w + 1) }} />
             {(p.status === 'live' || p.status === 'approved') && <Deals key={wave} project={p} docs={docs.data ?? []} />}
           </>}
-          {tab === 'room' && <DataRoom projectId={p.id} fields={fields} docs={docs.data ?? []} reload={docs.reload} editable={editable || p.status !== 'discarded'} error={docs.error} />}
+          {tab === 'room' && <DataRoom projectId={p.id} docs={docs.data ?? []} reload={docs.reload} editable={editable} error={docs.error} />}
         </div>
         <ReadinessPanel fields={fields} status={p.status} dbStage={dbStage} onAsk={a => { setTab('profile'); ask(a) }} busy={submit.busy} error={submit.error}
           onSubmit={() => void submit.run(() => rpc('submit_teaser', { p_project: p.id }))} />
@@ -125,53 +125,6 @@ function MatchBar({ matches }: { matches: Match[] | null }) {
       <div className="mbar-t">{BUCKETS.map(b => <i key={b.k} className={`b-${b.k}`} style={{ width: `${(n(b.k) / total) * 100}%` }} />)}</div>
       <div className="mbar-l">{BUCKETS.map(b => <span key={b.k}><i className={`b-${b.k}`} />{b.label} {n(b.k)}</span>)}<span className="muted">Unknown data never excludes an investor</span></div>
     </div>
-  )
-}
-
-/** The documents lenders ask for, taken from the profile model, and the documents recorded for this project. */
-function DataRoom({ projectId, fields, docs, reload, editable, error }: { projectId: string; fields: Fields; docs: ProjectDoc[]; reload: () => void | Promise<void>; editable: boolean; error: string | null }) {
-  const need = FIELDS.filter(d => d.doc)
-  const ready = need.filter(d => fields[d.key]?.st === 'filled').length
-  return (
-    <>
-      <section className="card">
-        <div className="row"><h2>Documents lenders ask for</h2><span className="sp" /><span className="mono">{ready}/{need.length} backed by an answer</span></div>
-        <p className="muted">Each document supports a profile answer. A document is marked ready once its answer is recorded; file upload comes next.</p>
-        {need.map(d => {
-          const st = fields[d.key]?.st
-          return (
-            <div className="row" key={d.key}>
-              <Pill tone={st === 'filled' ? 'good' : isDone(fields[d.key]) ? 'warn' : undefined}>{st === 'filled' ? 'Answer recorded' : isDone(fields[d.key]) ? 'Partly' : 'Not yet'}</Pill>
-              <span className="sp">{d.doc}</span>
-              <span className="muted">needed for {GATE_NAMES[d.gate].toLowerCase()}</span>
-            </div>
-          )
-        })}
-      </section>
-      <Docs projectId={projectId} docs={docs} reload={reload} editable={editable} error={error} />
-    </>
-  )
-}
-
-function Docs({ projectId, docs, reload, editable, error }: { projectId: string; docs: ProjectDoc[]; reload: () => void | Promise<void>; editable: boolean; error: string | null }) {
-  const [kind, setKind] = useState(DOC_KINDS[0])
-  const [title, setTitle] = useState('')
-  const act = useAction(reload)
-  return (
-    <section className="card">
-      <h2>Data room documents</h2>
-      <p className="muted">Four documents unlock the data room. This version records each document; file upload comes next.</p>
-      <ErrorLine error={act.error ?? error} />
-      {docs.length === 0 ? <Empty>No documents recorded.</Empty> : docs.map(d => (
-        <div className="row" key={d.id}><Pill>{d.kind}</Pill><span className="sp">{d.title}</span>
-          {editable && <button className="btn sm" disabled={act.busy} onClick={() => void act.run(async () => { const { error: e } = await supabase.from('project_docs').delete().eq('id', d.id); if (e) throw e })}>Remove</button>}</div>
-      ))}
-      {editable && <form className="row" onSubmit={e => { e.preventDefault(); void act.run(async () => { const { error: er } = await supabase.from('project_docs').insert({ project_id: projectId, kind, title: title.trim() }); if (er) throw er; setTitle('') }) }}>
-        <select value={kind} onChange={e => setKind(e.target.value)} style={{ width: 220 }}>{DOC_KINDS.map(k => <option key={k}>{k}</option>)}</select>
-        <input className="sp" required value={title} onChange={e => setTitle(e.target.value)} placeholder="Document title" />
-        <button className="btn" type="submit" disabled={act.busy}>Add</button>
-      </form>}
-    </section>
   )
 }
 
@@ -226,7 +179,8 @@ function Wave({ project, matches, canSend, onSent, onFill }: { onFill: (key: str
   )
 }
 
-function Deals({ project, docs }: { project: Project; docs: ProjectDoc[] }) {
+function Deals({ project, docs: all }: { project: Project; docs: ProjectDoc[] }) {
+  const docs = all.filter(x => x.storage_path)
   const deals = useLoad(() => rpc<ProjectDeal[]>('project_deals', { p_project: project.id }), [project.id])
   const msgs = useLoad(async () => {
     const ids = (deals.data ?? []).map(d => d.deal_id)
@@ -263,7 +217,7 @@ function Deals({ project, docs }: { project: Project; docs: ProjectDoc[] }) {
                 : <button className="btn sm pri" disabled={act.busy} onClick={() => go(d.deal_id, 'sign_nda')}>Sign NDA</button>)}
               {d.stage === 'nda_sent' && <span className="muted">NDA: you {d.nda_dev_signed ? '✓' : 'not yet'} · investor {d.nda_inv_signed ? '✓' : 'not yet'}</span>}
             </div>
-            {d.stage === 'room' && (docs.length === 0 ? <span className="muted">Add documents above, then choose what to share.</span> : <>
+            {d.stage === 'room' && (docs.length === 0 ? <span className="muted">Upload documents in the Data room tab, then choose what to share.</span> : <>
               <div className="chks">{docs.map(x => <label className="chk" key={x.id}><input type="checkbox" checked={(picked[d.deal_id] ?? []).includes(x.id)} onChange={e => { const cur = picked[d.deal_id] ?? []; setPicked({ ...picked, [d.deal_id]: e.target.checked ? [...cur, x.id] : cur.filter(i => i !== x.id) }) }} />{x.title}</label>)}</div>
               <div><button className="btn sm pri" disabled={act.busy || !(picked[d.deal_id] ?? []).length} onClick={() => go(d.deal_id, 'share_docs', { docs: picked[d.deal_id] })}>Share selected documents</button></div></>)}
             {d.stage === 'qa' && <>

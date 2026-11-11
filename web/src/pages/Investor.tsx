@@ -5,13 +5,14 @@ import { useAuth } from '../auth'
 import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
 import { MandateChat } from '../components/MandateChat'
 import { eur, pct, when } from '../lib/format'
+import { downloadDoc, sizeText } from '../lib/docs'
 import { InvestorProfileForm } from '../components/InvestorProfileForm'
 import { needsProfile, kindLabel, countryName } from '../lib/investorKinds'
 import { ASSET, GEO, INSTRUMENT, LICENSE, STAGE_LABEL, type DealMessage, type DealStage, type Investor as Inv, type Teaser } from '../lib/types'
 import { FIELDS, FK, SECS, clarity, columnsFor, evalTeaser, fmt, hydrate, unlocks, type Fit, type MKey, type Mandate } from '../lib/mandate'
 
 type Tab = 'feed' | 'deal' | 'pipe' | 'mandate'
-interface DealDoc { deal_id: string; doc_id: string; kind: string; title: string }
+interface DealDoc { deal_id: string; doc_id: string; kind: string; title: string; file_name: string | null; size_bytes: number | null; storage_path: string | null }
 
 const FLOW = ['Interest', 'NDA', 'Data room', 'Questions', 'Answers', 'Term sheet']
 const NOW: Partial<Record<DealStage, number>> = { interested: 0, nda_sent: 1, room: 2, shared: 3, qa: 3, answered: 4, ts: 5, call: 5 }
@@ -77,6 +78,8 @@ function Review({ f, inv, docs, msgs, busy, go, reloadInv }: { f: Fit; inv: Inv;
   const t = f.t
   const [qs, setQs] = useState('')
   const decl = useAction(reloadInv)
+  const dl = useAction()
+  const getDoc = (d: DealDoc) => dl.run(() => downloadDoc(d.storage_path!, d.file_name, d.doc_id))
   const access = Boolean(inv.declared_qualified_at) && inv.kyc_status === 'passed'
   const ltc = t.ask_eur != null && t.cost_eur ? t.ask_eur / t.cost_eur : null
   const room = ['room', 'shared', 'qa', 'answered', 'ts', 'call'].includes(t.stage)
@@ -146,7 +149,9 @@ function Review({ f, inv, docs, msgs, busy, go, reloadInv }: { f: Fit; inv: Inv;
 
       <section className="card">
         <div className="row"><h3>Data room</h3><span className="sp" /><span className="mono">{docs.length ? `${docs.length} shared` : room ? 'Open' : 'Locked until you sign the NDA'}</span></div>
-        {docs.length ? docs.map(d => <div className="row" key={d.doc_id}><Pill>{d.kind}</Pill><span className="sp">{d.title}</span><span className="muted">Shared</span></div>)
+        <ErrorLine error={dl.error} />
+        {docs.length ? docs.map(d => <div className="row" key={d.doc_id}><Pill>{d.kind === 'Checklist' ? 'Document' : d.kind}</Pill><span className="sp"><span>{d.title}</span>{d.file_name && <span className="muted small dtag">{d.file_name} · {sizeText(d.size_bytes)}</span>}</span>
+          {d.storage_path ? <button className="btn sm" type="button" disabled={busy} onClick={() => void getDoc(d)}>Download</button> : <span className="muted">No file</span>}</div>)
           : <span className="muted">{room ? 'The developer has not shared documents yet.' : 'Documents appear here after the NDA is signed by both sides and the developer shares them.'}</span>}
       </section>
 
