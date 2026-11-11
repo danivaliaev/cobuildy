@@ -7,32 +7,43 @@ export function Login() {
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const role = new URLSearchParams(window.location.search).get('role')
+  const back = window.location.origin + (role === 'investor' || role === 'developer' ? `/?role=${role}` : '')
+
+  async function google() {
+    setBusy(true); setError(null)
+    const { error: err } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: back } })
+    if (err) { setBusy(false); setError(errText(err.message)) }
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError(null)
-    const { error: err } = await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { emailRedirectTo: window.location.origin, shouldCreateUser: true } })
+    const { error: err } = await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { emailRedirectTo: back, shouldCreateUser: true } })
     setBusy(false)
     if (!err) return setSent(true)
-    const m = errText(err.message)
-    setError(/database error|invitation/i.test(m) ? 'This address has no approved invitation yet. Registration is by invitation only.' : m)
+    setError(errText(err.message))
   }
 
   return (
     <div className="login">
-      <form className="card" onSubmit={submit}>
+      <div className="card" style={{ display: 'grid', gap: 14 }}>
         <span className="mono">Cobuildy</span>
-        <h1>Sign in</h1>
+        <h1>Sign in or create an account</h1>
         {sent ? (
           <p>We sent a sign-in link to <b>{email}</b>. Open it on this device.</p>
         ) : (
           <>
-            <p className="muted">Registration is by invitation only. Enter the address your invitation was sent to.</p>
-            <label className="f"><span>Email</span><input type="email" required autoFocus value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" /></label>
+            <button className="btn pri" type="button" disabled={busy} onClick={() => void google()}>Continue with Google</button>
+            <span className="muted" style={{ textAlign: 'center' }}>or use an email link</span>
+            <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
+              <label className="f"><span>Email</span><input type="email" required value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" /></label>
+              <button className="btn" disabled={busy || !email} type="submit">{busy ? 'Sending…' : 'Send sign-in link'}</button>
+            </form>
             <ErrorLine error={error} />
-            <button className="btn pri" disabled={busy || !email} type="submit">{busy ? 'Sending…' : 'Send sign-in link'}</button>
+            <p className="muted">New here? The same buttons create your account. You choose your role on the next screen.</p>
           </>
         )}
-      </form>
+      </div>
     </div>
   )
 }

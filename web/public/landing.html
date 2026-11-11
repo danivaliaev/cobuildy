@@ -301,8 +301,8 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
       <a href="#faq">FAQ</a>
     </nav>
     <span class="sp"></span>
-    <a class="btn ghost sm" id="login" href="/login">Log in</a>
-    <button class="btn sm hide-s" type="button" data-signup="">Request an invitation</button>
+    <a class="btn ghost sm" id="login" onclick="saveCarry()" href="/login">Log in</a>
+    <button class="btn sm hide-s" type="button" data-signup="">Get started free</button>
   </div>
 </header>
 
@@ -323,7 +323,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
       <li>You approve every send</li>
     </ul>
     <div class="cta-row">
-      <button class="btn" type="button" data-signup="" id="h-cta">Request an invitation</button>
+      <button class="btn" type="button" data-signup="" id="h-cta">Get started free</button>
       <a class="btn ghost" href="#how">See how it works</a>
     </div>
     <p class="small" style="margin-top:14px" id="h-note"></p>
@@ -458,7 +458,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 
 <div class="wrap final">
   <h2 class="h2" id="f-h">Put an agent to work on your project today</h2>
-  <div class="cta-row"><button class="btn" type="button" data-signup="">Request an invitation</button><a class="btn ghost" href="#top">Try the agent again</a></div>
+  <div class="cta-row"><button class="btn" type="button" data-signup="">Get started free</button><a class="btn ghost" href="#top">Try the agent again</a></div>
 </div>
 </main>
 
@@ -479,15 +479,15 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
     <button class="x" type="button" id="dl-x" aria-label="Close">×</button>
     <div id="dl-form">
       <div class="seg" role="group" aria-label="Account type" style="margin-bottom:14px"><button id="r-dev" aria-pressed="true" type="button">Developer</button><button id="r-inv" aria-pressed="false" type="button">Investor</button></div>
-      <h2 id="dl-h">Request an invitation</h2>
+      <h2 id="dl-h">Get started free</h2>
       <p class="muted" style="margin:8px 0 14px" id="dl-p"></p>
       <div class="carry" id="dl-carry" hidden></div>
       <form id="su" novalidate style="display:grid;gap:12px;margin-top:14px">
         <div class="field"><label for="su-name">Name</label><input id="su-name" type="text" autocomplete="name"></div>
         <div class="field"><label for="su-mail">Work email</label><input id="su-mail" type="email" autocomplete="email"></div>
         <p class="small" id="su-err" role="alert" style="color:var(--warn)" hidden>Add your name and a valid email.</p>
-        <button class="btn block" type="submit">Request invitation</button>
-        <p class="small" id="su-note">Registration is by invitation. We review every request and email you a sign-in link once it is approved.</p>
+        <button class="btn block" type="submit">Get started</button>
+        <p class="small" id="su-note">Sign in with Google or an email link. Your answers from this page come with you.</p>
       </form>
     </div>
     <div id="dl-done" hidden>
@@ -764,7 +764,7 @@ function ctxText(r){
 }
 function setRole(r){
   role=r;$('r-dev').setAttribute('aria-pressed',r==='dev');$('r-inv').setAttribute('aria-pressed',r==='inv');
-  $('dl-p').textContent=r==='dev'?'Tell us who you are. Once invited, the agent continues where this page stopped.':'Tell us who you are. Once invited, you can save your mandate and receive matches.';
+  $('dl-p').textContent=r==='dev'?'Tell us who you are. The agent continues where this page stopped.':'Tell us who you are. You can save your mandate and receive matches.';
   const c=$('dl-carry'),t=ctxText(r);c.hidden=false;c.innerHTML='<span class="mono">Carried over from this page</span>'+t.map(x=>`<div>${x}</div>`).join('');
 }
 function openSignup(r){
@@ -772,7 +772,10 @@ function openSignup(r){
   setTimeout(()=>$('su-name').focus(),30);
 }
 function closeSignup(){$('ov').hidden=true}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-signup]');if(b){openSignup(b.dataset.signup||aud)}
+const LOGIN='/login';
+function saveCarry(){try{localStorage.setItem('cb.carry.v1',JSON.stringify({role:aud,dev:ST.dev.a,inv:ST.inv.a,ts:Date.now()}))}catch(e){}}
+addEventListener('pagehide',saveCarry);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveCarry()});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-signup]');if(b){saveCarry();const r=b.dataset.signup||aud;location.href=LOGIN+'?role='+(r==='inv'?'investor':'developer');return}
   if(e.target===$('ov'))closeSignup();
   });
 $('dl-x').onclick=closeSignup;
@@ -790,7 +793,7 @@ $('su').addEventListener('submit',async e=>{
   btn.disabled=false;$('dn-name').textContent=n.split(' ')[0];
   $('dn-steps').innerHTML=['We review your request, usually within one working day','You receive an email with a sign-in link','You sign in and continue with the details you entered here'].map(x=>`<li>${x}</li>`).join('');
   const t=ctxText(role);$('dn-carry').hidden=false;$('dn-carry').innerHTML='<span class="mono">Saved from this page</span>'+t.map(x=>`<div>${x}</div>`).join('');
-  $('dn-cta').innerHTML='<a class="btn plan block" href="/login">Already invited? Sign in</a>';
+  $('dn-cta').innerHTML='<a class="btn plan block" href="/login">Sign in</a>';
   $('dl-form').hidden=true;$('dl-done').hidden=false;
 });
 

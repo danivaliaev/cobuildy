@@ -3,6 +3,7 @@ import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
 import { configured } from './lib/supabase'
 import { Login } from './pages/Login'
+import { Onboarding } from './pages/Onboarding'
 import { Admin } from './pages/Admin'
 import { Developer } from './pages/Developer'
 import { ProjectPage } from './pages/Project'
@@ -47,7 +48,7 @@ export function App() {
   if (!configured) return <div className="login"><div className="card"><h2>Configuration missing</h2><p className="muted">Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY. See web/.env.example.</p></div></div>
   if (loading) return <div className="login"><span className="muted">Loading…</span></div>
   if (!session) return <SignedOut />
-  if (!profile) return <div className="login"><div className="card"><h2>No access yet</h2><p className="muted">Your account has no role. Ask Cobuildy to check your invitation.</p></div></div>
+  if (!profile) return <Onboarding />
   const home = HOME[profile.role]
   return (
     <Shell>
