@@ -61,7 +61,9 @@ export function ProfileChat({ projectId, fields, commit, editable, askReq }: {
     started.current = true
     const k = nextField(live.current)
     setCur(k)
-    setMsgs([{ r: 'a', t: INTRO + '\n\n' + (k ? FK[k].question : 'Your profile has no open fields. Review it on the right.') }])
+    const fromSite = Object.values(live.current).filter(f => f.src === 'form' && f.st !== 'empty').length
+    const welcome = fromSite ? `I saved ${fromSite} ${fromSite === 1 ? 'answer' : 'answers'} from our conversation on the website, you can see them on the right. ` : ''
+    setMsgs([{ r: 'a', t: welcome + INTRO + '\n\n' + (k ? FK[k].question : 'Your profile has no open fields. Review it on the right.') }])
   }, [])
 
   // "Ask agent" on a profile row.

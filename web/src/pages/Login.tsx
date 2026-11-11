@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { supabase, errText } from '../lib/supabase'
 import { ErrorLine } from '../components/ui'
 
@@ -9,6 +9,16 @@ export function Login() {
   const [error, setError] = useState<string | null>(null)
   const role = new URLSearchParams(window.location.search).get('role')
   const back = window.location.origin + (role === 'investor' || role === 'developer' ? `/?role=${role}` : '')
+
+  // The landing sends people here with ?auto=google so that one click starts Google sign-in.
+  const auto = useRef(new URLSearchParams(window.location.search).get('auto') === 'google')
+  useEffect(() => {
+    if (!auto.current) return
+    auto.current = false
+    window.history.replaceState(null, '', window.location.pathname + (role ? `?role=${role}` : ''))
+    void google()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function google() {
     setBusy(true); setError(null)

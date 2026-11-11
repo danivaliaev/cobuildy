@@ -586,7 +586,8 @@ const Q={
   {k:'lic',tag:'Stage',q:'What is the earliest stage you accept?',chips:[{l:'Permit granted only',v:2},{l:'Permit submitted or better',v:1},{l:'Any stage',v:0}],hint:'Permit granted only, submitted or better, or any stage.'}]
 };
 const ST={};
-['dev','inv'].forEach(m=>ST[m]={msgs:[],a:{},qi:0,done:false,typing:false,tmp:[]});
+['dev','inv'].forEach(m=>ST[m]={msgs:[],a:{},qi:0,done:false,gated:false,typing:false,tmp:[]});
+const GATE={dev:4,inv:3}; /* answers after which the agent asks the visitor to create an account */
 
 /* matching with unknown = never excluded */
 function devPart(a){
@@ -634,7 +635,8 @@ function renderChat(){
   $('c-msgs').innerHTML=s.msgs.map(m=>m.r==='u'?`<div class="m u"><div class="b">${esc(m.t)}</div></div>`:`<div class="m a"><span class="who"><i></i>Cobuildy agent</span><div class="b ${m.html?'rich':''}">${m.html?m.t:esc(m.t)}</div></div>`).join('')+(s.typing?dots:'');
   const box=$('c-msgs');box.scrollTop=box.scrollHeight;
   let h='';
-  if(s.done){h=`<span class="mono muted lbl">Next step</span><div class="set"><button class="go" type="button" data-signup="${aud}">${aud==='dev'?'Save this project':'Get alerts for new matches'} →</button><button type="button" data-act="reset">Change my answers</button></div>`}
+  if(s.gated&&!s.done){h=`<span class="mono muted lbl">Create your free account to continue</span><div class="set"><button class="go" type="button" data-signup="${aud}" data-auto="google">Continue with Google →</button><button type="button" data-signup="${aud}">Use email instead</button><button type="button" data-act="reset">Change my answers</button></div>`}
+  else if(s.done){h=`<span class="mono muted lbl">Next step</span><div class="set"><button class="go" type="button" data-signup="${aud}">${aud==='dev'?'Save this project':'Get alerts for new matches'} →</button><button type="button" data-act="reset">Change my answers</button></div>`}
   else if(q){const c=curChips();
     h=`<span class="mono muted lbl">Asking about · ${q.tag}</span><div class="set">`+c.map((x,i)=>{const on=q.multi&&s.tmp.includes(x.v);return `<button type="button" data-i="${i}" ${q.multi?`aria-pressed="${on}"`:''}>${esc(x.l)}</button>`}).join('')+
     (q.multi?`<button class="go" type="button" data-act="cont" ${s.tmp.length?'':'disabled'}>Continue →</button>`:'')+
@@ -650,6 +652,7 @@ function labelOf(k,v){
 let busy=false;
 async function submit(text,direct){
   if(busy)return;const s=ST[aud],q=Q[aud][s.qi];if(s.done||!q)return;
+  if(s.gated){busy=true;s.msgs.push({r:'u',t:text});renderChat();await say(s,'To continue, create your free account with the button below. Everything you told me is saved to your project.');busy=false;renderChat();return}
   busy=true;s.msgs.push({r:'u',t:text});renderChat();
   let found={};
   if(direct!==undefined){found[q.k]=direct}
@@ -665,9 +668,17 @@ async function submit(text,direct){
   if(aud==='dev'&&s.a.ask&&s.a.cost&&s.a.ask>s.a.cost){s.a.ask=s.a.cost;notes.push('the ask is capped at the total cost')}
   const st=stat(),more=nextQ(s)>=0;
   let msg=`Got it (${notes.join('; ')}). `+(aud==='dev'?`${st.n} of ${st.N} investors still match.`:`${st.n} of ${st.N} live projects still match.`);
-  if(more){await say(s,msg+'\n\n'+Q[aud][s.qi].q)}
+  const nAns=Q[aud].filter(x=>s.a[x.k]!==undefined).length;
+  if(more&&nAns>=GATE[aud]){await say(s,msg,false,350);await gate(s,nAns)}
+  else if(more){await say(s,msg+'\n\n'+Q[aud][s.qi].q)}
   else{await say(s,msg,false,350);await finish(s)}
   busy=false;renderChat();
+}
+async function gate(s,n){
+  s.gated=true;
+  const sum=Q[aud].filter(x=>s.a[x.k]!==undefined).map(x=>esc(labelOf(x.k,s.a[x.k]))).join(' · ');
+  const html=`<span>Good start. I already have ${n} answers: ${sum}.</span><ul class="sl"><li>To continue, create a free account. It takes one click with Google.</li><li>Everything you told me is saved into ${aud==='dev'?'your project':'your mandate'}, so we pick up at the next question.</li></ul><button class="btn plan sm" type="button" data-signup="${aud}" data-auto="google">Continue with Google</button>`;
+  await say(s,html,true,650);
 }
 async function finish(s){
   s.done=true;let html;
@@ -696,7 +707,7 @@ async function finish(s){
   await say(s,html,true,650);
 }
 function resetChat(m){
-  ST[m]={msgs:[],a:{},qi:0,done:false,typing:false,tmp:[]};const s=ST[m];
+  ST[m]={msgs:[],a:{},qi:0,done:false,gated:false,typing:false,tmp:[]};const s=ST[m];
   s.msgs.push({r:'a',t:m==='dev'?'Hi, I am your Cobuildy agent. Tell me about your project in your own words, or answer one question at a time. I check it against our investor database as we go.':'Hi, I am your Cobuildy agent. Tell me what you invest in, or answer one question at a time. I screen live projects against your mandate as we go.'});
   s.msgs.push({r:'a',t:Q[m][0].q});
 }
@@ -775,7 +786,7 @@ function closeSignup(){$('ov').hidden=true}
 const LOGIN='/login';
 function saveCarry(){try{localStorage.setItem('cb.carry.v1',JSON.stringify({role:aud,dev:ST.dev.a,inv:ST.inv.a,ts:Date.now()}))}catch(e){}}
 addEventListener('pagehide',saveCarry);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveCarry()});
-document.addEventListener('click',e=>{const b=e.target.closest('[data-signup]');if(b){saveCarry();const r=b.dataset.signup||aud;location.href=LOGIN+'?role='+(r==='inv'?'investor':'developer');return}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-signup]');if(b){saveCarry();const r=b.dataset.signup||aud;location.href=LOGIN+'?role='+(r==='inv'?'investor':'developer')+(b.dataset.auto?'&auto='+b.dataset.auto:'');return}
   if(e.target===$('ov'))closeSignup();
   });
 $('dl-x').onclick=closeSignup;
