@@ -177,18 +177,18 @@ function Wave({ project, matches, canSend, onSent }: { project: Project; matches
   return (
     <section className="card">
       <h2>Investor matches</h2>
-      <p className="muted">Hard criteria decide who can see the project; margin, return and track record only rank. Investors stay anonymous to you until the data room opens.</p>
+      <p className="muted">Hard criteria decide who can see the project; margin, return and track record only rank. Investors stay anonymous to you until they express interest.</p>
       {!canSend && <p className="muted">This is a preview that follows your answers. You can send the teaser once Cobuildy has approved it.</p>}
       <ErrorLine error={act.error ?? m.error} />
       {m.data && shown.length === 0 ? <Empty>No investor fits yet. Answer more questions or widen the ask.</Empty> : (
         <div className="scrollx"><table>
-          <thead><tr>{canSend && <th />}<th>Investor</th><th>Type</th><th>Country</th><th>Match</th><th>Score</th>{canSend && <th>Teaser</th>}</tr></thead>
+          <thead><tr>{canSend && <th />}<th>Type</th><th>Country</th><th>Match</th><th>Score</th>{canSend && <th>Teaser</th>}</tr></thead>
           <tbody>{shown.map(x => {
             const sent = done.has(x.code)
             const can = canSend && !sent && (x.bucket === 'fit' || x.bucket === 'possible')
             return <tr key={x.investor_id}>
               {canSend && <td><input type="checkbox" aria-label={`Select ${x.code}`} disabled={!can} checked={chosen.includes(x.investor_id)} onChange={e => setSel(e.target.checked ? [...chosen, x.investor_id] : chosen.filter(i => i !== x.investor_id))} /></td>}
-              <td>{x.code}</td><td>{kindLabel(x.kind)}</td><td>{countryName(x.country)}</td><td><Pill tone={tone(x.bucket)}>{x.bucket}</Pill></td><td>{x.score}</td>
+              <td>{kindLabel(x.kind)}</td><td>{countryName(x.country)}</td><td><Pill tone={tone(x.bucket)}>{x.bucket}</Pill></td><td>{x.score}</td>
               {canSend && <td>{sent ? <Pill tone="good">Sent</Pill> : <span className="muted">—</span>}</td>}</tr>
           })}</tbody>
         </table></div>

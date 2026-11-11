@@ -15,7 +15,7 @@ export function view(p: Project, matches: Array<{ code: string; bucket: string }
 /** Investor replies come first: they are the only items with someone waiting. */
 const W: Record<Tone, number> = { bad: 0, good: 1, warn: 2, plan: 3 }
 const byTone = (a: Attn, b: Attn) => W[a.tone] - W[b.tone]
-const who = (d: ProjectDeal) => `${d.investor_code} · ${kindLabel(d.investor_kind)}`
+const who = (d: ProjectDeal) => `${d.investor_name ?? d.investor_code} · ${kindLabel(d.investor_kind)}`
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
 export { plural }
 
