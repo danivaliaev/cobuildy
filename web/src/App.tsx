@@ -9,12 +9,14 @@ import { Developer } from './pages/Developer'
 import { ProjectPage } from './pages/Project'
 import { Investor } from './pages/Investor'
 import { Bell } from './components/Bell'
+import { AccountMenu } from './components/AccountMenu'
+import { Settings } from './pages/Settings'
 import type { Role } from './lib/types'
 
 const HOME: Record<Role, string> = { admin: '/admin', expert: '/admin', developer: '/developer', investor: '/investor' }
 
 function Shell({ children }: { children: React.ReactNode }) {
-  const { profile, session, signOut } = useAuth()
+  const { profile } = useAuth()
   const path = useLocation().pathname
   const wide = path.startsWith('/developer') || path.startsWith('/investor')
   const staff = profile?.role === 'admin' || profile?.role === 'expert'
@@ -28,9 +30,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           {profile?.role === 'investor' && <NavLink to="/investor" className={({ isActive }) => (isActive ? 'on' : '')}>Investor workspace</NavLink>}
         </nav>
         <Bell />
-        <span className="mono">{profile?.role}</span>
-        <span className="muted">{session?.user.email}</span>
-        <button className="btn sm" type="button" onClick={() => void signOut()}>Sign out</button>
+        <AccountMenu />
       </header>
       <main className={`wrap${wide ? ' wide' : ''}`}>{children}</main>
     </>
@@ -60,6 +60,7 @@ export function App() {
         <Route path="/developer" element={profile.role === 'developer' ? <Developer /> : <Navigate to={home} replace />} />
         <Route path="/developer/projects/:id" element={profile.role === 'developer' ? <ProjectPage /> : <Navigate to={home} replace />} />
         <Route path="/investor" element={profile.role === 'investor' ? <Investor /> : <Navigate to={home} replace />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to={home} replace />} />
       </Routes>
     </Shell>

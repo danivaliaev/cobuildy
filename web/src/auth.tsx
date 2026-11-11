@@ -4,7 +4,7 @@ import { supabase } from './lib/supabase'
 import type { Profile } from './lib/types'
 import { importCarry } from './lib/carry'
 
-interface AuthState { loading: boolean; session: Session | null; profile: Profile | null; signOut: () => Promise<void>; reload: () => void }
+interface AuthState { loading: boolean; session: Session | null; profile: Profile | null; signOut: (scope?: 'local' | 'global') => Promise<void>; reload: () => void }
 const Ctx = createContext<AuthState>({ loading: true, session: null, profile: null, signOut: async () => {}, reload: () => {} })
 export const useAuth = () => useContext(Ctx)
 
@@ -33,5 +33,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { live = false }
   }, [session, tick])
 
-  return <Ctx.Provider value={{ loading, session, profile, signOut: async () => { await supabase.auth.signOut() }, reload: () => setTick(t => t + 1) }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ loading, session, profile, signOut: async (scope = 'local') => { await supabase.auth.signOut({ scope }) }, reload: () => setTick(t => t + 1) }}>{children}</Ctx.Provider>
 }

@@ -140,3 +140,11 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 .modal .card{width:min(460px,100%)}.chg{margin:0;padding-left:18px;display:grid;gap:4px}
 .why{display:grid;gap:2px;font-size:13px}.why .linkbtn{font-size:13px}
 .why>span{border:0;background:none;padding:0;border-radius:0;display:block}
+/* account menu */
+.avatar{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--ink);color:var(--bg);font:600 12px var(--f-body);cursor:pointer;letter-spacing:.02em}
+.avatar:focus-visible{outline:2px solid var(--plan);outline-offset:2px}
+.bpanel.menu{width:min(280px,calc(100vw - 32px));gap:0;padding:6px}
+.mhead{display:grid;gap:2px;padding:10px 10px 12px;border-bottom:1px solid var(--line);word-break:break-word}
+.mitem{all:unset;box-sizing:border-box;display:block;width:100%;padding:10px;border-radius:10px;cursor:pointer;color:var(--ink);text-decoration:none}
+.mitem:hover,.mitem:focus-visible{background:var(--soft)}.mitem:focus-visible{outline:2px solid var(--plan)}
+.card input[readonly]{background:var(--soft);color:var(--ink-2)}
