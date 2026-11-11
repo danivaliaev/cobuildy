@@ -38,7 +38,7 @@ export interface ProjectDeal {
 export interface Teaser {
   deal_id: string; stage: DealStage; project_code: string; geo: string | null; asset: string | null; instrument: string[]
   ask_eur: number | null; cost_eur: number | null; gdv_eur: number | null; margin: number | null; license: string | null
-  units: number | null; build_months: number | null; presales: number | null
+  units: number | null; build_months: number | null; presales: number | null; changed_at?: string | null; sent_at?: string | null
   sponsor_years: number | null; sponsor_delivered: number | null; sponsor_volume_m: number | null; sponsor_checks: number | null
 }
 export interface DealMessage { id: string; deal_id: string; side: 'investor' | 'developer' | 'agent'; kind: 'question' | 'answer' | 'note'; body: string; created_at: string }

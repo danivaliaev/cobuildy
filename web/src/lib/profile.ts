@@ -193,3 +193,11 @@ export const MILESTONES = [
   'Milestone: the project is ready for lender outreach.',
   'Milestone: the data room is complete. Ask a Cobuildy expert to review before sharing.',
 ]
+
+/** What a save changes in the figures investors see in the teaser. Used to ask for confirmation once a project is live. */
+const KEY_LABEL: Record<string, string> = { ask_eur: 'Capital sought', cost_eur: 'Total cost', gdv_eur: 'Sales value (GDV)', margin: 'Margin', ltc: 'Loan to cost', units: 'Units', geo: 'Region', asset: 'Asset type', instrument: 'Instrument', license: 'Licence' }
+export function keyChanges(prev: Fields, next: Fields): string[] {
+  const a = columnsFor(prev) as Record<string, unknown>, b = columnsFor(next) as Record<string, unknown>
+  const show = (k: string, v: unknown) => (v == null || (Array.isArray(v) && !v.length) ? '—' : k.endsWith('_eur') ? `€${Math.round(Number(v) / 1e4) / 100}M` : k === 'margin' || k === 'ltc' ? `${Math.round(Number(v) * 100)}%` : Array.isArray(v) ? v.join('/') : String(v))
+  return Object.keys(KEY_LABEL).filter(k => JSON.stringify(a[k]) !== JSON.stringify(b[k])).map(k => `${KEY_LABEL[k]}: ${show(k, a[k])} → ${show(k, b[k])}`)
+}

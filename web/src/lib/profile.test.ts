@@ -51,3 +51,14 @@ describe('profile model', () => {
     expect(patchFor(p, f)).toMatchObject({ stage: 0, license: 'granted' })
   })
 })
+
+describe('keyChanges', () => {
+  it('lists changes to the figures investors see, and ignores others', async () => {
+    const { keyChanges, emptyFields, applyUpdates } = await import('./profile')
+    const a = applyUpdates(emptyFields(), [{ key: 'k_ask', status: 'filled', display: '€7M', amount: 7e6 }]).next
+    const b = applyUpdates(a, [{ key: 'k_ask', status: 'filled', display: '€8M', amount: 8e6 }]).next
+    expect(keyChanges(a, b)).toEqual(['Capital sought: €7M → €8M'])
+    const c = applyUpdates(b, [{ key: 'o_team', status: 'filled', display: 'x' }]).next
+    expect(keyChanges(b, c)).toEqual([])
+  })
+})

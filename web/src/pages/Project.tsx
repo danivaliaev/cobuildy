@@ -6,7 +6,7 @@ import { eur } from '../lib/format'
 import { ProfileChat } from '../components/ProfileChat'
 import { ProfileView } from '../components/ProfileView'
 import { ReadinessPanel } from '../components/ReadinessPanel'
-import { FIELDS, GATE_NAMES, blank, columnsFor, hydrate, isDone, patchFor, type FieldState, type Fields } from '../lib/profile'
+import { FIELDS, GATE_NAMES, blank, columnsFor, hydrate, isDone, keyChanges, patchFor, type FieldState, type Fields } from '../lib/profile'
 import { kindLabel, countryName } from '../lib/investorKinds'
 import { STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
@@ -43,9 +43,15 @@ export function ProjectPage() {
   // The profile is loaded once; after that this page is the source of truth and every change is saved straight away.
   useEffect(() => { if (proj.data && !fields) { setFields(hydrate(proj.data)); setDbStage(proj.data.stage) } }, [proj.data, fields])
 
+  const [confirm, setConfirm] = useState<{ lines: string[]; done: (ok: boolean) => void } | null>(null)
   const commit = useCallback(async (next: Fields) => {
     if (!proj.data) return
     const prev = fields
+    // Once the teaser is approved, a change to the key figures needs an explicit yes: investors and Cobuildy are told.
+    if (prev && (proj.data.status === 'approved' || proj.data.status === 'live')) {
+      const lines = keyChanges(prev, next)
+      if (lines.length && !(await new Promise<boolean>(res => setConfirm({ lines, done: res })))) throw new Error('Change not saved.')
+    }
     setFields(next)
     const patch = patchFor(proj.data, next)
     const { error } = await supabase.from('projects').update(patch).eq('id', id)
@@ -59,7 +65,8 @@ export function ProjectPage() {
   if (proj.loading) return <span className="muted">Loading…</span>
   if (!proj.data || !fields) return <><ErrorLine error={proj.error} /><Link to="/developer">← Projects</Link></>
   const p = proj.data
-  const editable = p.status === 'draft'
+  const editable = p.status !== 'discarded' && p.status !== 'closed_won' && p.status !== 'closed_lost'
+  const sent = p.status === 'approved' || p.status === 'live'
   const ask = (key: string) => { setAskReq({ key, n: Date.now() }); document.getElementById('agent-chat')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }
   const fitCount = (matches.data ?? []).filter(m => m.bucket === 'fit').length
   const edit = (key: string, next: FieldState) => commit({ ...fields, [key]: { ...blank(), ...next } })
@@ -69,6 +76,16 @@ export function ProjectPage() {
       <div className="row"><Link to="/developer">← Projects</Link><span className="sp" /><Pill tone={p.status === 'draft' ? undefined : 'good'}>{p.status.replace('_', ' ')}</Pill></div>
       <h1>{p.code} · {p.title}</h1>
       {p.status === 'teaser_review' && <span className="muted">Cobuildy is reviewing your teaser. Matching investors can be contacted once it is approved.</span>}
+
+      {sent && <div className="ibanner" role="note"><span className="sp">The teaser is approved. You can keep editing. A change to the key figures (capital, cost, GDV, margin, units, licence, region, asset, instrument) asks you to confirm, because investors who hold this teaser and Cobuildy are notified.</span></div>}
+      {confirm && (
+        <div className="modal" role="dialog" aria-modal="true" aria-label="Confirm change"><div className="card">
+          <h2>Change the teaser figures?</h2>
+          <p className="muted">Investors who already have this teaser will see the new values and get a notification. Cobuildy is notified too.</p>
+          <ul className="chg">{confirm.lines.map(l => <li key={l}>{l}</li>)}</ul>
+          <div className="row"><button className="btn pri" type="button" onClick={() => { confirm.done(true); setConfirm(null) }}>Save changes</button>
+            <button className="btn" type="button" onClick={() => { confirm.done(false); setConfirm(null) }}>Cancel</button></div>
+        </div></div>)}
 
       <MatchBar matches={matches.data} />
 

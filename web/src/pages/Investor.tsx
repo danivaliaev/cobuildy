@@ -18,6 +18,8 @@ const NOW: Partial<Record<DealStage, number>> = { interested: 0, nda_sent: 1, ro
 const PIPE: Array<[string, DealStage[]]> = [['Interest', ['interested', 'nda_sent']], ['Diligence', ['room', 'shared', 'qa', 'answered']], ['Decision', ['ts', 'call']], ['Passed', ['passed']]]
 const title = (t: Teaser) => `${ASSET[t.asset ?? ''] ?? t.asset ?? 'Project'} · ${GEO[t.geo ?? ''] ?? t.geo ?? ''}`
 const active = (t: Teaser) => t.stage !== 'passed'
+/** The sponsor corrected key figures after this investor received the teaser. */
+const upd = (t: Teaser) => Boolean(t.changed_at && t.sent_at && t.changed_at > t.sent_at && t.stage !== 'passed')
 
 function FlowBar({ stage }: { stage: DealStage }) {
   if (stage === 'passed') return <Pill>Passed</Pill>
@@ -56,7 +58,7 @@ function Card({ f, busy, onOpen, onGo }: { f: Fit; busy: boolean; onOpen: () => 
     <article className="pj">
       <button type="button" className="pj-h" onClick={onOpen}>
         <b>{title(t)} <span className="muted">· {t.project_code}</span></b>
-        <Pill tone={f.bucket === 'match' ? 'good' : 'plan'}>Fit {f.fit}%</Pill>
+        {upd(f.t) && <Pill tone="warn">Data updated</Pill>}<Pill tone={f.bucket === 'match' ? 'good' : 'plan'}>Fit {f.fit}%</Pill>
         <span className="meta">{t.instrument.map(i => INSTRUMENT[i] ?? i).join(' / ') || '—'} {eur(t.ask_eur)} · {ltc != null ? `LTC ${pct(ltc)}` : ''} · margin {pct(t.margin)} · {LICENSE[t.license ?? ''] ?? 'permit unknown'}</span>
       </button>
       <div className="why">
@@ -94,7 +96,7 @@ function Review({ f, inv, docs, msgs, busy, go, reloadInv }: { f: Fit; inv: Inv;
   return (
     <>
       <section className="card">
-        <div className="row"><span className="mono">{t.project_code} · {title(t)}</span><span className="sp" /><Pill tone={f.bucket === 'match' ? 'good' : 'plan'}>Fit {f.fit}%</Pill></div>
+        <div className="row"><span className="mono">{t.project_code} · {title(t)}</span><span className="sp" />{upd(t) && <Pill tone="warn">Data updated</Pill>}<Pill tone={f.bucket === 'match' ? 'good' : 'plan'}>Fit {f.fit}%</Pill></div>
         <h3>{title(t)}, {t.instrument.map(i => (INSTRUMENT[i] ?? i).toLowerCase()).join(' / ')} {eur(t.ask_eur)}</h3>
         <FlowBar stage={t.stage} />
         <div className="kv">{kv.map(([k, v]) => <div key={k}><span>{k}</span><span>{v}</span></div>)}</div>
