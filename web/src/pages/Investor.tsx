@@ -103,14 +103,17 @@ function Review({ f, inv, docs, msgs, busy, go, reloadInv }: { f: Fit; inv: Inv;
         <div className="row">
           {t.stage === 'sent' && <><button className="btn sm pri" disabled={busy} onClick={() => go(t.deal_id, 'interest')}>Express interest</button><button className="btn sm" disabled={busy} onClick={() => go(t.deal_id, 'pass', { reason: 'Not for us' })}>Pass</button></>}
           {t.stage === 'interested' && <span className="muted">Interest registered. The developer decides whether to open an NDA.</span>}
-          {t.stage === 'nda_sent' && <button className="btn sm plan" disabled={busy || !access} onClick={() => go(t.deal_id, 'sign_nda')}>Sign NDA and open the data room</button>}
+          {t.stage === 'nda_sent' && (t.nda_inv_signed
+            ? <span className="muted">You signed the NDA. Waiting for the developer to sign, then the data room opens.</span>
+            : <button className="btn sm plan" disabled={busy || !access} onClick={() => go(t.deal_id, 'sign_nda')}>Sign NDA and open the data room</button>)}
+          {t.stage === 'nda_sent' && !t.nda_inv_signed && t.nda_dev_signed && <span className="muted">The developer has signed.</span>}
           {t.stage === 'room' && <span className="muted">NDA signed. The developer is choosing which documents to share.</span>}
           {t.stage === 'answered' && <button className="btn sm plan" disabled={busy} onClick={() => go(t.deal_id, 'request_ts')}>Request a term sheet discussion</button>}
           {t.stage === 'ts' && <span className="muted">Term sheet discussion requested. The developer confirms a call slot.</span>}
           {t.stage === 'call' && <Pill tone="good">Call confirmed</Pill>}
           {['interested', 'nda_sent', 'room', 'shared', 'qa', 'answered'].includes(t.stage) && <button className="btn sm" disabled={busy} onClick={() => go(t.deal_id, 'pass', { reason: 'Not for us' })}>Pass</button>}
         </div>
-        {t.stage === 'nda_sent' && !access && (
+        {t.stage === 'nda_sent' && !t.nda_inv_signed && !access && (
           <div className="accbox">
             <b>Before you sign the NDA, two quick steps</b>
             <div className="row"><Pill tone={inv.declared_qualified_at ? 'good' : 'warn'}>{inv.declared_qualified_at ? '✓ ' : '1 '}Qualified investor declaration</Pill>
@@ -321,7 +324,7 @@ function Workspace({ inv, reload }: { inv: Inv; reload: () => void | Promise<voi
   const props: Prop[] = fits.flatMap<Prop>(f => {
     const t = f.t; const o: Prop[] = []
     if (t.stage === 'sent' && f.bucket === 'match' && f.fit >= 80) o.push({ id: `rv:${t.deal_id}`, deal: t.deal_id, h: `Review ${t.project_code} · ${title(t)}`, d: `Fit ${f.fit}% and nothing outside your mandate.` })
-    if (t.stage === 'nda_sent') o.push({ id: `nda:${t.deal_id}`, deal: t.deal_id, h: `Sign the NDA for ${t.project_code}`, d: 'Opens the data room. Needs your declaration and identity check.' })
+    if (t.stage === 'nda_sent' && !t.nda_inv_signed) o.push({ id: `nda:${t.deal_id}`, deal: t.deal_id, h: `Sign the NDA for ${t.project_code}`, d: 'Opens the data room. Needs your declaration and identity check.' })
     if (t.stage === 'shared') o.push({ id: `qa:${t.deal_id}`, deal: t.deal_id, h: `Documents shared for ${t.project_code}`, d: 'Read them and send your questions to the sponsor.' })
     if (t.stage === 'answered') o.push({ id: `ts:${t.deal_id}`, deal: t.deal_id, h: `Request a term sheet discussion for ${t.project_code}`, d: 'The sponsor answered. I recommend a call.' })
     return o

@@ -200,8 +200,9 @@ function Wave({ project, matches, canSend, onSent, onFill }: { onFill: (key: str
   })
   return (
     <section className="card">
-      <h2>Investor matches</h2>
-      <p className="muted">Hard criteria decide who can see the project; margin, return and track record only rank. “Needs info” means a fact is missing in your profile, so it cannot be checked against that investor’s criteria yet. Investors stay anonymous to you until they express interest.</p>
+      <h2>Send your teaser</h2>
+      <p className="muted">These are the investors whose criteria fit this project. Tick who should receive the teaser and press the button at the bottom. Investors who already have it are marked <b>Sent</b>, and their replies appear under <b>Deals</b> below.</p>
+      <p className="muted small">Fit: all hard criteria confirmed. Needs info: a fact is missing in your profile, so it cannot be checked yet. Margin, return and track record only change the score. Investors stay anonymous to you until they express interest.</p>
       {!canSend && <p className="muted">This is a preview that follows your answers. You can send the teaser once Cobuildy has approved it.</p>}
       <ErrorLine error={act.error ?? m.error} />
       {m.data && shown.length === 0 ? <Empty>No investor fits yet. Answer more questions or widen the ask.</Empty> : (
@@ -257,7 +258,10 @@ function Deals({ project, docs }: { project: Project; docs: ProjectDoc[] }) {
               {d.stage === 'interested' && <>
                 <button className="btn sm pri" disabled={act.busy} onClick={() => go(d.deal_id, 'accept')}>Accept</button>
                 <button className="btn sm" disabled={act.busy} onClick={() => go(d.deal_id, 'decline', { reason: 'Not a fit right now' })}>Decline</button></>}
-              {d.stage === 'nda_sent' && <button className="btn sm pri" disabled={act.busy} onClick={() => go(d.deal_id, 'sign_nda')}>Sign NDA</button>}
+              {d.stage === 'nda_sent' && (d.nda_dev_signed
+                ? <span className="ok">You signed the NDA. Waiting for {d.investor_name ?? 'the investor'} to sign.</span>
+                : <button className="btn sm pri" disabled={act.busy} onClick={() => go(d.deal_id, 'sign_nda')}>Sign NDA</button>)}
+              {d.stage === 'nda_sent' && <span className="muted">NDA: you {d.nda_dev_signed ? '✓' : 'not yet'} · investor {d.nda_inv_signed ? '✓' : 'not yet'}</span>}
             </div>
             {d.stage === 'room' && (docs.length === 0 ? <span className="muted">Add documents above, then choose what to share.</span> : <>
               <div className="chks">{docs.map(x => <label className="chk" key={x.id}><input type="checkbox" checked={(picked[d.deal_id] ?? []).includes(x.id)} onChange={e => { const cur = picked[d.deal_id] ?? []; setPicked({ ...picked, [d.deal_id]: e.target.checked ? [...cur, x.id] : cur.filter(i => i !== x.id) }) }} />{x.title}</label>)}</div>

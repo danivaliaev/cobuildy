@@ -35,7 +35,7 @@ export function attention(v: ProjView): Attn[] {
   if (p.status === 'teaser_review') add('warn', 'Teaser is waiting for approval', 'Cobuildy reviews it before any investor sees it.', 'View', 'profile')
   const sent = v.deals.length
   if ((p.status === 'approved' || p.status === 'live') && sent === 0 && v.fit.length > 0) add('plan', `Send the teaser to ${plural(v.fit.length, 'matching investor')}`, 'Teaser approved. You confirm before anything goes out.', 'Open investors', 'investors')
-  for (const d of v.deals) { const t = DEAL[d.stage]; if (t) add(t[0], `${who(d)} ${t[1]}`, t[2], t[3], t[4]) }
+  for (const d of v.deals) { const t = DEAL[d.stage]; if (t && !(d.stage === 'nda_sent' && d.nda_dev_signed)) add(t[0], `${who(d)} ${t[1]}`, t[2], t[3], t[4]) }
   const hard = (p.status === 'draft' || p.status === 'teaser_review') && c.next === 1
   for (const f of c.blockers.slice(0, 2)) add(hard ? 'warn' : 'plan', `Missing: ${f.label}`, hard ? 'Needed before the teaser can go out.' : 'Not required, but investors will ask for it.', 'Answer', 'profile')
   return out.sort(byTone)

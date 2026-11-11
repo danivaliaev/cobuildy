@@ -33,12 +33,12 @@ export interface Investor {
 export interface Match { investor_id: string; code: string; bucket: 'fit' | 'possible' | 'later' | 'out'; score: number; kind?: string | null; country?: string | null; missing?: string[] }
 export interface ProjectDeal {
   deal_id: string; investor_code: string; investor_kind: string | null; stage: DealStage; reason: string | null
-  investor_name: string | null; call_slot: string | null
+  investor_name: string | null; call_slot: string | null; nda_dev_signed?: boolean; nda_inv_signed?: boolean
 }
 export interface Teaser {
   deal_id: string; stage: DealStage; project_code: string; geo: string | null; asset: string | null; instrument: string[]
   ask_eur: number | null; cost_eur: number | null; gdv_eur: number | null; margin: number | null; license: string | null
-  units: number | null; build_months: number | null; presales: number | null; changed_at?: string | null; sent_at?: string | null
+  units: number | null; build_months: number | null; presales: number | null; changed_at?: string | null; sent_at?: string | null; nda_dev_signed?: boolean; nda_inv_signed?: boolean
   sponsor_years: number | null; sponsor_delivered: number | null; sponsor_volume_m: number | null; sponsor_checks: number | null
 }
 export interface DealMessage { id: string; deal_id: string; side: 'investor' | 'developer' | 'agent'; kind: 'question' | 'answer' | 'note'; body: string; created_at: string }
