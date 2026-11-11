@@ -15,7 +15,7 @@ const HOME: Record<Role, string> = { admin: '/admin', expert: '/admin', develope
 function Shell({ children }: { children: React.ReactNode }) {
   const { profile, session, signOut } = useAuth()
   const path = useLocation().pathname
-  const wide = path.startsWith('/developer/projects/') || path.startsWith('/investor')
+  const wide = path.startsWith('/developer') || path.startsWith('/investor')
   const staff = profile?.role === 'admin' || profile?.role === 'expert'
   return (
     <>
