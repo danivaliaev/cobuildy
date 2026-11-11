@@ -115,7 +115,7 @@ export function Developer() {
   const kpi: Array<[string, string, string]> = [
     [eur(t.ask), 'Capital sought', `across ${plural(t.n, 'project')}`],
     [`${t.ready} of ${t.n}`, 'Ready for outreach', views.length ? `readiness ${Math.min(...views.map(v => v.c.score))}–${Math.max(...views.map(v => v.c.score))}%` : ''],
-    [String(t.fit), 'Investors that fit', `unique · +${t.poss} possible`],
+    [String(t.fit), 'Investors that fit', `unique · +${t.poss} need info`],
     [t.sentAny ? String(t.interested) : '—', 'Showing interest', t.sentAny ? 'replied or moved on' : 'no teaser sent yet'],
     [String(t.attn.length), 'Open actions', t.attn.filter(a => a.tone === 'good').length + ' waiting for you'],
   ]

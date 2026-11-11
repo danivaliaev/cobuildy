@@ -70,6 +70,6 @@ export function reply(q: string, vs: ProjView[]): string {
     const v = vs.find(x => x.c.blockers.length) ?? vs[0]
     return v.c.blockers.length ? `${v.p.title} is still missing: ${v.c.blockers.slice(0, 5).map(f => f.label.toLowerCase()).join(', ')}.` : `${v.p.title} has nothing left to add for the next stage.`
   }
-  if (/investor|fit|match/.test(s)) return `${plural(t.fit, 'investor')} fit at least one project, and ${t.poss} more are possible. ` + vs.map(v => `${v.p.title}: ${v.fit.length}`).join('; ') + '.'
+  if (/investor|fit|match/.test(s)) return `${plural(t.fit, 'investor')} fit at least one project, and ${t.poss} more need more information from you. ` + vs.map(v => `${v.p.title}: ${v.fit.length}`).join('; ') + '.'
   return `${plural(t.n, 'project')}, ${t.ready} ready for outreach or beyond. ${eur(t.ask)} sought. ` + vs.map(v => `${v.p.title}: ${v.c.score}% ready`).join('; ') + '.'
 }

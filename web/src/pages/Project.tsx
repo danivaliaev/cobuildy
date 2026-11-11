@@ -99,7 +99,7 @@ export function ProjectPage() {
           </div>
           {tab === 'profile' && <ProfileView fields={fields} flash={flash} editable={editable} onAsk={ask} onEdit={edit} />}
           {tab === 'investors' && <>
-            <Wave project={p} matches={matches} canSend={p.status === 'approved' || p.status === 'live'} onSent={async () => { await proj.reload(); setWave(w => w + 1) }} />
+            <Wave onFill={k => { setTab('profile'); ask(k) }} project={p} matches={matches} canSend={p.status === 'approved' || p.status === 'live'} onSent={async () => { await proj.reload(); setWave(w => w + 1) }} />
             {(p.status === 'live' || p.status === 'approved') && <Deals key={wave} project={p} docs={docs.data ?? []} />}
           </>}
           {tab === 'room' && <DataRoom projectId={p.id} fields={fields} docs={docs.data ?? []} reload={docs.reload} editable={editable || p.status !== 'discarded'} error={docs.error} />}
@@ -112,7 +112,7 @@ export function ProjectPage() {
 }
 
 const BUCKETS: Array<{ k: Match['bucket']; label: string }> = [
-  { k: 'fit', label: 'Fit' }, { k: 'possible', label: 'Possible' }, { k: 'later', label: 'After actions' }, { k: 'out', label: 'Out' },
+  { k: 'fit', label: 'Fit' }, { k: 'possible', label: 'Needs info' }, { k: 'later', label: 'After actions' }, { k: 'out', label: 'Out' },
 ]
 
 /** Where the investor network stands for this project, recalculated as the profile changes. */
@@ -175,7 +175,14 @@ function Docs({ projectId, docs, reload, editable, error }: { projectId: string;
   )
 }
 
-function Wave({ project, matches, canSend, onSent }: { project: Project; matches: { data: Match[] | null; error: string | null; reload: () => void | Promise<void> }; canSend: boolean; onSent: () => Promise<void> }) {
+/** What stops an investor from being a sure fit: a fact of the project that their criteria need and the profile does not have yet. */
+const MISSING: Record<string, { text: string; key: string }> = {
+  geo: { text: 'Region not set', key: 'a_loc' }, asset: { text: 'Asset type not set', key: 'a_type' }, instrument: { text: 'Instrument not set', key: 'k_instr' },
+  ticket: { text: 'Capital sought not set', key: 'k_ask' }, license: { text: 'Licence status not set', key: 'p_status' },
+}
+const BUCKET_LABEL: Record<Match['bucket'], string> = { fit: 'fit', possible: 'needs info', later: 'later', out: 'out' }
+
+function Wave({ project, matches, canSend, onSent, onFill }: { onFill: (key: string) => void; project: Project; matches: { data: Match[] | null; error: string | null; reload: () => void | Promise<void> }; canSend: boolean; onSent: () => Promise<void> }) {
   const m = matches
   const contacted = useLoad(async () => (canSend ? await rpc<ProjectDeal[]>('project_deals', { p_project: project.id }) : []), [project.id, canSend])
   const done = new Set((contacted.data ?? []).map(d => d.investor_code))
@@ -194,18 +201,19 @@ function Wave({ project, matches, canSend, onSent }: { project: Project; matches
   return (
     <section className="card">
       <h2>Investor matches</h2>
-      <p className="muted">Hard criteria decide who can see the project; margin, return and track record only rank. Investors stay anonymous to you until they express interest.</p>
+      <p className="muted">Hard criteria decide who can see the project; margin, return and track record only rank. “Needs info” means a fact is missing in your profile, so it cannot be checked against that investor’s criteria yet. Investors stay anonymous to you until they express interest.</p>
       {!canSend && <p className="muted">This is a preview that follows your answers. You can send the teaser once Cobuildy has approved it.</p>}
       <ErrorLine error={act.error ?? m.error} />
       {m.data && shown.length === 0 ? <Empty>No investor fits yet. Answer more questions or widen the ask.</Empty> : (
         <div className="scrollx"><table>
-          <thead><tr>{canSend && <th />}<th>Type</th><th>Country</th><th>Match</th><th>Score</th>{canSend && <th>Teaser</th>}</tr></thead>
+          <thead><tr>{canSend && <th />}<th>Type</th><th>Country</th><th>Match</th><th>Score</th><th>To make it a fit</th>{canSend && <th>Teaser</th>}</tr></thead>
           <tbody>{shown.map(x => {
             const sent = done.has(x.code)
             const can = canSend && !sent && (x.bucket === 'fit' || x.bucket === 'possible')
             return <tr key={x.investor_id}>
               {canSend && <td><input type="checkbox" aria-label={`Select ${x.code}`} disabled={!can} checked={chosen.includes(x.investor_id)} onChange={e => setSel(e.target.checked ? [...chosen, x.investor_id] : chosen.filter(i => i !== x.investor_id))} /></td>}
-              <td>{kindLabel(x.kind)}</td><td>{countryName(x.country)}</td><td><Pill tone={tone(x.bucket)}>{x.bucket}</Pill></td><td>{x.score}</td>
+              <td>{kindLabel(x.kind)}</td><td>{countryName(x.country)}</td><td><Pill tone={tone(x.bucket)}>{BUCKET_LABEL[x.bucket]}</Pill></td><td>{x.score}</td>
+              <td>{x.bucket === 'possible' && (x.missing ?? []).length > 0 ? <span className="why">{(x.missing ?? []).filter(k => MISSING[k]).map(k => <span key={k}>{MISSING[k].text} · <button className="linkbtn" type="button" onClick={() => onFill(MISSING[k].key)}>Fill in</button></span>)}</span> : <span className="muted">—</span>}</td>
               {canSend && <td>{sent ? <Pill tone="good">Sent</Pill> : <span className="muted">—</span>}</td>}</tr>
           })}</tbody>
         </table></div>

@@ -30,7 +30,7 @@ export interface Investor {
   declared_qualified_at: string | null; kyc_status: 'none' | 'pending' | 'passed' | 'failed'
   mandate: { type?: 'priv' | 'inst' | null; st?: Record<string, string> } | null
 }
-export interface Match { investor_id: string; code: string; bucket: 'fit' | 'possible' | 'later' | 'out'; score: number; kind?: string | null; country?: string | null }
+export interface Match { investor_id: string; code: string; bucket: 'fit' | 'possible' | 'later' | 'out'; score: number; kind?: string | null; country?: string | null; missing?: string[] }
 export interface ProjectDeal {
   deal_id: string; investor_code: string; investor_kind: string | null; stage: DealStage; reason: string | null
   investor_name: string | null; call_slot: string | null
