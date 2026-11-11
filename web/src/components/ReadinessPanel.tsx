@@ -9,12 +9,23 @@ export function ReadinessPanel({ fields, status, dbStage, onAsk, onSubmit, busy,
   const c = calc(fields)
   const verdict = c.stage === 0 ? 'Not ready for a teaser yet' : c.stage === 1 ? 'Teaser-ready' : c.stage === 2 ? 'Ready for lender outreach' : 'Data room complete'
   const draft = status === 'draft'
+  const missing = FIELDS.filter(d => d.gate === 1 && fields[d.key]?.st !== 'filled')
   return (
     <aside className="card readycard" aria-label="Readiness">
       <div className="row"><h2>Readiness</h2><span className="sp" /><span className="mono">{c.score}%</span></div>
       <div className="bar"><i style={{ width: `${c.score}%` }} /></div>
       <div><b>{verdict}</b><div className="muted">{c.known} of {FIELDS.length} fields recorded · {c.filled} fully met</div></div>
       <div className="ladder">{STEPS.map((s, i) => <div key={s} className={c.stage >= i + 1 ? 'on' : i === c.stage ? 'now' : ''}><i />{s}</div>)}</div>
+
+      {draft ? (
+        <div className="blk">
+          <button className="btn pri" disabled={busy || c.stage < 1 || dbStage < 1} onClick={onSubmit}>Submit teaser for review</button>
+          {c.stage < 1 ? (
+            <span className="muted">Still needed for the teaser: {missing.map(d => d.label.toLowerCase()).join(', ')}.</span>
+          ) : dbStage < 1 ? <span className="muted">Saving…</span> : <span className="muted">Cobuildy reviews the teaser before any investor sees it.</span>}
+          <ErrorLine error={error} />
+        </div>
+      ) : <div className="blk"><Pill tone="good">{status.replace('_', ' ')}</Pill></div>}
 
       {c.blockers.length > 0 && (
         <div className="blk">
@@ -39,15 +50,6 @@ export function ReadinessPanel({ fields, status, dbStage, onAsk, onSubmit, busy,
           )
         })}
       </div>
-
-      {draft ? (
-        <div className="blk">
-          <button className="btn pri" disabled={busy || c.stage < 1 || dbStage < 1} onClick={onSubmit}>Submit teaser for review</button>
-          {c.stage < 1 ? <span className="muted">Answer the teaser questions first: asset, location, units, cost, sales value, capital sought and instrument.</span>
-            : dbStage < 1 ? <span className="muted">Saving…</span> : <span className="muted">Cobuildy reviews the teaser before any investor sees it.</span>}
-          <ErrorLine error={error} />
-        </div>
-      ) : <Pill tone="good">{status.replace('_', ' ')}</Pill>}
     </aside>
   )
 }
