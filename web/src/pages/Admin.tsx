@@ -143,7 +143,67 @@ function Investors() {
   )
 }
 
+type CompanyRow = {
+  company_id: string; name: string; website: string | null; founded: number | null; delivered: number; volume_m: number; refs: number
+  owner_email: string | null; projects: number
+  ver_registry: boolean; ver_web: boolean; ver_fin: boolean; ver_refs: boolean
+  notes: Record<string, { note: string | null; at: string }>
+}
+const CHECKS: Array<{ key: 'registry' | 'web' | 'fin' | 'refs'; flag: 'ver_registry' | 'ver_web' | 'ver_fin' | 'ver_refs'; label: string; hint: string }> = [
+  { key: 'registry', flag: 'ver_registry', label: 'Registry', hint: 'The company exists in the commercial registry; founding year and directors match.' },
+  { key: 'web', flag: 'ver_web', label: 'Website', hint: 'The site exists, belongs to the company and matches what they declared.' },
+  { key: 'fin', flag: 'ver_fin', label: 'Financials', hint: 'Accounts or bank statements were reviewed.' },
+  { key: 'refs', flag: 'ver_refs', label: 'References', hint: 'At least one past partner or buyer was contacted and confirmed.' },
+]
+
+function CompanyCard({ c, reload }: { c: CompanyRow; reload: () => void | Promise<void> }) {
+  const [notes, setNotes] = useState<Record<string, string>>(() => Object.fromEntries(CHECKS.map(k => [k.key, c.notes[k.key]?.note ?? ''])))
+  const act = useAction(reload)
+  const set = (key: string, passed: boolean) => void act.run(() => rpc('set_company_check', { p_company: c.company_id, p_check: key, p_passed: passed, p_note: notes[key] ?? '' }))
+  const passed = CHECKS.filter(k => c[k.flag]).length
+  return (
+    <div className="card soft">
+      <div className="row">
+        <b>{c.name}</b><Pill tone={passed === 4 ? 'good' : passed > 0 ? 'plan' : undefined}>{passed} of 4 verified</Pill><span className="sp" />
+        <span className="muted">{c.owner_email ?? '—'} · {c.projects} {c.projects === 1 ? 'project' : 'projects'}</span>
+      </div>
+      <div className="muted">
+        Founded {c.founded ?? '—'} · {c.delivered} delivered · €{c.volume_m}M volume · {c.refs} references
+        {c.website && <> · <a href={/^https?:/.test(c.website) ? c.website : `https://${c.website}`} target="_blank" rel="noreferrer">{c.website}</a></>}
+      </div>
+      {CHECKS.map(k => {
+        const done = c[k.flag]; const info = c.notes[k.key]
+        return (
+          <div className="grid2" key={k.key} style={{ alignItems: 'end' }}>
+            <div><div className="row"><b>{k.label}</b>{done ? <Pill tone="good">Verified</Pill> : <Pill>Not verified</Pill>}</div>
+              <div className="muted">{k.hint}{info && <> Last updated {when(info.at)}.</>}</div></div>
+            <div className="row">
+              <input className="sp" placeholder="What was checked, and where" value={notes[k.key] ?? ''} onChange={e => setNotes({ ...notes, [k.key]: e.target.value })} />
+              {done
+                ? <><button className="btn sm" disabled={act.busy || !(notes[k.key] ?? '').trim()} onClick={() => set(k.key, true)}>Save note</button><button className="btn sm" disabled={act.busy} onClick={() => set(k.key, false)}>Revoke</button></>
+                : <button className="btn sm pri" disabled={act.busy || !(notes[k.key] ?? '').trim()} onClick={() => set(k.key, true)}>Mark verified</button>}
+            </div>
+          </div>
+        )
+      })}
+      <ErrorLine error={act.error} />
+    </div>
+  )
+}
+
+function Companies() {
+  const list = useLoad(async () => rpc<CompanyRow[]>('admin_companies'))
+  return (
+    <section className="card">
+      <h2>Sponsor verification</h2>
+      <p className="muted">Four checks that only Cobuildy can set. Investors see the count on every teaser. A note is required, and every change is logged. The developer is notified when a check passes.</p>
+      <ErrorLine error={list.error} />
+      {list.data && list.data.length === 0 ? <Empty>No companies yet.</Empty> : list.data?.map(c => <CompanyCard key={c.company_id} c={c} reload={list.reload} />)}
+    </section>
+  )
+}
+
 export function Admin() {
   const [k, setK] = useState(0)
-  return <><h1>Admin</h1><Requests onInvited={() => setK(k + 1)} /><Invitations reloadKey={k} /><Teasers /><Investors /></>
+  return <><h1>Admin</h1><Requests onInvited={() => setK(k + 1)} /><Invitations reloadKey={k} /><Teasers /><Companies /><Investors /></>
 }
