@@ -1,3 +1,4 @@
+import { kindType } from './investorKinds'
 import { eur, pct } from './format'
 import { ASSET, GEO, INSTRUMENT, type Investor, type Teaser } from './types'
 
@@ -53,7 +54,7 @@ export function hydrate(inv: Investor): Mandate {
     term: inv.max_term, track: inv.min_track, margin: inv.min_margin == null ? null : Number(inv.min_margin), pre: inv.min_presales == null ? null : Number(inv.min_presales),
   }
   const saved = inv.mandate?.st ?? {}
-  const type = inv.mandate?.type === 'priv' || inv.mandate?.type === 'inst' ? inv.mandate.type : null
+  const type = inv.mandate?.type === 'priv' || inv.mandate?.type === 'inst' ? inv.mandate.type : kindType(inv.kind)
   const st: Mandate['st'] = {}
   for (const k of KEYS) {
     const s = saved[k]

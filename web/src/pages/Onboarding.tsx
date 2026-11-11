@@ -3,6 +3,7 @@ import { supabase, errText } from '../lib/supabase'
 import { useAuth } from '../auth'
 import { carryRole } from '../lib/carry'
 import { ErrorLine } from '../components/ui'
+import { InvestorProfileForm, type InvestorProfileValue } from '../components/InvestorProfileForm'
 
 type Pick = 'developer' | 'investor'
 
@@ -16,13 +17,34 @@ export function Onboarding() {
   const [company, setCompany] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [step, setStep] = useState<1 | 2>(1)
+
+  async function finishInvestor(v: InvestorProfileValue) {
+    setBusy(true); setError(null)
+    const { error: err } = await supabase.rpc('complete_investor_signup', { p_name: name.trim(), p_firm: v.name, p_kind: v.kind, p_country: v.country, p_phone: v.phone })
+    if (err) { setBusy(false); setError(errText(err.message)); return }
+    reload()
+  }
 
   async function submit(e: FormEvent) {
-    e.preventDefault(); setBusy(true); setError(null)
+    e.preventDefault(); setError(null)
+    if (role === 'investor') { setStep(2); return }
+    setBusy(true)
     const { error: err } = await supabase.rpc('complete_signup', { p_role: role, p_name: name.trim(), p_company: company.trim() || null })
     if (err) { setBusy(false); setError(errText(err.message)); return }
     reload()
   }
+
+  if (role === 'investor' && step === 2) return (
+    <div className="login">
+      <div className="card">
+        <span className="mono">Cobuildy · step 2 of 2</span>
+        <h1>About your investing</h1>
+        <p className="muted">Pick what describes you best. This tells developers who they are talking to.</p>
+        <InvestorProfileForm submitLabel="Open my workspace" busy={busy} error={error} onSubmit={finishInvestor} onCancel={() => setStep(1)} />
+      </div>
+    </div>
+  )
 
   return (
     <div className="login">
@@ -35,9 +57,9 @@ export function Onboarding() {
           <button type="button" role="radio" aria-checked={role === 'investor'} className={`btn ${role === 'investor' ? 'pri' : ''}`} onClick={() => setRole('investor')}>I invest or lend</button>
         </div>
         <label className="f"><span>Your name</span><input required maxLength={120} value={name} onChange={e => setName(e.target.value)} autoComplete="name" /></label>
-        <label className="f"><span>{role === 'developer' ? 'Company (optional)' : 'Fund or firm (optional)'}</span><input maxLength={160} value={company} onChange={e => setCompany(e.target.value)} autoComplete="organization" /></label>
+        {role === 'developer' && <label className="f"><span>Company (optional)</span><input maxLength={160} value={company} onChange={e => setCompany(e.target.value)} autoComplete="organization" /></label>}
         <ErrorLine error={error} />
-        <button className="btn pri" type="submit" disabled={busy || !name.trim()}>{busy ? 'Saving…' : 'Open my workspace'}</button>
+        <button className="btn pri" type="submit" disabled={busy || !name.trim()}>{busy ? 'Saving…' : role === 'investor' ? 'Continue' : 'Open my workspace'}</button>
         <button className="linkbtn" type="button" onClick={() => void signOut()}>Use another account</button>
       </form>
     </div>

@@ -22,7 +22,7 @@ export interface Project {
 }
 export interface ProjectDoc { id: string; project_id: string; kind: string; title: string }
 export interface Investor {
-  id: string; code: string; kind: string | null; name: string; email: string | null; user_id: string | null
+  id: string; code: string; kind: string | null; country: string | null; phone: string | null; name: string; email: string | null; user_id: string | null
   instruments: string[]; geos: string[]; assets: string[]
   ticket_min: number | null; ticket_max: number | null; min_license: 'none' | 'submitted' | 'granted' | null
   max_ltc: number | null; min_return: number | null; max_term: number | null; min_track: number | null
@@ -30,7 +30,7 @@ export interface Investor {
   declared_qualified_at: string | null; kyc_status: 'none' | 'pending' | 'passed' | 'failed'
   mandate: { type?: 'priv' | 'inst' | null; st?: Record<string, string> } | null
 }
-export interface Match { investor_id: string; code: string; bucket: 'fit' | 'possible' | 'later' | 'out'; score: number }
+export interface Match { investor_id: string; code: string; bucket: 'fit' | 'possible' | 'later' | 'out'; score: number; kind?: string | null; country?: string | null }
 export interface ProjectDeal {
   deal_id: string; investor_code: string; investor_kind: string | null; stage: DealStage; reason: string | null
   investor_name: string | null; call_slot: string | null

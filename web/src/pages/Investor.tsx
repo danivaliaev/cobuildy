@@ -1,10 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { supabase, rpc } from '../lib/supabase'
+import { supabase, rpc, errText } from '../lib/supabase'
 import { useAuth } from '../auth'
 import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
 import { MandateChat } from '../components/MandateChat'
 import { eur, pct, when } from '../lib/format'
+import { InvestorProfileForm } from '../components/InvestorProfileForm'
+import { needsProfile, kindLabel, countryName } from '../lib/investorKinds'
 import { ASSET, GEO, INSTRUMENT, LICENSE, STAGE_LABEL, type DealMessage, type DealStage, type Investor as Inv, type Teaser } from '../lib/types'
 import { FIELDS, FK, SECS, clarity, columnsFor, evalTeaser, fmt, hydrate, unlocks, type Fit, type MKey, type Mandate } from '../lib/mandate'
 
@@ -169,6 +171,37 @@ function Board({ fits, onOpen }: { fits: Fit[]; onOpen: (id: string) => void }) 
   )
 }
 
+function ProfileBox({ inv, reload, banner }: { inv: Inv; reload: () => void | Promise<void>; banner?: boolean }) {
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [hidden, setHidden] = useState(() => { try { return sessionStorage.getItem('cb.ipf.skip') === '1' } catch { return false } })
+  const need = needsProfile(inv)
+  if (banner && (!need || hidden) && !open) return null
+  const save = async (v: { kind: string; country: string; name: string; phone: string }) => {
+    setBusy(true); setError(null)
+    const { error: err } = await supabase.rpc('update_investor_profile', { p_name: v.name, p_kind: v.kind, p_country: v.country, p_phone: v.phone })
+    setBusy(false)
+    if (err) { setError(errText(err.message)); return }
+    setOpen(false); await reload()
+  }
+  const form = <InvestorProfileForm initial={{ kind: (inv.kind ?? '') as never, country: inv.country ?? '', name: inv.name, phone: inv.phone ?? '' }} submitLabel="Save" busy={busy} error={error} onSubmit={save} onCancel={() => setOpen(false)} />
+  if (open) return <section className="card"><h2>Your investor profile</h2>{form}</section>
+  if (banner) return (
+    <div className="ibanner" role="status"><span className="sp"><b>Complete your profile.</b> Tell us your investor type, country and phone so developers know who they are talking to.</span>
+      <button className="btn pri" type="button" onClick={() => setOpen(true)}>Complete profile</button>
+      <button className="btn" type="button" onClick={() => { setHidden(true); try { sessionStorage.setItem('cb.ipf.skip', '1') } catch { /* ignore */ } }}>Later</button></div>)
+  return (
+    <section className="card">
+      <div className="row"><h2>Your investor profile</h2><span className="sp" /><button className="chipbtn" type="button" onClick={() => setOpen(true)}>Edit</button></div>
+      <div className="prow"><span className="plab">Type</span><span className="pval">{kindLabel(inv.kind)}</span></div>
+      <div className="prow"><span className="plab">Country</span><span className="pval">{countryName(inv.country)}</span></div>
+      <div className="prow"><span className="plab">Name</span><span className="pval">{inv.name}</span></div>
+      <div className="prow"><span className="plab">Phone</span><span className="pval">{inv.phone ?? '—'}</span></div>
+    </section>
+  )
+}
+
 function MandateTab({ m, fits, onAsk }: { m: Mandate; fits: Fit[]; onAsk: (k: MKey) => void }) {
   const un = Object.fromEntries(unlocks(fits.filter(f => active(f.t)))) as Partial<Record<MKey, number>>
   return (
@@ -308,6 +341,7 @@ function Workspace({ inv, reload }: { inv: Inv; reload: () => void | Promise<voi
 
   return (
     <>
+      <ProfileBox inv={inv} reload={reload} banner />
       <Strip fits={fits} inv={inv} m={m} />
       <div className="pgrid">
         <div id="agent-chat" className="pcol"><MandateChat mandate={m} commit={commit} askReq={askReq} /></div>
@@ -333,7 +367,7 @@ function Workspace({ inv, reload }: { inv: Inv; reload: () => void | Promise<voi
             ? <Review f={selFit} inv={inv} docs={(docs.data ?? []).filter(d => d.deal_id === selFit.t.deal_id)} msgs={(msgs.data ?? []).filter(x => x.deal_id === selFit.t.deal_id)} busy={act.busy} go={go} reloadInv={reload} />
             : <section className="card"><Empty>Pick a project under Matches to review it here: fit with your mandate, numbers, sponsor, data room and questions.</Empty></section>)}
           {tab === 'pipe' && <Board fits={fits} onOpen={openDeal} />}
-          {tab === 'mandate' && <MandateTab m={m} fits={fits} onAsk={k => { ask(k) }} />}
+          {tab === 'mandate' && <><ProfileBox inv={inv} reload={reload} /><MandateTab m={m} fits={fits} onAsk={k => { ask(k) }} /></>}
         </div>
         <Status m={m} inv={inv} fits={fits} props={props} onOpen={openDeal} onDismiss={id => setDismissed(d => [...d, id])} onAsk={ask} reloadInv={reload} />
       </div>

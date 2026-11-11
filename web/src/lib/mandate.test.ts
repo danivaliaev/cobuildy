@@ -3,7 +3,7 @@ import { applyUpdates, clarity, columnsFor, coerce, evalTeaser, hydrate, nextKey
 import type { Investor, Teaser } from './types'
 
 const inv = (o: Partial<Investor> = {}): Investor => ({
-  id: 'i', code: 'I-1', kind: null, name: 'X', email: null, user_id: 'u', instruments: [], geos: [], assets: [], ticket_min: null, ticket_max: null, min_license: null,
+  id: 'i', code: 'I-1', kind: null, country: null, phone: null, name: 'X', email: null, user_id: 'u', instruments: [], geos: [], assets: [], ticket_min: null, ticket_max: null, min_license: null,
   max_ltc: null, min_return: null, max_term: null, min_track: null, min_margin: null, min_presales: null, declared_qualified_at: null, kyc_status: 'none', mandate: null, ...o,
 })
 const teaser = (o: Partial<Teaser> = {}): Teaser => ({

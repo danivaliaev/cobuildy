@@ -7,6 +7,7 @@ import { ProfileChat } from '../components/ProfileChat'
 import { ProfileView } from '../components/ProfileView'
 import { ReadinessPanel } from '../components/ReadinessPanel'
 import { FIELDS, GATE_NAMES, blank, columnsFor, hydrate, isDone, patchFor, type FieldState, type Fields } from '../lib/profile'
+import { kindLabel, countryName } from '../lib/investorKinds'
 import { STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
 type Tab = 'profile' | 'investors' | 'room'
@@ -37,7 +38,7 @@ export function ProjectPage() {
   const [mk, setMk] = useState('')
   const cols = fields ? JSON.stringify(columnsFor(fields)) : ''
   useEffect(() => { const t = setTimeout(() => setMk(cols), 900); return () => clearTimeout(t) }, [cols])
-  const matches = useLoad(() => rpc<Match[]>('match_project', { p_project: id }), [id, mk])
+  const matches = useLoad(() => rpc<Match[]>('match_project_info', { p_project: id }), [id, mk])
 
   // The profile is loaded once; after that this page is the source of truth and every change is saved straight away.
   useEffect(() => { if (proj.data && !fields) { setFields(hydrate(proj.data)); setDbStage(proj.data.stage) } }, [proj.data, fields])
@@ -181,13 +182,13 @@ function Wave({ project, matches, canSend, onSent }: { project: Project; matches
       <ErrorLine error={act.error ?? m.error} />
       {m.data && shown.length === 0 ? <Empty>No investor fits yet. Answer more questions or widen the ask.</Empty> : (
         <div className="scrollx"><table>
-          <thead><tr>{canSend && <th />}<th>Investor</th><th>Match</th><th>Score</th>{canSend && <th>Teaser</th>}</tr></thead>
+          <thead><tr>{canSend && <th />}<th>Investor</th><th>Type</th><th>Country</th><th>Match</th><th>Score</th>{canSend && <th>Teaser</th>}</tr></thead>
           <tbody>{shown.map(x => {
             const sent = done.has(x.code)
             const can = canSend && !sent && (x.bucket === 'fit' || x.bucket === 'possible')
             return <tr key={x.investor_id}>
               {canSend && <td><input type="checkbox" aria-label={`Select ${x.code}`} disabled={!can} checked={chosen.includes(x.investor_id)} onChange={e => setSel(e.target.checked ? [...chosen, x.investor_id] : chosen.filter(i => i !== x.investor_id))} /></td>}
-              <td>{x.code}</td><td><Pill tone={tone(x.bucket)}>{x.bucket}</Pill></td><td>{x.score}</td>
+              <td>{x.code}</td><td>{kindLabel(x.kind)}</td><td>{countryName(x.country)}</td><td><Pill tone={tone(x.bucket)}>{x.bucket}</Pill></td><td>{x.score}</td>
               {canSend && <td>{sent ? <Pill tone="good">Sent</Pill> : <span className="muted">—</span>}</td>}</tr>
           })}</tbody>
         </table></div>
@@ -223,7 +224,7 @@ function Deals({ project, docs }: { project: Project; docs: ProjectDoc[] }) {
         const open = ms.filter(x => x.kind === 'question')
         return (
           <div className="card soft" key={d.deal_id}>
-            <div className="row"><b>{d.investor_name ?? d.investor_code}</b><span className="muted">{d.investor_kind}</span><span className="sp" />
+            <div className="row"><b>{d.investor_name ?? d.investor_code}</b><span className="muted">{kindLabel(d.investor_kind)}</span><span className="sp" />
               <Pill tone={d.stage === 'passed' ? 'bad' : d.stage === 'call' ? 'good' : 'plan'}>{STAGE_LABEL[d.stage]}</Pill></div>
             {d.reason && <div className="muted">Reason: {d.reason}</div>}
             {ms.map(x => <div key={x.id} className={`q ${x.kind === 'answer' ? 'a' : ''}`}><span className="mono">{x.kind}</span><div>{x.body}</div></div>)}

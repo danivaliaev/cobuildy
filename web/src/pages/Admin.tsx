@@ -1,3 +1,4 @@
+import { kindLabel, countryName } from '../lib/investorKinds'
 import { useState, type FormEvent } from 'react'
 import { supabase, rpc } from '../lib/supabase'
 import { useAuth } from '../auth'
@@ -127,10 +128,10 @@ function Investors() {
       <ErrorLine error={act.error ?? list.error} />
       {list.data && list.data.length === 0 ? <Empty>No investors yet. They appear when an invited investor signs in.</Empty> : (
         <div className="scrollx"><table>
-          <thead><tr><th>Code</th><th>Name</th><th>Email</th><th>Declared</th><th>KYC</th><th /></tr></thead>
+          <thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Country</th><th>Email</th><th>Phone</th><th>Declared</th><th>KYC</th><th /></tr></thead>
           <tbody>{list.data?.map(i => (
             <tr key={i.id}>
-              <td>{i.code}</td><td>{i.name}</td><td>{i.email ?? '—'}</td>
+              <td>{i.code}</td><td>{i.name}</td><td>{kindLabel(i.kind)}</td><td>{countryName(i.country)}</td><td>{i.email ?? '—'}</td><td>{i.phone ?? '—'}</td>
               <td>{i.declared_qualified_at ? <Pill tone="good">{when(i.declared_qualified_at)}</Pill> : <Pill>no</Pill>}</td>
               <td><Pill tone={i.kyc_status === 'passed' ? 'good' : i.kyc_status === 'failed' ? 'bad' : i.kyc_status === 'pending' ? 'warn' : undefined}>{i.kyc_status}</Pill></td>
               <td><select aria-label="Set KYC status" value={i.kyc_status} disabled={act.busy} onChange={e => void act.run(() => rpc('set_kyc', { p_investor: i.id, p_status: e.target.value }))}>
