@@ -8,6 +8,7 @@ import { Admin } from './pages/Admin'
 import { Developer } from './pages/Developer'
 import { ProjectPage } from './pages/Project'
 import { Investor } from './pages/Investor'
+import { Bell } from './components/Bell'
 import type { Role } from './lib/types'
 
 const HOME: Record<Role, string> = { admin: '/admin', expert: '/admin', developer: '/developer', investor: '/investor' }
@@ -26,6 +27,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           {profile?.role === 'developer' && <NavLink to="/developer" className={({ isActive }) => (isActive ? 'on' : '')}>My projects</NavLink>}
           {profile?.role === 'investor' && <NavLink to="/investor" className={({ isActive }) => (isActive ? 'on' : '')}>Investor workspace</NavLink>}
         </nav>
+        <Bell />
         <span className="mono">{profile?.role}</span>
         <span className="muted">{session?.user.email}</span>
         <button className="btn sm" type="button" onClick={() => void signOut()}>Sign out</button>

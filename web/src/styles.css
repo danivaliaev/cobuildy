@@ -128,3 +128,11 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 .afeed div:first-child{border-top:0}.afeed small{color:var(--ink-2)}
 @media (max-width:1000px){.kpis.dk{grid-template-columns:repeat(2,minmax(0,1fr))}.dgrid{grid-template-columns:1fr}}
 @media (max-width:520px){.lad em{display:none}}
+/* notifications */
+.bell{position:relative}.bellbtn{position:relative;display:inline-flex;align-items:center;gap:4px}
+.bdot{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:var(--bad);color:#fff;font:600 11px/18px var(--f-body);text-align:center;padding:0 4px}
+.bpanel{position:absolute;right:0;top:calc(100% + 8px);width:min(380px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.14);padding:12px;display:flex;flex-direction:column;gap:2px;z-index:30}
+.bitem{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:10px minmax(0,1fr);gap:10px;padding:10px 6px;border-top:1px solid var(--line);width:100%}
+.bitem:hover b{text-decoration:underline}.bitem:focus-visible{outline:2px solid var(--plan);border-radius:8px}
+.bitem i{width:8px;height:8px;border-radius:50%;margin-top:6px;background:transparent}.bitem.new i{background:var(--plan)}
+.bitem b{display:block;font-weight:500}.bitem .s{display:block;color:var(--ink-2);font-size:13px}.bitem .t{display:block;color:var(--ink-2);font:500 10.5px var(--f-mono);letter-spacing:.03em;text-transform:uppercase;margin-top:2px}
