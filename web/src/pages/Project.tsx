@@ -33,6 +33,7 @@ export function ProjectPage() {
   const tab: Tab = (['profile', 'investors', 'room'] as const).find(t => t === sp.get('tab')) ?? 'profile'
   const setTab = (t: Tab) => setSp(t === 'profile' ? {} : { tab: t }, { replace: true })
   // Investor matches are recalculated shortly after the profile changes, so the numbers on this page follow the answers.
+  const [wave, setWave] = useState(0)
   const [mk, setMk] = useState('')
   const cols = fields ? JSON.stringify(columnsFor(fields)) : ''
   useEffect(() => { const t = setTimeout(() => setMk(cols), 900); return () => clearTimeout(t) }, [cols])
@@ -80,8 +81,8 @@ export function ProjectPage() {
           </div>
           {tab === 'profile' && <ProfileView fields={fields} flash={flash} editable={editable} onAsk={ask} onEdit={edit} />}
           {tab === 'investors' && <>
-            <Wave project={p} matches={matches} canSend={p.status === 'approved' || p.status === 'live'} />
-            {(p.status === 'live' || p.status === 'approved') && <Deals project={p} docs={docs.data ?? []} />}
+            <Wave project={p} matches={matches} canSend={p.status === 'approved' || p.status === 'live'} onSent={async () => { await proj.reload(); setWave(w => w + 1) }} />
+            {(p.status === 'live' || p.status === 'approved') && <Deals key={wave} project={p} docs={docs.data ?? []} />}
           </>}
           {tab === 'room' && <DataRoom projectId={p.id} fields={fields} docs={docs.data ?? []} reload={docs.reload} editable={editable || p.status !== 'discarded'} error={docs.error} />}
         </div>
@@ -156,14 +157,22 @@ function Docs({ projectId, docs, reload, editable, error }: { projectId: string;
   )
 }
 
-function Wave({ project, matches, canSend }: { project: Project; matches: { data: Match[] | null; error: string | null; reload: () => void | Promise<void> }; canSend: boolean }) {
+function Wave({ project, matches, canSend, onSent }: { project: Project; matches: { data: Match[] | null; error: string | null; reload: () => void | Promise<void> }; canSend: boolean; onSent: () => Promise<void> }) {
   const m = matches
+  const contacted = useLoad(async () => (canSend ? await rpc<ProjectDeal[]>('project_deals', { p_project: project.id }) : []), [project.id, canSend])
+  const done = new Set((contacted.data ?? []).map(d => d.investor_code))
   const [sel, setSel] = useState<string[] | null>(null)
-  const act = useAction(async () => { setSel(null); await m.reload() })
-  const sendable = (m.data ?? []).filter(x => x.bucket === 'fit' || x.bucket === 'possible')
-  const chosen = sel ?? sendable.filter(x => x.bucket === 'fit').map(x => x.investor_id)
+  const [notice, setNotice] = useState<string | null>(null)
+  const act = useAction(async () => { setSel(null); await Promise.all([m.reload(), contacted.reload(), onSent()]) })
+  const fresh = (x: Match) => !done.has(x.code)
+  const sendable = (m.data ?? []).filter(x => (x.bucket === 'fit' || x.bucket === 'possible') && fresh(x))
+  const chosen = (sel ?? sendable.filter(x => x.bucket === 'fit').map(x => x.investor_id)).filter(id => sendable.some(x => x.investor_id === id))
   const tone = (b: Match['bucket']) => (b === 'fit' ? 'good' : b === 'possible' ? 'plan' : b === 'later' ? 'warn' : undefined)
   const shown = (m.data ?? []).filter(x => x.bucket !== 'out').sort((a, b) => b.score - a.score)
+  const send = () => void act.run(async () => {
+    const n = await rpc<number>('launch_wave', { p_project: project.id, p_wave: 1, p_investors: chosen })
+    setNotice(n > 0 ? `Teaser sent to ${n} investor${n === 1 ? '' : 's'}. Replies appear under Deals below.` : 'Nothing new was sent: these investors already have the teaser.')
+  })
   return (
     <section className="card">
       <h2>Investor matches</h2>
@@ -172,16 +181,20 @@ function Wave({ project, matches, canSend }: { project: Project; matches: { data
       <ErrorLine error={act.error ?? m.error} />
       {m.data && shown.length === 0 ? <Empty>No investor fits yet. Answer more questions or widen the ask.</Empty> : (
         <div className="scrollx"><table>
-          <thead><tr>{canSend && <th />}<th>Investor</th><th>Match</th><th>Score</th></tr></thead>
+          <thead><tr>{canSend && <th />}<th>Investor</th><th>Match</th><th>Score</th>{canSend && <th>Teaser</th>}</tr></thead>
           <tbody>{shown.map(x => {
-            const can = canSend && (x.bucket === 'fit' || x.bucket === 'possible')
+            const sent = done.has(x.code)
+            const can = canSend && !sent && (x.bucket === 'fit' || x.bucket === 'possible')
             return <tr key={x.investor_id}>
               {canSend && <td><input type="checkbox" aria-label={`Select ${x.code}`} disabled={!can} checked={chosen.includes(x.investor_id)} onChange={e => setSel(e.target.checked ? [...chosen, x.investor_id] : chosen.filter(i => i !== x.investor_id))} /></td>}
-              <td>{x.code}</td><td><Pill tone={tone(x.bucket)}>{x.bucket}</Pill></td><td>{x.score}</td></tr>
+              <td>{x.code}</td><td><Pill tone={tone(x.bucket)}>{x.bucket}</Pill></td><td>{x.score}</td>
+              {canSend && <td>{sent ? <Pill tone="good">Sent</Pill> : <span className="muted">—</span>}</td>}</tr>
           })}</tbody>
         </table></div>
       )}
-      {canSend && <div className="row"><button className="btn plan" disabled={act.busy || chosen.length === 0} onClick={() => void act.run(() => rpc('launch_wave', { p_project: project.id, p_wave: 1, p_investors: chosen }))}>Send teaser to {chosen.length} investor{chosen.length === 1 ? '' : 's'}</button></div>}
+      {notice && <div className="ok" role="status">{notice}</div>}
+      {canSend && <div className="row"><button className="btn plan" disabled={act.busy || chosen.length === 0} onClick={send}>
+        {act.busy ? 'Sending…' : chosen.length === 0 ? (done.size > 0 ? 'Teaser sent' : 'No investor selected') : `Send teaser to ${chosen.length} investor${chosen.length === 1 ? '' : 's'}`}</button></div>}
     </section>
   )
 }
