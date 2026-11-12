@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, rpc } from '../lib/supabase'
 import { useAuth } from '../auth'
-import { ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
+import { ErrorLine, Pill, useAction, useLoad } from '../components/ui'
 import { eur } from '../lib/format'
 import { GEO, type Project, type ProjectDeal } from '../lib/types'
 import { activity, attention, nextStep, plural, reply, totals, view, type ProjView } from '../lib/dashboard'
@@ -35,7 +35,7 @@ export function Developer() {
   const nav = useNavigate()
   const { profile } = useAuth()
   const data = useLoad(async () => {
-    const { data: ps, error } = await supabase.from('projects').select('*').eq('owner_id', profile!.id).order('created_at', { ascending: false })
+    const { data: ps, error } = await supabase.from('projects').select('*').eq('owner_id', profile!.id).neq('status', 'discarded').order('created_at', { ascending: false })
     if (error) throw error
     const { data: co } = await supabase.from('companies').select('name').eq('owner_id', profile!.id).maybeSingle()
     const views = await Promise.all((ps as Project[]).map(async p => {
@@ -47,16 +47,12 @@ export function Developer() {
     }))
     return { views, company: (co as { name: string } | null)?.name ?? null }
   })
-  const [creating, setCreating] = useState(false)
-  const [title, setTitle] = useState('')
   const act = useAction()
-  const create = (e: FormEvent) => {
-    e.preventDefault()
+  // No naming step: a project is created straight away (or an untouched draft is reused) and the agent starts asking.
+  const create = () => {
     void act.run(async () => {
-      const { data: c } = await supabase.from('companies').select('id').eq('owner_id', profile!.id).maybeSingle()
-      const { data: row, error } = await supabase.from('projects').insert({ title: title.trim(), owner_id: profile!.id, company_id: c?.id ?? null, status: 'draft' }).select('id').single()
-      if (error) throw error
-      nav(`/developer/projects/${row.id}`)
+      const id = await rpc<string>('create_project')
+      nav(`/developer/projects/${id}`)
     })
   }
   const open = (id: string, tab = 'profile') => nav(`/developer/projects/${id}${tab === 'profile' ? '' : `?tab=${tab}`}`)
@@ -80,7 +76,7 @@ export function Developer() {
         <span className="mono muted">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
         <div className="row"><h1>{greet}{first ? `, ${first}` : ''}</h1><span className="sp" />
           {data.data?.company && <Pill>{data.data.company}</Pill>}
-          <button className="btn pri" type="button" onClick={() => setCreating(true)}>+ New project</button></div>
+          <button className="btn pri" type="button" disabled={act.busy} onClick={create}>+ New project</button></div>
         {data.data && <p className="muted">{plural(t.n, 'project')}, {t.ready} ready for outreach or beyond. {plural(t.fit, 'investor')} fit at least one of them.</p>}
       </div>
       <ErrorLine error={data.error ?? act.error} />
@@ -96,13 +92,6 @@ export function Developer() {
               )) : <p className="muted">Nothing needs you right now.</p>}</div>
             </section>
             <div className="dhead" style={{ padding: '6px 4px 0' }}><h2>Your projects</h2><span className="mono muted">{plural(t.n, 'project')}</span></div>
-            {creating && (
-              <form className="dcard" onSubmit={create}>
-                <Field label="Project name"><input autoFocus required value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Marbella Hills, 24 villas" /></Field>
-                <div className="row"><button className="btn pri" disabled={act.busy || !title.trim()} type="submit">Create and open</button>
-                  <button className="btn" type="button" onClick={() => setCreating(false)}>Cancel</button></div>
-                <span className="muted small">You then tell the agent about it in your own words and the profile builds as you talk.</span>
-              </form>)}
             {views.map(v => {
               const { p, c } = v
               return (
@@ -115,7 +104,7 @@ export function Developer() {
                   <div className="next"><b>Next:</b> {nextStep(v)} · {plural(c.blockers.length, 'open question')} for the next stage <span className="muted">· {p.code}</span> {attention(v).length === 0 && <Pill tone={tone(p.status)}>{p.status}</Pill>}</div>
                 </button>)
             })}
-            <button className="pc newp" type="button" onClick={() => setCreating(true)}><b>+ New project</b><span className="muted">Tell the agent about it in your own words. The profile builds as you talk.</span></button>
+            <button className="pc newp" type="button" disabled={act.busy} onClick={create}><b>+ New project</b><span className="muted">Tell the agent about it in your own words. The profile builds as you talk.</span></button>
           </div>
           <div className="dcol">
             <Assistant views={views} />

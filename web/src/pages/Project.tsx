@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { supabase, rpc } from '../lib/supabase'
 import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
 import { ProfileChat } from '../components/ProfileChat'
@@ -43,6 +43,9 @@ export function ProjectPage() {
   useEffect(() => { if (proj.data && !fields) { setFields(hydrate(proj.data)); setDbStage(proj.data.stage) } }, [proj.data, fields])
 
   const [confirm, setConfirm] = useState<{ lines: string[]; done: (ok: boolean) => void } | null>(null)
+  const nav = useNavigate()
+  const [del, setDel] = useState(false)
+  const delAct = useAction()
   const commit = useCallback(async (next: Fields) => {
     if (!proj.data) return
     const prev = fields
@@ -64,6 +67,7 @@ export function ProjectPage() {
   if (proj.loading) return <span className="muted">Loading…</span>
   if (!proj.data || !fields) return <><ErrorLine error={proj.error} /><Link to="/developer">← Projects</Link></>
   const p = proj.data
+  const hasAnswers = Object.values(fields).some(f => f.st !== 'empty')
   const editable = p.status !== 'discarded' && p.status !== 'closed_won' && p.status !== 'closed_lost'
   const ask = (key: string) => { setAskReq({ key, n: Date.now() }); document.getElementById('agent-chat')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }
   const fitCount = (matches.data ?? []).filter(m => m.bucket === 'fit').length
@@ -71,9 +75,19 @@ export function ProjectPage() {
 
   return (
     <>
-      <div className="row"><Link to="/developer">← Projects</Link><span className="sp" /><Pill tone={p.status === 'draft' ? undefined : 'good'}>{p.status.replace('_', ' ')}</Pill></div>
+      <div className="row"><Link to="/developer">← Projects</Link><span className="sp" />
+        {p.status === 'draft' && <button className="linkbtn" type="button" onClick={() => setDel(true)}>Delete project</button>}
+        <Pill tone={p.status === 'draft' ? undefined : 'good'}>{p.status.replace('_', ' ')}</Pill></div>
       <h1>{p.code} · {p.title}</h1>
       {p.status === 'teaser_review' && <div className="ibanner" role="note"><span className="sp">Your teaser is waiting for Cobuildy approval. Matching investors can be contacted once it is approved.</span></div>}
+      {del && (
+        <div className="modal" role="dialog" aria-modal="true" aria-label="Delete project"><div className="card">
+          <h2>Delete this project?</h2>
+          <p className="muted">{hasAnswers ? 'It will be removed from your list together with everything you told the agent about it.' : 'It is empty, so nothing is lost. It will be removed from your list.'} No investor has seen it.</p>
+          <ErrorLine error={delAct.error} />
+          <div className="row"><button className="btn pri" type="button" disabled={delAct.busy} onClick={() => void delAct.run(async () => { await rpc('discard_project', { p_project: p.id }); nav('/developer') })}>Yes, delete it</button>
+            <button className="btn" type="button" disabled={delAct.busy} onClick={() => setDel(false)}>Keep it</button></div>
+        </div></div>)}
       {confirm && (
         <div className="modal" role="dialog" aria-modal="true" aria-label="Confirm change"><div className="card">
           <h2>Change the teaser figures?</h2>
