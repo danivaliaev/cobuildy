@@ -45,6 +45,8 @@ export function ProjectPage() {
   const [confirm, setConfirm] = useState<{ lines: string[]; done: (ok: boolean) => void } | null>(null)
   const nav = useNavigate()
   const [del, setDel] = useState(false)
+  const [hintSeen, setHintSeen] = useState(() => { try { return localStorage.getItem('cb_start_hint') === '1' } catch { return false } })
+  const dismissHint = () => { setHintSeen(true); try { localStorage.setItem('cb_start_hint', '1') } catch { /* private mode */ } }
   const delAct = useAction()
   const commit = useCallback(async (next: Fields) => {
     if (!proj.data) return
@@ -68,6 +70,7 @@ export function ProjectPage() {
   if (!proj.data || !fields) return <><ErrorLine error={proj.error} /><Link to="/developer">← Projects</Link></>
   const p = proj.data
   const hasAnswers = Object.values(fields).some(f => f.st !== 'empty')
+  const startHere = p.status === 'draft' && !hasAnswers
   const editable = p.status !== 'discarded' && p.status !== 'closed_won' && p.status !== 'closed_lost'
   const ask = (key: string) => { setAskReq({ key, n: Date.now() }); document.getElementById('agent-chat')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }
   const fitCount = (matches.data ?? []).filter(m => m.bucket === 'fit').length
@@ -100,7 +103,16 @@ export function ProjectPage() {
       <MatchBar matches={matches.data} />
 
       <div className="pgrid">
-        <div id="agent-chat" className="pcol"><ProfileChat projectId={p.id} fields={fields} commit={commit} editable={editable} askReq={askReq} /></div>
+        {startHere && !hintSeen && <div className="spot-veil" aria-hidden="true" onClick={dismissHint} />}
+        <div id="agent-chat" className={`pcol${startHere ? ' start-here' : ''}${startHere && !hintSeen ? ' spot' : ''}`}>
+          {startHere && !hintSeen && (
+            <div className="spot-tip" role="note">
+              <b>Start here</b>
+              <span>Tap an answer, or type in your own words. I fill in your project as we talk.</span>
+              <button className="btn pri" type="button" onClick={dismissHint}>Got it</button>
+            </div>)}
+          <ProfileChat projectId={p.id} fields={fields} commit={commit} editable={editable} askReq={askReq} />
+        </div>
         <div className="pmain">
           <div className="tabs" role="tablist">
             <button type="button" role="tab" className="tab" aria-selected={tab === 'profile'} onClick={() => setTab('profile')}>Project profile</button>
