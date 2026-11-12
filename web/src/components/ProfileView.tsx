@@ -50,7 +50,6 @@ function Row({ d, s, flash, editable, onAsk, onEdit }: {
             <button className="btn sm" type="button" onClick={() => setEditing(false)}>Cancel</button>
           </span>
         ) : isDone(s) ? <>{s.v}<span className="psrc">{SRC[s.src] ?? ''}</span></> : <span className="muted">{s.st === 'unknown' ? 'Not available yet' : 'Not asked yet'}</span>}
-        {(s.st === 'partial' || s.st === 'unknown') && !editing && <span className="pgap">{s.st === 'unknown' ? 'Gap' : 'Partly met'} · next: {d.task}</span>}
         {err && <ErrorLine error={err} />}
       </span>
       {editable && !editing && (

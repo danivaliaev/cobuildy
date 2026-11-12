@@ -19,6 +19,8 @@ export const FK: Record<string, FieldDef> = Object.fromEntries(FIELDS.map(f => [
 
 export const blank = (): FieldState => ({ st: 'empty', v: '', n: null, src: '' })
 export const emptyFields = (): Fields => Object.fromEntries(FIELDS.map(f => [f.key, blank()]))
+/** Whether a field satisfies its gate. A teaser accepts a partly met answer; the later stages need fully met fields. */
+export const meets = (d: { gate: number }, s: FieldState) => s.st === 'filled' || (d.gate === 1 && s.st === 'partial')
 export const isDone = (s: FieldState) => s.st === 'filled' || s.st === 'partial'
 
 // ---------- parsing ----------
@@ -47,11 +49,11 @@ export function calc(f: Fields): Calc {
     if (s.st === 'filled') { P += d.weight; filled++ } else if (s.st === 'partial') P += d.weight * 0.5
     if (isDone(s)) known++
   }
-  const open = (g: number) => FIELDS.some(d => d.gate === g && (f[d.key] ?? blank()).st !== 'filled')
+  const open = (g: number) => FIELDS.some(d => d.gate === g && !meets(d, f[d.key] ?? blank()))
   let stage: 0 | 1 | 2 | 3 = 0
   if (!open(1)) { stage = 1; if (!open(2)) { stage = 2; if (!open(3)) stage = 3 } }
   const next = Math.min(stage + 1, 3)
-  const blockers = stage < 3 ? FIELDS.filter(d => d.gate <= next && (f[d.key] ?? blank()).st !== 'filled') : []
+  const blockers = stage < 3 ? FIELDS.filter(d => d.gate <= next && !meets(d, f[d.key] ?? blank())) : []
   return { score: Math.round((P / W) * 100), stage, next, blockers, known, filled }
 }
 

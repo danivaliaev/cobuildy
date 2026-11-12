@@ -39,6 +39,11 @@ describe('profile model', () => {
     expect(calc(full).stage).toBe(1)
     expect(columnsFor(full)).toMatchObject({ asset: 'RES', geo: 'CS', city: 'Marbella', units: 12, cost_eur: 5.4e6, gdv_eur: 6.5e6, ask_eur: 3e6, instrument: ['senior', 'mezz'], ltc: 0.556, margin: 0.204 })
   })
+  it('a partly met answer still counts for the teaser gate', () => {
+    const keys = ['a_type', 'a_loc', 'a_units', 'l_own', 'f_cost', 'f_gdv', 'k_ask', 'k_instr', 'k_equity', 'e_strategy']
+    const ups = keys.map(key => ({ key, status: (key === 'l_own' ? 'partial' : 'filled') as 'partial' | 'filled', display: 'x', amount: 1e6 }))
+    expect(calc(applyUpdates(emptyFields(), ups).next).stage).toBe(1)
+  })
   it('a partial answer counts half and does not open the gate', () => {
     const { next } = applyUpdates(emptyFields(), [{ key: 'p_status', status: 'partial', display: 'Submitted, waiting for the town hall' }])
     expect(columnsFor(next).license).toBe('submitted')

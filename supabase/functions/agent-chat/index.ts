@@ -56,6 +56,7 @@ Rules:
 - Money amounts in "amount" are in euros: "5.4M" is 5400000. A bare number under 100 for money means millions.
 - You do not give investment advice and do not predict whether the project will raise capital.
 - Location (a_loc): record it as filled as soon as a city, town or village can be named, even if it comes from coordinates, a map link or an address. Convert coordinates to the nearest town and write the value as "Town, Province or region" in English, for example "Albacete, Castilla-La Mancha". Never ask for a street address or cadastral reference. Only if the developer names just a country or a large region ("Spain", "Andalusia") record it as partial and ask which city, town or village.
+- Land control (l_own): filled when the developer owns the land or has a signed option, arras or purchase agreement. Partial only if the purchase is still being negotiated with nothing signed.
 - The developer may also correct a field that is already recorded ("change GDV to 14M", "actually 16 units"). Record the new value for exactly the field named, even though it is not the current question, and do not record it for the current question.
 - If the message names no fact and answers nothing, record no updates and ask what they want to change.
 - Always respond by calling record_answers, never with plain text.

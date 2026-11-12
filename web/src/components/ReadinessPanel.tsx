@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ErrorLine, Pill } from './ui'
-import { FIELDS, SECTIONS, calc, type FieldDef, type Fields } from '../lib/profile'
+import { FIELDS, SECTIONS, blank, calc, meets, type FieldDef, type Fields } from '../lib/profile'
 
 /** The three stages of a project. A stage opens once every field of its gate is fully met. */
 const STAGES = [
@@ -26,7 +26,7 @@ export function ReadinessPanel({ asking, fields, status, dbStage, onAsk, onSubmi
   const st = (d: FieldDef) => fields[d.key]?.st ?? 'empty'
   const si = (id: string) => SECTIONS.findIndex(x => x.id === id)
   const stageFields = (n: number) => FIELDS.filter(d => d.gate === n).sort((a, b) => b.weight - a.weight || si(a.section) - si(b.section))
-  const done = (n: number) => stageFields(n).filter(d => st(d) === 'filled').length
+  const done = (n: number) => stageFields(n).filter(d => meets(d, fields[d.key] ?? blank())).length
 
   // A short confirmation each time a field is completed.
   const prev = useRef<number | null>(null)

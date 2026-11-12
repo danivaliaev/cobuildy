@@ -171,7 +171,7 @@
     {
      "label": "Purchase agreed (option / arras)",
      "value": "Purchase agreed (option / arras)",
-     "partial": true,
+     "partial": false,
      "unknown": false,
      "task": "Complete the purchase or extend the option"
     },
