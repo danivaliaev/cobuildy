@@ -337,7 +337,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
     </div>
     <h1 id="h-title"></h1>
     <p class="lede" id="h-lede"></p>
-    <ul class="proof" aria-label="Key facts">
+    <ul class="proof" id="proof" aria-label="Key facts">
       <li><b>From 1%</b> success fee, only on results</li>
       <li><b>24/7</b> agent on your side</li>
       <li><b>90%+</b> of routine work automated</li>
@@ -785,12 +785,12 @@ $('c-chips').addEventListener('pointerdown',stopHint);
 /* ---------- audience switch ---------- */
 let aud='dev';
 const COPY={
- dev:{t:'An AI agent that raises <em>your project’s</em> capital.',l:'It knows every lender and fund active in Spain and Portugal and what each one asks for. It builds your profile, finds the gaps, makes the introductions and follows up. You decide. We are paid only when capital arrives.',n:'Try the agent in the chat. No sign-up needed.',
+ dev:{chips:['<b>From 1%</b> success fee, only on results','<b>24/7</b> agent on your side','<b>90%+</b> of routine work automated','You approve every send'],t:'An AI agent that raises <em>your project’s</em> capital.',l:'It knows every lender and fund active in Spain and Portugal and what each one asks for. It builds your profile, finds the gaps, makes the introductions and follows up. You decide. We are paid only when capital arrives.',n:'Try the agent in the chat. No sign-up needed.',
   ah:'An agent that never clocks out',ap:'While you build, it watches the market, keeps your profile ready and moves your outreach forward. It knows what each investor requires and what you still owe them.',know:['Lender and fund mandates','Ticket sizes and LTC limits','Permit requirements','Your documents and gaps','Open questions from investors','Market comparables'],
   sh:'From a first message to a term sheet',steps:[['Tell the agent','Describe the project in your own words, or upload what you have. The profile builds beside the chat and shows what is missing.','Step 1 · You'],['Approve the plan','The agent drafts the teaser, picks the investors and writes the messages. You review and confirm before anything is sent.','Step 2 · Agent drafts, you approve'],['Get introduced','Interested investors get the data room. Your team and ours handle calls, terms and closing. The agent keeps chasing the details.','Step 3 · Agent chases, people close']],
   fh:'Put an agent to work on your project today',
   log:['Re-checked 41 lender mandates against your project','A new fund opened a €2–8M senior mandate for Costa del Sol. Fit count +3','Flagged a conflict: the owner on the nota simple differs from your project company','Built the teaser. Waiting for your approval before anything is sent','Investor C-17 asked for the nota simple. Reply drafted for your OK','Sent the 7-day follow-up to 4 silent investors (wave approved by you)','Weekly status prepared for your Monday call']},
- inv:{t:'An AI agent that finds deals <em>that fit</em> your mandate.',l:'It reads every project we receive, checks it against your criteria and brings you only the matches, with numbers already structured and gaps flagged. You decide what to review. Introductions are always opt-in.',n:'Try the agent in the chat. No sign-up needed.',
+ inv:{chips:['<b>Off-market</b> deals, only for investors on file','<b>24/7</b> agents match every new project','<b>First alert</b> when a project fits','<b>5 quick questions</b> to get on file'],t:'An AI agent that finds deals <em>that fit</em> your mandate.',l:'It reads every project we receive, checks it against your criteria and brings you only the matches, with numbers already structured and gaps flagged. You decide what to review. Introductions are always opt-in.',n:'Try the agent in the chat. No sign-up needed.',
   ah:'An agent that screens while you sleep',ap:'It reads new submissions as they arrive, compares them with your mandate and with the market, and tells you what is worth your time.',know:['Your mandate and limits','Every live project','Sponsor track records','Pricing against comparables','Data room completeness','What you passed on and why'],
   sh:'From a mandate to a decision',steps:[['Set your mandate','Regions, instruments, ticket size and the minimum stage you accept. Change it any time.','Step 1 · You'],['Review the shortlist','The agent screens every project, structures the numbers and drafts questions for the sponsor. You open only what fits.','Step 2 · Agent screens, you choose'],['Meet the sponsor','Opt in to an introduction and get the data room. You run the diligence and decide. We stay out of your decision.','Step 3 · You decide']],
   fh:'Put an agent on your mandate today',
@@ -799,7 +799,7 @@ const COPY={
 function setAud(k){
   aud=k;const c=COPY[k];
   $('aud-dev').setAttribute('aria-pressed',k==='dev');$('aud-inv').setAttribute('aria-pressed',k==='inv');
-  $('h-title').innerHTML=c.t;$('h-lede').textContent=c.l;$('h-note').textContent=c.n;
+  $('proof').innerHTML=c.chips.map(x=>`<li>${x}</li>`).join('');$('h-title').innerHTML=c.t;$('h-lede').textContent=c.l;$('h-note').textContent=c.n;
   $('d-tag').textContent=k==='dev'?'Try your agent now':'Set your mandate';
   $('ag-h').textContent=c.ah;$('ag-p').textContent=c.ap;$('ag-know').innerHTML=c.know.map(x=>`<span>${x}</span>`).join('');
   $('st-h').textContent=c.sh;$('f-h').textContent=c.fh;
