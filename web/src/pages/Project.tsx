@@ -45,6 +45,7 @@ export function ProjectPage() {
   const [confirm, setConfirm] = useState<{ lines: string[]; done: (ok: boolean) => void } | null>(null)
   const nav = useNavigate()
   const [del, setDel] = useState(false)
+  const [asking, setAsking] = useState<string | null>(null)
   const [hintSeen, setHintSeen] = useState(() => { try { return localStorage.getItem('cb_start_hint') === '1' } catch { return false } })
   const dismissHint = () => { setHintSeen(true); try { localStorage.setItem('cb_start_hint', '1') } catch { /* private mode */ } }
   const delAct = useAction()
@@ -111,7 +112,7 @@ export function ProjectPage() {
               <span>Tap an answer, or type in your own words. I fill in your project as we talk.</span>
               <button className="btn pri" type="button" onClick={dismissHint}>Got it</button>
             </div>)}
-          <ProfileChat projectId={p.id} fields={fields} commit={commit} editable={editable} askReq={askReq} />
+          <ProfileChat projectId={p.id} fields={fields} commit={commit} editable={editable} askReq={askReq} onCurrent={setAsking} />
         </div>
         <div className="pmain">
           <div className="tabs" role="tablist">
@@ -126,7 +127,7 @@ export function ProjectPage() {
           </>}
           {tab === 'room' && <DataRoom projectId={p.id} docs={docs.data ?? []} reload={docs.reload} editable={editable} error={docs.error} />}
         </div>
-        <ReadinessPanel fields={fields} status={p.status} dbStage={dbStage} onAsk={a => { setTab('profile'); ask(a) }} busy={submit.busy} error={submit.error}
+        <ReadinessPanel asking={asking} fields={fields} status={p.status} dbStage={dbStage} onAsk={a => { setTab('profile'); ask(a) }} busy={submit.busy} error={submit.error}
           onSubmit={() => void submit.run(() => rpc('submit_teaser', { p_project: p.id }))} />
       </div>
     </>

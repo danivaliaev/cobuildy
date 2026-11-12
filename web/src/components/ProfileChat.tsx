@@ -29,8 +29,8 @@ function localAnswer(text: string, cur: string | null): { updates: Update[]; rep
   return { updates: [], reply: 'The agent is offline right now, so I could not read that. Pick one of the suggested answers, or try again in a minute.' }
 }
 
-export function ProfileChat({ projectId, fields, commit, editable, askReq }: {
-  projectId: string; fields: Fields; commit: (next: Fields) => Promise<void>; editable: boolean; askReq: { key: string; n: number } | null
+export function ProfileChat({ projectId, fields, commit, editable, askReq, onCurrent }: {
+  onCurrent?: (key: string | null) => void; projectId: string; fields: Fields; commit: (next: Fields) => Promise<void>; editable: boolean; askReq: { key: string; n: number } | null
 }) {
   const [msgs, setMsgs] = useState<Msg[]>([])
   const [cur, setCur] = useState<string | null>(null)
@@ -43,6 +43,7 @@ export function ProfileChat({ projectId, fields, commit, editable, askReq }: {
   const lastAsk = useRef(0)
   const live = useRef(fields)
   live.current = fields
+  useEffect(() => { onCurrent?.(cur) }, [cur]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { end.current?.scrollIntoView({ block: 'nearest' }) }, [msgs, typing])
 
   const push = (m: Msg) => setMsgs(a => [...a, m])
