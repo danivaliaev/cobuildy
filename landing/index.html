@@ -237,7 +237,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 .mstrip{display:grid;gap:8px;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--bg)}
 .mstrip .big b{font-size:44px}
 .mstrip .big span{font-size:14px;max-width:none}
-.cmsgs{height:340px;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:14px 2px;margin-top:6px;scrollbar-width:thin}
+.cmsgs{max-height:min(340px,45vh);min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:14px 2px;margin-top:6px;scrollbar-width:thin}
 .m{max-width:94%;display:flex;flex-direction:column;gap:5px}
 .m.u{align-self:flex-end;align-items:flex-end}
 .m .b{padding:9px 13px;border-radius:16px;font-size:15px;white-space:pre-wrap}
@@ -263,6 +263,8 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 .cchips button[aria-pressed="true"]{background:var(--plan);border-color:var(--plan);color:var(--bg)}
 .cchips button:disabled{opacity:.45;cursor:default}
 /* first-view hint: the question and its answers breathe three times, once per visit */
+.demo.hint{animation:breathed 1.8s ease-in-out 3}
+@keyframes breathed{0%,100%{border-color:var(--line);box-shadow:0 1px 0 var(--line),0 0 0 0 transparent}50%{border-color:var(--plan);box-shadow:0 1px 0 var(--line),0 0 34px 3px color-mix(in srgb,var(--plan) 22%,transparent)}}
 .cchips.hint{outline:2px solid transparent;outline-offset:8px;border-radius:16px;animation:breathe 1.8s ease-in-out 3}
 .cmsgs.hint .m.a:last-child .b{animation:breatheb 1.8s ease-in-out 3}
 @keyframes breathe{0%,100%{outline-color:transparent;box-shadow:0 0 0 0 transparent}50%{outline-color:var(--plan);box-shadow:0 0 24px 2px color-mix(in srgb,var(--plan) 26%,transparent)}}
@@ -278,7 +280,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 .cin{display:flex;gap:8px;margin-top:12px}
 .cin input{flex:1;min-width:0;height:46px;border-radius:999px;padding:0 18px}
 .send{width:46px;height:46px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font-size:20px;cursor:pointer;flex:none}
-@media (max-width:640px){.cmsgs{height:300px}.prog em{display:none}}
+@media (max-width:640px){.cmsgs{max-height:min(300px,42vh)}.prog em{display:none}}
 @media (max-width:980px){
   .nav nav{display:none}
   .hero,.split,.fee{grid-template-columns:1fr;gap:32px}
@@ -299,7 +301,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
   .foot{grid-template-columns:1fr}
   .menu .pop{width:min(300px,calc(100vw - 32px))}
 }
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.stack i{transition:none}.live::before,.ev.new{animation:none}.cchips.hint,.cmsgs.hint .m.a:last-child .b,.m.u .b.pop{animation:none}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.stack i{transition:none}.live::before,.ev.new{animation:none}.demo.hint,.cchips.hint,.cmsgs.hint .m.a:last-child .b,.m.u .b.pop{animation:none}}
 </style>
 
 <header>
@@ -718,8 +720,7 @@ async function finish(s){
 }
 function resetChat(m){
   ST[m]={msgs:[],a:{},qi:0,done:false,gated:false,typing:false,tmp:[]};const s=ST[m];
-  s.msgs.push({r:'a',t:m==='dev'?'Hi, I am your Cobuildy agent. Tell me about your project in your own words, or answer one question at a time. I check it against our investor database as we go.':'Hi, I am your Cobuildy agent. Tell me what you invest in, or answer one question at a time. I screen live projects against your mandate as we go.'});
-  s.msgs.push({r:'a',t:Q[m][0].q});
+  s.msgs.push({r:'a',t:(m==='dev'?'Hi, I am your Cobuildy agent. I check your project against our investor database as we go.':'Hi, I am your Cobuildy agent. I screen live projects against your mandate as we go.')+'\n\n'+Q[m][0].q});
 }
 $('c-form').addEventListener('submit',e=>{e.preventDefault();const t=$('c-in').value.trim();if(!t)return;$('c-in').value='';submit(t)});
 $('c-reset').onclick=()=>{if(busy)return;resetChat(aud);renderChat()};
@@ -763,12 +764,12 @@ function pickFly(btn,c){
 }
 /* First-view hint: the question and its answer buttons breathe three times when the chat scrolls into view, once per visit. */
 let hintOver=false;
-function stopHint(){hintOver=true;$('c-chips').classList.remove('hint');$('c-msgs').classList.remove('hint')}
+function stopHint(){hintOver=true;['demo','c-chips','c-msgs'].forEach(i=>$(i).classList.remove('hint'))}
 if(!REDUCED&&'IntersectionObserver' in window){
   const io=new IntersectionObserver(es=>{
     if(hintOver||!es.some(e=>e.isIntersecting))return;io.disconnect();
     setTimeout(()=>{const s=ST[aud];if(hintOver||s.done||s.qi!==0||Object.keys(s.a).length)return;
-      $('c-chips').classList.add('hint');$('c-msgs').classList.add('hint');setTimeout(stopHint,5600)},500)
+      ['demo','c-chips','c-msgs'].forEach(i=>$(i).classList.add('hint'));setTimeout(stopHint,5600)},500)
   },{threshold:.8});
   io.observe($('c-chips'));
 }
