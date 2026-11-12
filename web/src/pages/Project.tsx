@@ -101,8 +101,6 @@ export function ProjectPage() {
             <button className="btn" type="button" onClick={() => { confirm.done(false); setConfirm(null) }}>Cancel</button></div>
         </div></div>)}
 
-      <MatchBar matches={matches.data} />
-
       <div className="pgrid">
         {startHere && !hintSeen && <div className="spot-veil" aria-hidden="true" onClick={dismissHint} />}
         <div id="agent-chat" className={`pcol${startHere ? ' start-here' : ''}${startHere && !hintSeen ? ' spot' : ''}`}>
@@ -122,6 +120,7 @@ export function ProjectPage() {
           </div>
           {tab === 'profile' && <ProfileView fields={fields} flash={flash} editable={editable} onAsk={ask} onEdit={edit} />}
           {tab === 'investors' && <>
+            <MatchBar matches={matches.data} />
             <Wave onFill={k => { setTab('profile'); ask(k) }} project={p} matches={matches} canSend={p.status === 'approved' || p.status === 'live'} onSent={async () => { await proj.reload(); setWave(w => w + 1) }} />
             {(p.status === 'live' || p.status === 'approved') && <Deals key={wave} project={p} docs={docs.data ?? []} />}
           </>}
@@ -145,8 +144,9 @@ function MatchBar({ matches }: { matches: Match[] | null }) {
   const total = matches.length || 1
   return (
     <div className="mbar" aria-label="Investor matches">
+      <div className="muted">How the investors on file match this project, out of {matches.length}</div>
       <div className="mbar-t">{BUCKETS.map(b => <i key={b.k} className={`b-${b.k}`} style={{ width: `${(n(b.k) / total) * 100}%` }} />)}</div>
-      <div className="mbar-l">{BUCKETS.map(b => <span key={b.k}><i className={`b-${b.k}`} />{b.label} {n(b.k)}</span>)}<span className="muted">Unknown data never excludes an investor</span></div>
+      <div className="mbar-l">{BUCKETS.map(b => <span key={b.k}><i className={`b-${b.k}`} />{b.label} {n(b.k)}</span>)}<span className="muted">Missing data never rules an investor out</span></div>
     </div>
   )
 }
