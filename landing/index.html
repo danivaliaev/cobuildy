@@ -253,7 +253,8 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
 .b ul.sl{margin:0;padding:0;list-style:none;display:grid;gap:7px;font-size:14.5px}
 .b ul.sl li::before{content:"";display:inline-block;width:6px;height:6px;background:var(--plan);margin-right:9px;vertical-align:2px}
-.cchips{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.cchips{position:relative;padding:14px 14px 12px;margin:0 -14px;border-radius:16px;display:flex;flex-direction:column;gap:8px}
+.cchips::before{content:"";position:absolute;top:0;left:14px;right:14px;border-top:1px solid var(--line)}
 .cchips .lbl{display:block}
 .cchips .set{display:flex;flex-wrap:wrap;gap:6px}
 .cchips button{min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 14px var(--f-body);cursor:pointer;text-align:left}
@@ -265,7 +266,8 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 /* first-view hint: the question and its answers breathe three times, once per visit */
 .demo.hint{animation:breathed 1.8s ease-in-out 3}
 @keyframes breathed{0%,100%{border-color:var(--line);box-shadow:0 1px 0 var(--line),0 0 0 0 transparent}50%{border-color:var(--plan);box-shadow:0 1px 0 var(--line),0 0 34px 3px color-mix(in srgb,var(--plan) 22%,transparent)}}
-.cchips.hint{outline:2px solid transparent;outline-offset:8px;border-radius:16px;animation:breathe 1.8s ease-in-out 3}
+.cchips.hint{outline:2px solid transparent;outline-offset:0;animation:breathe 1.8s ease-in-out 3}
+.cchips.hint::before{border-top-color:transparent}
 .cmsgs.hint .m.a:last-child .b{animation:breatheb 1.8s ease-in-out 3}
 @keyframes breathe{0%,100%{outline-color:transparent;box-shadow:0 0 0 0 transparent}50%{outline-color:var(--plan);box-shadow:0 0 24px 2px color-mix(in srgb,var(--plan) 26%,transparent)}}
 @keyframes breatheb{0%,100%{border-color:var(--line);box-shadow:0 0 0 0 transparent}50%{border-color:var(--plan);box-shadow:0 0 18px 1px color-mix(in srgb,var(--plan) 22%,transparent)}}
@@ -277,7 +279,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 .m.u .b.hold{visibility:hidden}
 .m.u .b.pop{animation:pop .22s ease-out}
 @keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
-.cin{display:flex;gap:8px;margin-top:12px}
+.cin{display:flex;gap:8px;margin-top:10px}
 .cin input{flex:1;min-width:0;height:46px;border-radius:999px;padding:0 18px}
 .send{width:46px;height:46px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font-size:20px;cursor:pointer;flex:none}
 @media (max-width:640px){.cmsgs{max-height:min(300px,42vh)}.prog em{display:none}}
