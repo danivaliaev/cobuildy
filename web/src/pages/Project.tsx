@@ -6,7 +6,7 @@ import { ProfileChat } from '../components/ProfileChat'
 import { ProfileView } from '../components/ProfileView'
 import { ReadinessPanel } from '../components/ReadinessPanel'
 import { DataRoom } from '../components/DataRoom'
-import { FIELDS, blank, columnsFor, hydrate, keyChanges, patchFor, type FieldState, type Fields } from '../lib/profile'
+import { FIELDS, blank, calc, columnsFor, hydrate, keyChanges, patchFor, type FieldState, type Fields } from '../lib/profile'
 import { kindLabel, countryName } from '../lib/investorKinds'
 import { STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
@@ -41,6 +41,16 @@ export function ProjectPage() {
 
   // The profile is loaded once; after that this page is the source of truth and every change is saved straight away.
   useEffect(() => { if (proj.data && !fields) { setFields(hydrate(proj.data)); setDbStage(proj.data.stage) } }, [proj.data, fields])
+
+  // Keep the saved stage in step with the answers. The rules for a stage can change after a profile was saved,
+  // and the teaser can only be submitted once the saved stage says it is ready.
+  const calcStage = fields ? calc(fields).stage : null
+  const projStatus = proj.data?.status
+  useEffect(() => {
+    if (calcStage === null || projStatus !== 'draft' || !fields || calcStage === dbStage) return
+    const score = calc(fields).score
+    void supabase.from('projects').update({ stage: calcStage, readiness: score }).eq('id', id).then(({ error }) => { if (!error) setDbStage(calcStage) })
+  }, [calcStage, projStatus, dbStage, id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [confirm, setConfirm] = useState<{ lines: string[]; done: (ok: boolean) => void } | null>(null)
   const nav = useNavigate()
