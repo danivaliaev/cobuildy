@@ -188,7 +188,7 @@ function Wave({ project, matches, canSend, onSent, onFill }: { onFill: (key: str
     <section className="card">
       <h2>Send your teaser</h2>
       <p className="muted">These are the investors whose criteria fit this project. Tick who should receive the teaser and press the button at the bottom. Investors who already have it are marked <b>Sent</b>, and their replies appear under <b>Deals</b> below.</p>
-      <p className="muted small">Fit: all hard criteria confirmed. Needs info: a fact is missing in your profile, so it cannot be checked yet. Margin, return and track record only change the score. Investors stay anonymous to you until they express interest.</p>
+      <p className="muted small">Fit: all hard criteria confirmed. Needs info: a fact is missing in your profile, so it cannot be checked yet. Score is the share of this investor's criteria your project meets; a missing fact counts as half. Investors stay anonymous to you until they express interest.</p>
       {!canSend && <p className="muted">This is a preview that follows your answers. You can send the teaser once Cobuildy has approved it.</p>}
       <ErrorLine error={act.error ?? m.error} />
       {m.data && shown.length === 0 ? <Empty>No investor fits yet. Answer more questions or widen the ask.</Empty> : (
