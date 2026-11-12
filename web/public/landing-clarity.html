@@ -85,6 +85,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .lede{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin:22px 0 0;max-width:none}
 .lede span{display:block;width:fit-content;max-width:100%;padding:9px 20px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);font:500 clamp(17px,1.6vw,20px)/1.3 var(--f-body);color:var(--ink)}
 
+.lede.plain{max-width:54ch}.lede.plain span{display:inline;width:auto;border:0;background:none;border-radius:0;padding:0;font:400 clamp(18px,1.7vw,21px)/1.55 var(--f-body)}
 .lede b{font-weight:600;color:var(--brand)}
 .proof{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 28px;padding:0;list-style:none}
 .proof li{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13.5px}
@@ -822,7 +823,7 @@ $('c-chips').addEventListener('pointerdown',stopHint);
 /* ---------- audience switch ---------- */
 let aud='dev';
 const COPY={
- dev:{chips:[],t:'Hi! I am here to raise <em>capital</em> for your project.',l:['<b>Institutional</b> lenders and investors','<b>Spain and Portugal</b>','<b>1.5%</b>, only on results','I work for you <b>24/7</b>, routine included'],n:'Try the agent in the chat. No sign-up needed.',
+ dev:{chips:[],t:'Hi! I am here to raise <em>capital</em> for your project.',l:'I work for you <b>24/7</b> across Spain and Portugal, matching your project with institutional lenders and investors and handling the routine work. You pay <b>only when capital arrives</b>: 1.5% on the first €3M and 1% on everything above.',n:'Try the agent in the chat. No sign-up needed.',
   ah:'An agent that never clocks out',ap:'While you build, it watches the market, keeps your profile ready and moves your outreach forward. It knows what each investor requires and what you still owe them.',know:['Lender and fund mandates','Ticket sizes and LTC limits','Permit requirements','Your documents and gaps','Open questions from investors','Market comparables'],
   sh:'From a first message to a term sheet',steps:[['Tell the agent','Describe the project in your own words, or upload what you have. The profile builds beside the chat and shows what is missing.','Step 1 · You'],['Approve the plan','The agent drafts the teaser, picks the investors and writes the messages. You review and confirm before anything is sent.','Step 2 · Agent drafts, you approve'],['Get introduced','Interested investors get the data room. Your team and ours handle calls, terms and closing. The agent keeps chasing the details.','Step 3 · Agent chases, people close']],
   fh:'Put an agent to work on your project today',
@@ -836,7 +837,7 @@ const COPY={
 function setAud(k){
   aud=k;const c=COPY[k];
   $('aud-dev').setAttribute('aria-pressed',k==='dev');$('aud-inv').setAttribute('aria-pressed',k==='inv');
-  $('proof').innerHTML=c.chips.map(x=>`<li>${x}</li>`).join('');$('h-title').innerHTML=c.t;$('h-lede').innerHTML=c.l.map(x=>`<span>${x}</span>`).join('');$('h-note').textContent='Tap an answer in the chat. No sign-up needed.';
+  $('proof').innerHTML=c.chips.map(x=>`<li>${x}</li>`).join('');$('h-title').innerHTML=c.t;$('h-lede').classList.toggle('plain',typeof c.l==='string');$('h-lede').innerHTML=(typeof c.l==='string'?[c.l]:c.l).map(x=>`<span>${x}</span>`).join('');$('h-note').textContent='Tap an answer in the chat. No sign-up needed.';
   $('d-tag').textContent=k==='dev'?'Try it now':'Set your mandate';
   $('ag-h').textContent=c.ah;$('ag-p').textContent=c.ap;$('ag-know').innerHTML=c.know.map(x=>`<span>${x}</span>`).join('');
   $('st-h').textContent=c.sh;$('f-h').textContent=c.fh;
