@@ -477,7 +477,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 
 <div class="wrap final">
   <h2 class="h2" id="f-h">Put an agent to work on your project today</h2>
-  <div class="cta-row"><button class="btn" type="button" data-signup="">Get started free</button><a class="btn ghost" href="#top">Try the agent again</a></div>
+  <div class="cta-row"><button class="btn" type="button" data-signup="" id="f-cta">Get started free</button><a class="btn ghost" href="#top">Try the agent again</a></div>
 </div>
 </main>
 
@@ -804,7 +804,7 @@ function setAud(k){
   $('ag-h').textContent=c.ah;$('ag-p').textContent=c.ap;$('ag-know').innerHTML=c.know.map(x=>`<span>${x}</span>`).join('');
   $('st-h').textContent=c.sh;$('f-h').textContent=c.fh;
   $('steps').innerHTML=c.steps.map(s=>`<article class="card"><span class="mono t">${s[2]}</span><h3>${s[0]}</h3><p>${s[1]}</p></article>`).join('');
-  $('h-cta').dataset.signup=k;document.querySelectorAll('.final [data-signup]').forEach(b=>b.dataset.signup=k);
+  $('h-cta').dataset.signup=k;$('h-cta').textContent=$('f-cta').textContent=k==='inv'?'Start receiving matches':'Get started free';document.querySelectorAll('.final [data-signup]').forEach(b=>b.dataset.signup=k);
   logInit();
   renderChat();
 }
