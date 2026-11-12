@@ -93,7 +93,6 @@ export function ProjectPage() {
         {p.status === 'draft' && <button className="linkbtn" type="button" onClick={() => setDel(true)}>Delete project</button>}
         <Pill tone={p.status === 'draft' ? undefined : 'good'}>{p.status.replace('_', ' ')}</Pill></div>
       <h1>{p.code} · {p.title}</h1>
-      {p.status === 'teaser_review' && <div className="ibanner" role="note"><span className="sp">Your teaser is waiting for Cobuildy approval. Matching investors can be contacted once it is approved.</span></div>}
       {del && (
         <div className="modal" role="dialog" aria-modal="true" aria-label="Delete project"><div className="card">
           <h2>Delete this project?</h2>
