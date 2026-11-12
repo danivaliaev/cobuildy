@@ -28,8 +28,16 @@ describe('profile model', () => {
       { key: 'k_ask', status: 'filled', amount: 3e6 },
       { key: 'k_instr', status: 'filled', display: 'Senior + mezzanine' },
     ])
-    expect(calc(next).stage).toBe(1)
-    expect(columnsFor(next)).toMatchObject({ asset: 'RES', geo: 'CS', city: 'Marbella', units: 12, cost_eur: 5.4e6, gdv_eur: 6.5e6, ask_eur: 3e6, instrument: ['senior', 'mezz'], ltc: 0.556, margin: 0.204 })
+    // land control, own equity and exit strategy are also required for a teaser
+    expect(calc(next).stage).toBe(0)
+    expect(calc(next).blockers.map(b => b.key)).toEqual(['l_own', 'k_equity', 'e_strategy'])
+    const full = applyUpdates(next, [
+      { key: 'l_own', status: 'filled', display: 'Owned outright' },
+      { key: 'k_equity', status: 'filled', amount: 2.4e6 },
+      { key: 'e_strategy', status: 'filled', display: 'Sell units off-plan' },
+    ]).next
+    expect(calc(full).stage).toBe(1)
+    expect(columnsFor(full)).toMatchObject({ asset: 'RES', geo: 'CS', city: 'Marbella', units: 12, cost_eur: 5.4e6, gdv_eur: 6.5e6, ask_eur: 3e6, instrument: ['senior', 'mezz'], ltc: 0.556, margin: 0.204 })
   })
   it('a partial answer counts half and does not open the gate', () => {
     const { next } = applyUpdates(emptyFields(), [{ key: 'p_status', status: 'partial', display: 'Submitted, waiting for the town hall' }])
