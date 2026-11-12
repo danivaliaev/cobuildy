@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cobuildy hero A: agent</title>
+<meta name="description" content="Cobuildy matches real estate development projects in Spain and Portugal with debt and equity investors.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: split hero. Left, the promise (changes with "I'm a developer / investor"). Right, a working agent demo that answers
+   with real numbers before sign-up. Below: 24/7 agent log, 90/10 split of automated vs human work, success-fee band, steps, cases, FAQ.
+   One recurring motif: the site-plan grid. Blue is the only accent; green/amber only mark state. */
+:root{
+  --bg:#fafafa; --surface:#ffffff; --ink:#111111; --ink-2:#5b5a55; --line:#e4e3de;
+  --plan:#0f3d17; --plan-soft:#e6efe7; --good:#1b6b3a; --good-soft:#e3f1e8; --warn:#8a5a00; --warn-soft:#fbf1d9;
+  --lime:#eafc53; --brand:#0f3d17; --on-brand:#ffffff; --on-brand-accent:#eafc53; --mark:#eafc53; --em:#0f3d17;
+  --f-display:'Instrument Serif',Georgia,'Times New Roman',serif;
+  --f-body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e110e; --surface:#171a17; --ink:#f3f2ee; --ink-2:#a9aca3; --line:#2a2e2a;
+  --plan:#8fd19a; --plan-soft:#15261a; --good:#6fcf9b; --good-soft:#15261a; --warn:#e0b45a; --warn-soft:#2c2412;
+  --lime:#eafc53; --brand:#eafc53; --on-brand:#111111; --on-brand-accent:#111111; --mark:transparent; --em:#eafc53; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e110e; --surface:#171a17; --ink:#f3f2ee; --ink-2:#a9aca3; --line:#2a2e2a;
+  --plan:#8fd19a; --plan-soft:#15261a; --good:#6fcf9b; --good-soft:#15261a; --warn:#e0b45a; --warn-soft:#2c2412;
+  --lime:#eafc53; --brand:#eafc53; --on-brand:#111111; --on-brand-accent:#111111; --mark:transparent; --em:#eafc53; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--f-body);-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+a{color:inherit}
+h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
+p{margin:0}
+:focus-visible{outline:2px solid var(--plan);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1180px;margin:0 auto}
+.mono{font-family:var(--f-mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.muted{color:var(--ink-2)}
+[hidden]{display:none!important}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 24px;border-radius:999px;border:1px solid var(--brand);
+  background:var(--brand);color:var(--on-brand);font:500 15px var(--f-body);text-decoration:none;cursor:pointer;transition:transform .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.sm{height:38px;padding:0 16px;font-size:14px}
+.btn.soft{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.plan{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.btn.block{width:100%}
+
+/* nav */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.nav{display:flex;align-items:center;gap:22px;height:68px}
+.logo{font-family:"Instrument Sans","Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;font-size:21px;letter-spacing:-.02em;line-height:1;text-transform:uppercase;text-decoration:none;color:var(--ink);display:flex;align-items:center}
+.nav nav{display:flex;gap:22px;margin-left:12px;font-size:14.5px}
+.nav nav a{text-decoration:none;color:var(--ink-2)}
+.nav nav a:hover{color:var(--ink)}
+.sp{flex:1}
+.menu{position:relative}
+.menu summary{list-style:none;display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--ink);font:500 14px var(--f-body);cursor:pointer}
+.menu summary::-webkit-details-marker{display:none}
+.menu summary::after{content:none}
+.menu[open] summary{background:var(--surface)}
+.menu .pop{position:absolute;right:0;top:46px;width:300px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:8px;z-index:40;display:grid;gap:2px;box-shadow:0 12px 40px rgba(0,0,0,.12)}
+.menu .pop a,.menu .pop span.off{display:block;padding:12px 14px;border-radius:12px;text-decoration:none}
+.menu .pop a:hover{background:var(--plan-soft)}
+.menu .pop b{display:block;font-weight:500}
+.menu .pop small{color:var(--ink-2);font-size:13px}
+.menu .pop span.off{opacity:.6}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:44px;align-items:start;padding-block:36px 64px;position:relative}
+.grid-bg{position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:56px 56px;opacity:.5;
+  -webkit-mask-image:radial-gradient(ellipse 70% 70% at 30% 30%,#000 15%,transparent 75%);mask-image:radial-gradient(ellipse 70% 70% at 30% 30%,#000 15%,transparent 75%)}
+.seg{display:inline-flex;padding:4px;border-radius:999px;background:var(--surface);border:1px solid var(--line);gap:2px}
+.seg button{border:0;background:transparent;color:var(--ink-2);font:500 14px var(--f-body);height:36px;padding:0 18px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
+.hero h1{font-family:var(--f-display);font-size:clamp(42px,5.6vw,76px);line-height:.99;letter-spacing:-.03em;margin:22px 0 20px}
+.hero h1 em{font-style:italic;color:var(--em);background:linear-gradient(transparent 64%,var(--mark) 64% 90%,transparent 90%);-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .06em}
+.lede{font-size:clamp(17px,1.7vw,19.5px);color:var(--ink-2);max-width:50ch}
+.proof{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 28px;padding:0;list-style:none}
+.proof li{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13.5px}
+.proof li b{color:var(--plan);font-weight:600}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.small{font-size:13.5px;color:var(--ink-2)}
+
+/* demo card */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:22px;min-width:0;box-shadow:0 1px 0 var(--line)}
+.demo-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.live{display:inline-flex;gap:7px;align-items:center;color:var(--good)}
+.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--good);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label,.lbl{font:500 11.5px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+select,input[type=text],input[type=email]{width:100%;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:400 15px var(--f-body);padding:0 12px}
+.range-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.range-row b{font:500 15px var(--f-body);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--plan);height:26px;margin:0}
+.chipset{display:flex;flex-wrap:wrap;gap:6px}
+.chipset button{height:34px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 13.5px var(--f-body);cursor:pointer}
+.chipset button[aria-pressed="true"]{background:var(--plan);border-color:var(--plan);color:var(--bg)}
+.res{margin-top:18px;padding-top:18px;border-top:1px dashed var(--line);display:grid;gap:14px}
+.big{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.big b{font:400 64px/1 var(--f-display);color:var(--plan);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.big span{color:var(--ink-2);max-width:30ch;font-size:15px;line-height:1.35}
+.stack{display:flex;height:8px;border-radius:5px;overflow:hidden;background:var(--line);gap:2px}
+.stack i{display:block;height:100%;transition:width .35s}
+.stack .a{background:var(--plan)} .stack .b{background:var(--plan-soft);box-shadow:inset 0 0 0 1px var(--plan)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2)}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;background:var(--plan);vertical-align:-1px}
+.legend .lb::before{background:var(--plan-soft);box-shadow:inset 0 0 0 1px var(--plan)}
+.legend .lc::before{background:var(--line)}
+.say{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:14px}
+.av{width:28px;height:28px;border:1.5px solid var(--plan);display:grid;place-items:center;border-radius:7px}
+.av i{width:10px;height:10px;background:var(--plan);display:block}
+.say ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:14.5px}
+.say li::before{content:"";display:inline-block;width:6px;height:6px;background:var(--plan);margin-right:9px;vertical-align:2px}
+.rows{display:grid;gap:0}
+.rows .r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.rows .r:first-child{border-top:0}
+.rows .r small{color:var(--ink-2);grid-column:1/-1}
+.pill{font:500 11px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--good-soft);color:var(--good);align-self:start;white-space:nowrap}
+.pill.b{background:var(--plan-soft);color:var(--plan)}
+.demo-f{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.demo-f .small{flex:1;min-width:200px}
+
+/* sections */
+section,.band{padding-block:84px}
+.eyebrow{color:var(--plan);margin-bottom:16px;display:block}
+.h2{font-family:var(--f-display);font-size:clamp(34px,5vw,56px);line-height:1.04;letter-spacing:-.02em}
+.sub{color:var(--ink-2);font-size:18px;max-width:58ch;margin-top:16px}
+.center{text-align:center}.center .sub{margin-inline:auto}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px}
+
+/* agent log */
+.split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:48px;align-items:center}
+.know{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.know span{border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13.5px;color:var(--ink-2);background:var(--surface)}
+.log{padding:8px 20px;min-width:0}
+.log-h{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap}
+.ev{display:grid;grid-template-columns:52px 1fr;gap:14px;padding:13px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.ev:last-child{border-bottom:0}
+.ev time{font:500 12px var(--f-mono);color:var(--ink-2);padding-top:2px}
+.ev.new{animation:in .5s}
+@keyframes in{from{opacity:0;transform:translateY(-6px)}}
+.ev em{font-style:normal;font:500 11px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--warn);background:var(--warn-soft);padding:1px 7px;border-radius:999px;margin-left:6px;white-space:nowrap}
+
+/* 90 / 10 */
+.alt{background:var(--surface);border-block:1px solid var(--line)}
+.ninety{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,4fr) minmax(0,4fr);gap:16px;margin-top:44px}
+.ninety>div{border:1px solid var(--line);border-radius:22px;padding:26px;background:var(--bg);min-width:0}
+.ninety .pct{font:400 clamp(80px,10vw,132px)/.9 var(--f-display);color:var(--plan);letter-spacing:-.04em}
+.ninety h3{font:500 12px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;margin-bottom:16px}
+.ninety ul{margin:0;padding:0;list-style:none;display:grid;gap:11px;font-size:15px}
+.ninety li{display:grid;grid-template-columns:14px 1fr;gap:10px;align-items:start}
+.ninety li::before{content:"";width:9px;height:9px;margin-top:6px;background:var(--plan)}
+.ninety .h li::before{background:transparent;border:1.5px solid var(--ink)}
+.cmp{margin-top:56px;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:var(--bg)}
+.cmp .row{display:grid;grid-template-columns:1.1fr 1.4fr 1.4fr;border-top:1px solid var(--line)}
+.cmp .row:first-child{border-top:0;background:var(--surface)}
+.cmp .row>div{padding:16px 20px;font-size:15px;min-width:0}
+.cmp .row>div:first-child{color:var(--ink-2)}
+.cmp .row>div:last-child{background:var(--plan-soft)}
+.cmp .row:first-child>div{font:500 12px var(--f-mono);letter-spacing:.05em;text-transform:uppercase}
+.cmp .row:first-child>div:last-child{color:var(--plan)}
+
+/* fee band */
+.fee{background:#0f3d17;color:#fafafa;border-radius:32px;padding:clamp(28px,5vw,64px);display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:40px;align-items:center}
+.fee .h2{color:#fafafa}
+.fee .eyebrow{color:#fafafa;opacity:.7}
+.fee .sub{color:rgba(250,250,250,.76)}
+.fee .btn{background:#eafc53;border-color:#eafc53;color:#111}
+.fee ul{margin:0;padding:0;list-style:none;display:grid;gap:0}
+.fee li{padding:16px 0;border-top:1px solid rgba(250,250,250,.2);display:grid;gap:2px}
+.fee li:first-child{border-top:0}
+.fee li b{font:400 26px var(--f-display)}
+.fee li:first-child b{color:#eafc53}
+.fee li span{color:rgba(250,250,250,.72);font-size:15px}
+
+/* steps / cases */
+.steps3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:44px}
+.steps3 article{padding:26px;display:flex;flex-direction:column;gap:10px}
+.steps3 .t{color:var(--plan)}
+.steps3 h3{font:400 30px/1.08 var(--f-display)}
+.steps3 p{color:var(--ink-2);font-size:15.5px}
+.cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:40px}
+.case{padding:24px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.case .city{font:400 34px/1 var(--f-display)}
+.case dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14.5px}
+.case dt{color:var(--ink-2)}.case dd{margin:0;text-align:right}
+.tag{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--plan-soft);color:var(--plan);font:500 12px var(--f-mono);letter-spacing:.04em;width:fit-content}
+.fine{font-size:13px;color:var(--ink-2);margin-top:16px}
+.team{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:36px}
+.person{display:flex;gap:16px;align-items:center}
+.pav{width:56px;height:56px;border-radius:50%;background:var(--plan-soft);color:var(--plan);display:grid;place-items:center;font:400 22px var(--f-display);flex:none}
+.person b{font-weight:500;display:block}.person span{color:var(--ink-2);font-size:14px}
+
+/* faq */
+.faq{max-width:780px;margin:36px auto 0}
+details.q{border-top:1px solid var(--line);padding:18px 0}
+details.q:last-child{border-bottom:1px solid var(--line)}
+details.q summary{cursor:pointer;font:500 18px var(--f-body);list-style:none;display:flex;justify-content:space-between;gap:16px}
+details.q summary::-webkit-details-marker{display:none}
+details.q summary::after{content:"+";font-size:22px;line-height:1;color:var(--ink-2)}
+details.q[open] summary::after{content:"–"}
+details.q p{color:var(--ink-2);margin-top:12px;max-width:62ch}
+
+.final{text-align:center;padding-block:40px 90px}
+.final .cta-row{justify-content:center;margin-top:28px}
+
+footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;color:var(--ink-2)}
+.foot{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
+.foot h4{font:500 12px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;margin:0 0 12px;color:var(--ink)}
+.foot a{display:block;text-decoration:none;margin-bottom:8px}
+.legal{margin-top:36px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;max-width:90ch}
+
+/* sign-up dialog */
+.ov{position:fixed;inset:0;z-index:60;background:color-mix(in srgb,var(--ink) 55%,transparent);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow:auto}
+.dlg{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:26px;width:min(480px,100%);display:grid;gap:16px;position:relative}
+.dlg h2{font:400 34px/1.05 var(--f-display)}
+.x{position:absolute;right:14px;top:14px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:18px;line-height:1}
+.carry{border:1px dashed var(--line);border-radius:14px;padding:12px 14px;font-size:14px;display:grid;gap:3px}
+.carry span{color:var(--ink-2)}
+.steps-next{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:14.5px}
+.steps-next li::before{content:"";display:inline-block;width:6px;height:6px;background:var(--plan);margin-right:9px;vertical-align:2px}
+
+/* chat demo */
+.link{border:0;background:none;color:var(--ink-2);font:500 13px var(--f-body);text-decoration:underline;cursor:pointer;padding:4px}
+.prog{display:flex;gap:4px;margin-bottom:12px}
+.prog span{flex:1;min-width:0}
+.prog i{display:block;height:4px;border-radius:3px;background:var(--line)}
+.prog .done i{background:var(--ink)}.prog .now i{background:var(--plan)}
+.prog em{display:block;margin-top:5px;font:500 10px var(--f-mono);letter-spacing:.03em;text-transform:uppercase;font-style:normal;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog .now em{color:var(--plan)}
+.mstrip{display:grid;gap:8px;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--bg)}
+.mstrip .big b{font-size:44px}
+.mstrip .big span{font-size:14px;max-width:none}
+.cmsgs{max-height:min(340px,45vh);min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:14px 2px;margin-top:6px;scrollbar-width:thin}
+.m{max-width:94%;display:flex;flex-direction:column;gap:5px}
+.m.u{align-self:flex-end;align-items:flex-end}
+.m .b{padding:9px 13px;border-radius:16px;font-size:15px;white-space:pre-wrap}
+.m.a .b{background:var(--bg);border:1px solid var(--line);border-top-left-radius:6px}
+.m.a .b.rich{white-space:normal;display:grid;gap:12px;width:100%}
+.m.a:has(.rich){max-width:100%}
+.m.u .b{background:var(--brand);color:var(--on-brand);border-top-right-radius:6px}
+.who{font:500 10.5px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);display:flex;gap:6px;align-items:center}
+.who i{width:9px;height:9px;border:1.4px solid var(--plan);display:inline-block;position:relative}
+.who i::after{content:"";position:absolute;inset:1.5px;background:var(--plan)}
+.typing{display:flex;gap:4px;align-items:center;height:36px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--ink-2);animation:pulse 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+.b ul.sl{margin:0;padding:0;list-style:none;display:grid;gap:7px;font-size:14.5px}
+.b ul.sl li::before{content:"";display:inline-block;width:6px;height:6px;background:var(--plan);margin-right:9px;vertical-align:2px}
+.cchips{position:relative;padding:14px 14px 12px;margin:0 -14px;border-radius:16px;display:flex;flex-direction:column;gap:8px}
+.cchips::before{content:"";position:absolute;top:0;left:14px;right:14px;border-top:1px solid var(--line)}
+.cchips .lbl{display:block}
+.cchips .set{display:flex;flex-wrap:wrap;gap:6px}
+.cchips button{min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 14px var(--f-body);cursor:pointer;text-align:left}
+.cchips button:hover{border-color:var(--ink-2)}
+.cchips button.go{border-color:var(--plan);background:var(--plan-soft);color:var(--plan)}
+.cchips button.ex{border-style:dashed;color:var(--ink-2)}
+.cchips button[aria-pressed="true"]{background:var(--plan);border-color:var(--plan);color:var(--bg)}
+.cchips button:disabled{opacity:.45;cursor:default}
+/* first-view hint: the question and its answers breathe three times, once per visit */
+.demo.hint{animation:breathed 1.8s ease-in-out 3}
+@keyframes breathed{0%,100%{border-color:var(--line);box-shadow:0 1px 0 var(--line),0 0 0 0 transparent}50%{border-color:var(--plan);box-shadow:0 1px 0 var(--line),0 0 38px 4px color-mix(in srgb,var(--lime) 50%,transparent)}}
+.cchips.hint{outline:2px solid transparent;outline-offset:0;animation:breathe 1.8s ease-in-out 3}
+.cchips.hint::before{border-top-color:transparent}
+.cmsgs.hint .m.a:last-child .b{animation:breatheb 1.8s ease-in-out 3}
+@keyframes breathe{0%,100%{outline-color:transparent;box-shadow:0 0 0 0 transparent}50%{outline-color:var(--plan);box-shadow:0 0 26px 4px color-mix(in srgb,var(--lime) 55%,transparent)}}
+@keyframes breatheb{0%,100%{border-color:var(--line);box-shadow:0 0 0 0 transparent}50%{border-color:var(--plan);box-shadow:0 0 20px 3px color-mix(in srgb,var(--lime) 50%,transparent)}}
+/* a chosen answer turns green with a tick, then flies into the user's message */
+.cchips button.picked{background:var(--plan);border-color:var(--plan);color:var(--bg);transition:background .18s,color .18s,border-color .18s}
+.cchips button.picked::before{content:"\2713\00a0"}
+.fly{position:fixed;z-index:60;display:flex;align-items:center;padding:0 14px;margin:0;border:1px solid var(--plan);border-radius:999px;background:var(--plan);color:var(--bg);font:500 14px var(--f-body);white-space:nowrap;overflow:hidden;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.14)}
+.fly .ck{display:inline-block;overflow:hidden;max-width:1.2em;margin-right:6px}
+.m.u .b.hold{visibility:hidden}
+.m.u .b.pop{animation:pop .22s ease-out}
+@keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+.cin{display:flex;gap:8px;margin-top:10px}
+.cin input{flex:1;min-width:0;height:46px;border-radius:999px;padding:0 18px}
+.send{width:46px;height:46px;border-radius:50%;border:0;background:var(--brand);color:var(--on-brand-accent);font-size:20px;cursor:pointer;flex:none}
+@media (max-width:640px){.cmsgs{max-height:min(300px,42vh)}.prog em{display:none}}
+@media (max-width:980px){
+  .nav nav{display:none}
+  .hero,.split,.fee{grid-template-columns:1fr;gap:32px}
+  .ninety,.steps3,.cases,.team{grid-template-columns:1fr}
+  .foot{grid-template-columns:1fr 1fr}
+  section,.band{padding-block:60px}
+}
+@media (max-width:640px){
+  .nav .btn.sm.hide-s{display:none}
+  .form-grid{grid-template-columns:1fr}
+  .cmp .row{grid-template-columns:1fr}
+  .cmp .row:first-child{display:none}
+  .cmp .row>div{padding:10px 18px}
+  .cmp .row>div:first-child{font:500 12px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;padding-top:16px}
+  .cmp .row>div:nth-child(2)::before{content:"Traditional team · ";color:var(--ink-2)}
+  .cmp .row>div:nth-child(3){padding-bottom:16px}
+  .cmp .row>div:nth-child(3)::before{content:"Cobuildy · ";color:var(--plan);font-weight:500}
+  .foot{grid-template-columns:1fr}
+  .menu .pop{width:min(300px,calc(100vw - 32px))}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.stack i{transition:none}.live::before,.ev.new{animation:none}.demo.hint,.cchips.hint,.cmsgs.hint .m.a:last-child .b,.m.u .b.pop{animation:none}}
+
+/* clarity pass (prototype): larger type, explicit instruction, chat directly under the headline on phones */
+#d-tag{font:600 15px var(--f-body);letter-spacing:0;text-transform:none}
+.demo-h .link{font-size:15px}
+.cchips{gap:12px;padding:16px 14px 14px}
+.cchips .step{display:flex;align-items:center;gap:10px;font:600 17px/1.3 var(--f-body);color:var(--ink)}
+.cchips .step b{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 9px;border-radius:999px;background:var(--brand);color:var(--on-brand);font:600 14px var(--f-body);white-space:nowrap}
+.cchips .step .arr{margin-left:auto;font-size:24px;line-height:1;color:var(--plan);animation:nudgey 1.2s ease-in-out 4}
+@keyframes nudgey{50%{transform:translateY(5px)}}
+.cchips .lbl{font:600 16px var(--f-body);letter-spacing:0;text-transform:none;color:var(--ink)}
+.cchips .set{gap:10px}
+.cchips button{min-height:48px;padding:10px 18px;font-size:17px}
+.cin input{height:52px;font-size:17px}
+.send{width:52px;height:52px}
+.m .b{font-size:17px;line-height:1.45}
+.who{font-size:12.5px}
+.prog em{font-size:12px}
+.mstrip .big span{font-size:15.5px}
+.hero #h-note{font-size:16px;color:var(--ink-2)}
+@media (max-width:980px){
+  .hero{gap:20px}
+  .hl{display:contents}
+  .hl>.seg{order:1;justify-self:start}.hl>h1{order:2;margin:0}.demo{order:3}
+  .hl>.lede{order:4}.hl>.proof{order:5;margin:0}.hl>.cta-row{order:6}.hl>#h-note{order:7}
+  #h-cta,#h-note{display:none}
+}
+@media (max-width:640px){
+  .demo{padding:16px}.demo-h{margin-bottom:8px}.prog{margin-bottom:8px}
+  .mstrip{padding:8px 12px;gap:6px}.mstrip .big{gap:8px}.mstrip .big b{font-size:30px}.mstrip .big span{font-size:14px}
+  .cmsgs{padding:8px 2px;margin-top:2px}.m .b{font-size:16px;padding:8px 12px}
+  .cchips{padding:12px 14px 10px;gap:10px}
+}
+@media (prefers-reduced-motion:reduce){.cchips .step .arr{animation:none}}
+
+/* ===== hero redesign (prototype) ===== */
+body[data-aud="dev"] .hero{display:none}
+body[data-aud="inv"] .hv{display:none}
+.hv-stage{display:none}
+.hv.chatting .hv-stage{display:block}
+.hv.chatting .hv-pre{display:none}
+.hv-go{font:600 22px var(--f-body);cursor:pointer;border:0}
+.hv .seg{align-self:flex-start;max-width:100%}.hv .seg button{font-size:16px;height:42px;padding:0 20px;white-space:nowrap}
+@media (max-width:480px){.hv .seg button{font-size:15px;padding:0 14px}}
+.hv-eyebrow{font:600 15px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:#234F29}
+
+.hv-a{display:grid;grid-template-columns:minmax(360px,40%) minmax(0,1fr);padding:0}
+.hv-a .pan{background:#0F3D17;border-top-right-radius:40px;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;min-height:640px}
+.hv-a .pan .bg{position:absolute;inset:0;width:100%;height:100%}
+.hv-a .pan .ag{position:relative;width:min(400px,86%);height:auto;display:block}
+.hv-a .col{padding:20px 72px 40px 64px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.hv-a .bub{background:#fff;border:1.5px solid #D6D8D2;border-radius:28px;border-top-left-radius:6px;padding:26px 32px}
+.hv-a .bub h1{font:400 clamp(34px,3.6vw,50px)/1.06 var(--f-display);letter-spacing:-.01em;color:#0F3D17;margin:0}
+.hv-a .bub p{margin:14px 0 0;font-size:22px;line-height:1.45;color:#2B2F2B}
+.hv-a .two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.hv-a .bub .pre{font:600 15px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:#234F29;margin:0 0 10px}
+.hv-a .box{border-radius:24px;padding:22px 26px;background:#fff;border:1.5px solid #D6D8D2}
+.hv-a .box.you{background:#EAFC53;border-color:#EAFC53}
+.hv-a .box h3{display:flex;align-items:center;gap:10px;font:600 20px var(--f-body);color:#0F3D17;margin:0}
+.hv-a .box h3 i{font-style:normal;min-width:34px;height:34px;padding:0 8px;border-radius:999px;background:#0F3D17;color:#EAFC53;display:inline-flex;align-items:center;justify-content:center;font-size:16px}
+.hv-a .box ul{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:9px;font-size:19px;line-height:1.35;color:#2B2F2B}
+.hv-a .box.you ul{color:#111}
+.hv-a .act{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.hv-a .hv-go{display:inline-flex;align-items:center;gap:14px;padding:20px 36px;background:#0F3D17;color:#fff;border-radius:999px}
+.hv-a .hv-go span{color:#EAFC53;font-size:26px}
+.hv-a .act small{font-size:18px;line-height:1.4;color:#4A4F4A}
+@media (max-width:980px){
+  .hv-a{grid-template-columns:1fr}
+  .hv-a .pan{border-top-right-radius:0;border-bottom-right-radius:40px;min-height:0;height:210px}
+  .hv-a .pan .ag{width:auto;height:200px}
+  .hv-a .hv-pre .act{order:2}.hv-a .hv-pre .two{order:3}
+  .hv-a .col{padding:24px 20px 36px}
+  .hv-a .two{grid-template-columns:1fr}
+  .hv-a .bub{padding:20px}.hv-a .bub p{font-size:19px}
+  .hv-a .hv-go{font-size:20px;padding:18px 26px;width:100%;justify-content:center}
+}
+</style>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#top" aria-label="Cobuildy">Cobuildy</a>
+    <nav aria-label="Main">
+      <a href="#agent">Your agent</a>
+      <a href="#automation">Automation</a>
+      <a href="#fee">Success fee</a>
+      <a href="#how">How it works</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <span class="sp"></span>
+    <a class="btn ghost sm" id="login" onclick="saveCarry()" href="/login">Log in</a>
+    <button class="btn sm hide-s" type="button" data-signup="">Get started free</button>
+  </div>
+</header>
+
+<main id="top">
+<section class="hv hv-a" id="hv" aria-label="Introduction">
+  <div class="pan">
+    <svg class="bg" viewBox="0 0 560 816" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g stroke="#2C5A33" stroke-width="1" opacity="0.7"><path d="M0 80H560M0 160H560M0 240H560M0 320H560M0 400H560M0 480H560M0 560H560M0 640H560M0 720H560"/><path d="M80 0V816M160 0V816M240 0V816M320 0V816M400 0V816M480 0V816"/></g>
+      <g fill="none" stroke="#4E8559" stroke-width="2"><rect x="30" y="560" width="90" height="256"/><rect x="130" y="470" width="110" height="346"/><rect x="360" y="520" width="100" height="296"/><rect x="470" y="610" width="90" height="206"/><path d="M50 590h50M50 620h50M50 650h50M50 680h50M50 710h50M150 500h70M150 540h70M150 580h70M150 620h70M150 660h70M380 550h60M380 590h60M380 630h60M380 670h60"/></g>
+    </svg>
+    <svg class="ag" viewBox="0 0 340 400" role="img" aria-label="The Cobuildy agent: a friendly figure in a lime hard hat, waving">
+      <rect x="30" y="288" width="64" height="84" rx="9" transform="rotate(-9 62 330)" fill="#F2F1ED"/>
+      <g transform="rotate(-9 62 330)" stroke="#0F3D17" stroke-width="3" stroke-linecap="round"><path d="M44 312h36M44 328h36M44 344h24"/></g>
+      <path d="M244 292 L296 222" stroke="#2E6B3B" stroke-width="28" stroke-linecap="round" fill="none"/>
+      <circle cx="298" cy="206" r="18" fill="#F2F1ED"/>
+      <rect x="92" y="252" width="156" height="148" rx="34" fill="#2E6B3B"/>
+      <path d="M140 252 L170 292 L200 252 Z" fill="#F2F1ED"/>
+      <rect x="188" y="304" width="44" height="26" rx="7" fill="#EAFC53"/>
+      <text x="210" y="322" font-family="Instrument Sans, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#0F3D17">AI</text>
+      <rect x="100" y="110" width="140" height="146" rx="36" fill="#F2F1ED"/>
+      <path d="M92 142 Q92 72 170 66 Q248 72 248 142 Z" fill="#EAFC53"/>
+      <rect x="160" y="66" width="20" height="76" rx="6" fill="#D2E63A"/>
+      <rect x="80" y="134" width="180" height="16" rx="8" fill="#D2E63A"/>
+      <rect x="128" y="172" width="28" height="34" rx="9" fill="#0F3D17"/><rect x="184" y="172" width="28" height="34" rx="9" fill="#0F3D17"/>
+      <circle cx="139" cy="183" r="4.5" fill="#EAFC53"/><circle cx="195" cy="183" r="4.5" fill="#EAFC53"/>
+      <path d="M140 224 Q170 248 200 224" stroke="#0F3D17" stroke-width="6" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="col">
+    <div class="seg" role="group" aria-label="I am a"><button id="aud-dev2" aria-pressed="true" type="button">I'm a developer</button><button id="aud-inv2" aria-pressed="false" type="button">I'm an investor</button></div>
+    <div class="hv-pre" style="display:flex;flex-direction:column;gap:20px">
+      <div class="bub"><div class="pre">For real-estate developers in Spain and Portugal</div><h1>Hello, I am your Cobuildy agent.</h1><p>I find investors for your project. I know every lender and fund active in Spain and Portugal. I work around the clock, and you pay only when capital arrives.</p></div>
+      <div class="two">
+        <div class="box"><h3><i>I</i>What I do</h3><ul><li>Find investors that fit</li><li>Build your teaser</li><li>Follow up for you</li></ul></div>
+        <div class="box you"><h3><i>You</i>What you do</h3><ul><li>Tap answers to 6 questions</li><li>Approve every message</li><li>Take the investor calls</li></ul></div>
+      </div>
+      <div class="act"><button class="hv-go" type="button" id="hv-go">Start: tell me about your project <span aria-hidden="true">→</span></button><small>Just tap the answers.<br>No sign-up needed.</small></div>
+    </div>
+    <div class="hv-stage" id="hv-stage"></div>
+  </div>
+</section>
+<div class="wrap hero">
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="hl">
+    <div class="seg" role="group" aria-label="I am a">
+      <button id="aud-dev" aria-pressed="true" type="button">I'm a developer</button>
+      <button id="aud-inv" aria-pressed="false" type="button">I'm an investor</button>
+    </div>
+    <h1 id="h-title"></h1>
+    <p class="lede" id="h-lede"></p>
+    <ul class="proof" id="proof" aria-label="Key facts">
+      <li><b>From 1%</b> success fee, only on results</li>
+      <li><b>24/7</b> agent on your side</li>
+      <li><b>90%+</b> of routine work automated</li>
+      <li>You approve every send</li>
+    </ul>
+    <div class="cta-row">
+      <button class="btn" type="button" id="h-cta">Answer the first question</button>
+      <a class="btn ghost" href="#how">See how it works</a>
+    </div>
+    <p class="small" style="margin-top:14px" id="h-note"></p>
+  </div>
+
+  <div class="demo" id="demo">
+    <div class="demo-h"><span class="mono live" id="d-tag">Try your agent now</span><button class="link" type="button" id="c-reset">Start over</button></div>
+    <div class="prog" id="c-prog" aria-hidden="true"></div>
+    <div class="mstrip" aria-live="polite">
+      <div class="big"><b id="m-n">0</b><span id="m-l"></span></div>
+      <div class="stack" aria-hidden="true"><i class="a" id="s-a"></i><i class="b" id="s-b"></i></div>
+    </div>
+    <div class="cmsgs" id="c-msgs" aria-live="polite"></div>
+    <div class="cchips" id="c-chips"></div>
+    <form class="cin" id="c-form" autocomplete="off">
+      <input id="c-in" type="text" aria-label="Message to the agent" placeholder="Or type your answer here">
+      <button class="send" type="submit" aria-label="Send">↑</button>
+    </form>
+  </div>
+</div>
+
+<div class="band" id="agent" style="padding-block:40px 84px">
+  <div class="wrap split">
+    <div>
+      <span class="eyebrow mono">Your agent</span>
+      <h2 class="h2" id="ag-h">An agent that never clocks out</h2>
+      <p class="sub" id="ag-p"></p>
+      <div class="know" id="ag-know"></div>
+    </div>
+    <div class="card log" aria-label="Agent activity">
+      <div class="log-h"><span class="mono live">Agent log</span></div>
+      <div id="log"></div>
+    </div>
+  </div>
+</div>
+
+<div class="alt" id="automation">
+  <div class="wrap" style="padding-block:84px">
+    <div class="center">
+      <span class="eyebrow mono">Automation with people in charge</span>
+      <h2 class="h2">The agent does the routine work. People make the decisions.</h2>
+      <p class="sub">A traditional advisory team needs analysts to research the market, investment managers to match and chase, and associates to prepare documents. Our agent does that work for every client at the same time. The decisions that carry risk stay with a person.</p>
+    </div>
+    <div class="ninety">
+      <div><span class="pct">90%+</span><p class="muted" style="margin-top:14px;font-size:16px">of routine actions are automated: research, matching, drafting, follow-ups and reporting.</p></div>
+      <div><h3>The agent does</h3><ul>
+        <li>Tracks every lender, fund and private investor and what each one asks for</li>
+        <li>Builds the project profile from your own words and documents</li>
+        <li>Finds data gaps and contradictions before an investor does</li>
+        <li>Matches projects to mandates and re-scores as either side changes</li>
+        <li>Drafts teasers, questions and follow-ups</li>
+        <li>Chases silent replies and prepares the weekly status</li>
+      </ul></div>
+      <div class="h"><h3>A person decides</h3><ul>
+        <li>What the project says about itself</li>
+        <li>Which investors see it, and when</li>
+        <li>Every message before it is sent</li>
+        <li>Price, terms and structure</li>
+        <li>Legal review and sign-off</li>
+        <li>The final investment decision</li>
+      </ul></div>
+    </div>
+
+    <div class="cmp" role="table" aria-label="Traditional advisory team compared with Cobuildy">
+      <div class="row" role="row"><div role="columnheader"></div><div role="columnheader">Traditional team</div><div role="columnheader">Cobuildy</div></div>
+      <div class="row" role="row"><div role="cell">Working hours</div><div role="cell">Office hours, shared across clients</div><div role="cell">Every minute, dedicated to your mandate</div></div>
+      <div class="row" role="row"><div role="cell">Market knowledge</div><div role="cell">Contacts held by individual people</div><div role="cell">The whole market, kept current by the agent</div></div>
+      <div class="row" role="row"><div role="cell">First shortlist</div><div role="cell">Days to weeks of manual research</div><div role="cell">Minutes. Try it above.</div></div>
+      <div class="row" role="row"><div role="cell">Cost as volume grows</div><div role="cell">Rises with headcount</div><div role="cell">Falls with every project the agent learns from</div></div>
+      <div class="row" role="row"><div role="cell">What you pay</div><div role="cell">Retainers plus fees</div><div role="cell">1.5% to €3M, then 1%. Nothing else.</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="fee" style="padding-block:84px">
+  <div class="fee">
+    <div>
+      <span class="eyebrow mono">How we are paid</span>
+      <h2 class="h2">Cheaper than a broker. Faster than doing it yourself.</h2>
+      <p class="sub">One success fee, paid only when the capital arrives: 1.5% on the first €3M raised and 1% on everything above. We can charge less because one agent serves every project at once, so each new project costs us little extra.</p>
+      <div class="cta-row" style="margin-top:26px"><button class="btn soft" type="button" data-signup="">Start free</button></div>
+    </div>
+    <ul>
+      <li><b>1.5% up to €3M, then 1%</b><span>Raise €5M and the fee is €65,000. No retainer, no upfront fee, no minimum.</span></li>
+      <li><b>Fee terms in writing first</b><span>You see the numbers before any work begins.</span></li>
+      <li><b>No capital raised, no fee</b><span>Our incentive is the same as yours.</span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="wrap" id="how" style="padding-block:20px 84px">
+  <div class="center">
+    <span class="eyebrow mono">How it works</span>
+    <h2 class="h2" id="st-h">From a first message to a term sheet</h2>
+  </div>
+  <div class="steps3" id="steps"></div>
+</div>
+
+<div class="alt">
+  <div class="wrap" style="padding-block:84px">
+    <div class="center">
+      <span class="eyebrow mono">Track record</span>
+      <h2 class="h2">Projects we have helped fund</h2>
+    </div>
+    <div class="cases">
+      <article class="card case"><span class="tag">Equity · Closed Feb 2025</span><div class="city">Porto</div><p class="muted">Duplex development</p><dl><dt>Raised</dt><dd>€600k</dd><dt>Structure</dt><dd>25%+ equity</dd></dl></article>
+      <article class="card case"><span class="tag">Senior debt · Closed Oct 2025</span><div class="city">Tenerife</div><p class="muted">Luxury villas</p><dl><dt>Raised</dt><dd>€1.8M</dd><dt>Structure</dt><dd>12% senior debt</dd></dl></article>
+      <article class="card case"><span class="tag">Equity · Closed Nov 2025</span><div class="city">Marbella</div><p class="muted">Multifamily</p><dl><dt>Raised</dt><dd>€2.5M</dd><dt>Structure</dt><dd>22%+ equity</dd></dl></article>
+    </div>
+    <div class="team">
+      <div class="person"><div class="pav">D</div><div><b>Dani Valiaev</b><span>Partner</span></div></div>
+      <div class="person"><div class="pav">D</div><div><b>Dona Karamanaga</b><span>Head of Investor Relations</span></div></div>
+      <div class="person"><div class="pav">G</div><div><b>Gonzalo Giovannelli</b><span>Head of Developer Relations</span></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="faq" style="padding-block:84px 40px">
+  <div class="center"><span class="eyebrow mono">FAQ</span><h2 class="h2">Questions people ask first</h2></div>
+  <div class="faq">
+    <details class="q" open><summary>What do I pay?</summary><p>Developers pay a success fee only when capital is raised: 1.5% on the first €3M and 1% on any amount above that. For example, raising €5M costs €65,000. There is no retainer and no upfront fee. The terms are written down and agreed before any work begins.</p></details>
+    <details class="q"><summary>What does the AI agent actually do?</summary><p>It builds your profile from what you tell it, finds the gaps investors will ask about, matches you with lenders and investors whose criteria fit, drafts the documents and messages, and follows up. It works around the clock for you.</p></details>
+    <details class="q"><summary>What stays with people?</summary><p>Every decision that carries risk. You approve what the project says and who sees it, and you confirm every send. Our team reviews materials, negotiates terms and coordinates legal work. Nothing is sent on your behalf without your approval.</p></details>
+    <details class="q"><summary>Where do the investors come from?</summary><p>From our network of lenders, funds, family offices and private investors active in Spain and Portugal. The agent keeps their criteria current. Investors are qualified before they see project details and opt in to every introduction.</p></details>
+    <details class="q"><summary>I am an investor. What do I get?</summary><p>An agent that reads every project we receive, checks it against your mandate and brings you only the matches, with the numbers already structured. You decide what to review and who to talk to.</p></details>
+    <details class="q"><summary>Which projects are a fit?</summary><p>New development, conversion and repositioning in Spain and Portugal, from roughly €500k to several million euros of capital. Permits and sponsor equity improve the options at every stage.</p></details>
+    <details class="q"><summary>Are you a financial adviser?</summary><p>No. Cobuildy S.L. acts as an introducer. We do not give investment advice and we do not hold client funds. Investors make their own decisions with their own advisers.</p></details>
+  </div>
+</div>
+
+<div class="wrap final">
+  <h2 class="h2" id="f-h">Put an agent to work on your project today</h2>
+  <div class="cta-row"><button class="btn" type="button" data-signup="" id="f-cta">Get started free</button><a class="btn ghost" href="#top">Try the agent again</a></div>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div><a class="logo" href="#top" aria-label="Cobuildy" style="font-size:23px">Cobuildy</a><p style="margin-top:10px;max-width:32ch">An AI agent for real estate capital in Spain and Portugal. Paid on success.</p></div>
+      <div><h4>Developers</h4><a href="#top">Try the agent</a><a href="#fee">Success fee</a><a href="#how">How it works</a></div>
+      <div><h4>Investors</h4><a href="#top">Set your mandate</a><a href="#agent">Your agent</a><a href="#faq">FAQ</a></div>
+      <div><h4>Company</h4><span>info@cobuildy.com</span><span style="display:block">+34 931 702 287</span><span style="display:block;margin-top:8px">Carrer de Calàbria 149, Entresòl 1a, 08015 Barcelona</span></div>
+    </div>
+    <p class="legal">Cobuildy S.L. is an introducer between real estate developers and investors. It is not a financial adviser, does not provide investment advice and does not hold client funds. Access to project information is limited to qualified investors. Investor and project profiles shown in the demo are illustrative. Past projects do not guarantee future results. © 2026 Cobuildy S.L.</p>
+  </div>
+</footer>
+
+<div class="ov" id="ov" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dl-h">
+    <button class="x" type="button" id="dl-x" aria-label="Close">×</button>
+    <div id="dl-form">
+      <div class="seg" role="group" aria-label="Account type" style="margin-bottom:14px"><button id="r-dev" aria-pressed="true" type="button">Developer</button><button id="r-inv" aria-pressed="false" type="button">Investor</button></div>
+      <h2 id="dl-h">Get started free</h2>
+      <p class="muted" style="margin:8px 0 14px" id="dl-p"></p>
+      <div class="carry" id="dl-carry" hidden></div>
+      <form id="su" novalidate style="display:grid;gap:12px;margin-top:14px">
+        <div class="field"><label for="su-name">Name</label><input id="su-name" type="text" autocomplete="name"></div>
+        <div class="field"><label for="su-mail">Work email</label><input id="su-mail" type="email" autocomplete="email"></div>
+        <p class="small" id="su-err" role="alert" style="color:var(--warn)" hidden>Add your name and a valid email.</p>
+        <button class="btn block" type="submit">Get started</button>
+        <p class="small" id="su-note">Sign in with Google or an email link. Your answers from this page come with you.</p>
+      </form>
+    </div>
+    <div id="dl-done" hidden>
+      <h2>Request received, <span id="dn-name"></span>.</h2>
+      <p class="muted" style="margin:8px 0 14px">What happens next:</p>
+      <ul class="steps-next" id="dn-steps"></ul>
+      <div class="carry" id="dn-carry" style="margin-top:14px" hidden></div>
+      <div style="margin-top:18px" id="dn-cta"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://upmzrfgagplmguxwladk.supabase.co',SB_KEY='sb_publishable_HTNKW5GzoHf-3QqJFO1rUA_R6jb5rQm';
+const $=id=>document.getElementById(id);
+const eur=n=>n>=1e6?'€'+(Math.round(n/1e5)/10).toString().replace(/\.0$/,'')+'M':'€'+Math.round(n/1e3)+'k';
+const GEO={CS:'Costa del Sol',BCN:'Barcelona',MAD:'Madrid',VLC:'Valencia',ISL:'Balearics / Canaries',LIS:'Lisbon',OPO:'Porto',ALG:'Algarve'};
+const AS={RES:'Residential',BTR:'Build-to-rent',HOS:'Hospitality'};
+const INS={senior:'Senior loan',mezz:'Mezzanine',equity:'Equity'};
+const plural=(n,w)=>n+' '+w+(n===1?'':'s');
+
+/* ---------- deterministic illustrative data ---------- */
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=rng(20261109),pick=a=>a[Math.floor(R()*a.length)],rr=(a,b)=>a+R()*(b-a);
+const pool=['CS','CS','CS','CS','BCN','BCN','MAD','MAD','VLC','ISL','LIS','LIS','OPO','OPO','ALG'];
+const TY=[
+ {t:'Private credit fund',n:14,ins:[['senior'],['senior','mezz'],['mezz'],['senior']],g:[4,7],as:[['RES'],['RES','BTR'],['RES','BTR','HOS']],tk:[[1.5e6,10e6],[2e6,20e6]],lic:['granted'],ltc:[.6,.7]},
+ {t:'Regional bank',n:8,ins:[['senior']],g:[1,3],as:[['RES']],tk:[[.5e6,6e6]],lic:['granted'],ltc:[.5,.6]},
+ {t:'Family office',n:14,ins:[['senior','mezz'],['mezz','equity'],['equity'],['senior']],g:[2,4],as:[['RES'],['RES','HOS'],['RES','BTR','HOS']],tk:[[.5e6,4e6]],lic:['submitted','none','granted'],ltc:[.6,.75]},
+ {t:'Private investor club',n:8,ins:[['equity']],g:[1,3],as:[['RES'],['RES','HOS']],tk:[[.3e6,2.5e6]],lic:['none','submitted'],ltc:[.6,.7]},
+ {t:'Crowdfunding platform',n:6,ins:[['equity','mezz']],g:[2,4],as:[['RES','BTR']],tk:[[.3e6,2.5e6]],lic:['granted','submitted'],ltc:[.6,.7]},
+ {t:'Mezzanine and JV capital',n:6,ins:[['mezz'],['mezz','equity']],g:[2,5],as:[['RES','BTR','HOS']],tk:[[1e6,7e6]],lic:['submitted','none'],ltc:[.75,.85]},
+ {t:'Preferred equity fund',n:4,ins:[['equity']],g:[3,6],as:[['RES','BTR','HOS']],tk:[[3e6,15e6]],lic:['submitted','none'],ltc:[.7,.8]}];
+const DB=[];
+TY.forEach(t=>{for(let i=0;i<t.n;i++){const ng=Math.round(rr(t.g[0],t.g[1])),geo=[];while(geo.length<ng){const g=pick(pool);if(!geo.includes(g))geo.push(g)}
+  const tk=pick(t.tk),a=Math.round(tk[0]*rr(.9,1.4)/5e4)*5e4,b=Math.round(tk[1]*rr(.7,1.1)/5e4)*5e4;
+  DB.push({id:'I'+String(DB.length+1).padStart(2,'0'),t:t.t,ins:pick(t.ins),geo,as:pick(t.as),min:a,max:Math.max(b,a*2),lic:pick(t.lic),ltc:+(rr(t.ltc[0],t.ltc[1])).toFixed(2)})}});
+/* projects an investor could see: second pool, drawn after the investor pool so both stay stable */
+const PRJ=[];
+for(let i=0;i<40;i++){
+  const ins=pick(['senior','senior','senior','mezz','equity','equity']),geo=pick(pool),as=pick(['RES','RES','RES','BTR','HOS']);
+  const ask=Math.round(rr(.4e6,8e6)/5e4)*5e4,ltc=ins==='equity'?+rr(.3,.5).toFixed(2):+rr(.45,.75).toFixed(2),lic=pick([2,2,2,1,1,0]);
+  PRJ.push({id:'L-'+String(i+1).padStart(2,'0'),ins,geo,as,ask,ltc,lic,margin:+rr(.14,.32).toFixed(2),track:Math.round(rr(1,12)),units:Math.round(rr(6,40))});
+}
+const LR={none:0,submitted:1,granted:2,build:2};
+const LICN=['No permit yet','Permit submitted','Permit granted'];
+
+/* ---------- agent chat demo (all matching runs in the page, nothing is sent) ---------- */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const STL={none:'Land, no permit yet',submitted:'Permit submitted',granted:'Permit granted',build:'Under construction'};
+const INSL={senior:'Senior loan',mezz:'Mezzanine',equity:'Equity partner',any:'Capital type open'};
+const ASL={RES:'Residential for sale',VIL:'Luxury villas',BTR:'Build-to-rent',HOS:'Hospitality',any:'Any asset'};
+const LICL={2:'Permit granted only',1:'Permit submitted or better',0:'Any stage'};
+const TKL={'0.3,1':'€0.3–1M','1,3':'€1–3M','3,6':'€3–6M','6,20':'€6M and above'};
+const code=v=>v==='VIL'?'RES':v;
+const GEORX=[[/costa del sol|marbella|estepona|m[aá]laga|mijas|benahav|fuengirola|sotogrande/i,'CS'],[/barcelona|sitges|girona|catalu/i,'BCN'],[/madrid/i,'MAD'],[/valencia|alicante|denia/i,'VLC'],[/mallorca|ibiza|palma|balear|tenerife|canar/i,'ISL'],[/lisbon|lisboa|cascais|sintra/i,'LIS'],[/porto|oporto/i,'OPO'],[/algarve|faro|lagos|albufeira|vilamoura/i,'ALG']];
+const geosIn=t=>GEORX.filter(([r])=>r.test(t)).map(x=>x[1]);
+function money(t){const m=String(t).replace(/€|eur(os)?/ig,'').match(/(\d+(?:[.,]\d+)?)\s*(mm|m|million|millones|k|mil)?\b/i);if(!m)return null;let v=+m[1].replace(',','.');const u=(m[2]||'').toLowerCase();if(u==='k'||u==='mil')v*=1e3;else if(u)v*=1e6;else if(v<100)v*=1e6;return Math.round(v)}
+const MN='(€?\\s*\\d[\\d.,]*\\s*(?:mm|m|million|k)?)';
+function xDev(t){const o={};const g=geosIn(t);if(g.length)o.geo=g[0];
+  if(/villa/i.test(t))o.as='VIL';else if(/build.to.rent|btr|rental|\brent/i.test(t))o.as='BTR';else if(/hotel|hospitality/i.test(t))o.as='HOS';else if(/apartment|residential|flats?|duplex|housing|homes/i.test(t))o.as='RES';
+  if(/no permit|not (yet )?permitted|land only|before (the )?permit|no licen[cs]e/i.test(t))o.stage='none';
+  else if(/submitted|applied|pending|waiting for (the )?(town hall|licen|permit)/i.test(t))o.stage='submitted';
+  else if(/under construction|on site|construction (has )?started/i.test(t))o.stage='build';
+  else if(/permit(ted)?|licen[cs]e (granted|in hand|approved)|granted/i.test(t))o.stage='granted';
+  if(/mezz/i.test(t))o.ins='mezz';else if(/senior|bank loan|\bloan\b|\bdebt/i.test(t))o.ins='senior';else if(/equity|partner|\bjv\b/i.test(t))o.ins='equity';else if(/not sure|\bany\b|open to/i.test(t))o.ins='any';
+  let m;
+  if(m=t.match(new RegExp('(?:total )?(?:project )?cost[^\\d€]{0,25}'+MN,'i')))o.cost=money(m[1]);
+  if(m=t.match(new RegExp('(?:need|raise|raising|looking for|seeking|require|financing(?: of)?)[^\\d€]{0,25}'+MN,'i')))o.ask=money(m[1]);
+  Object.keys(o).forEach(k=>{if(o[k]==null)delete o[k]});return o}
+function xInv(t){const o={};const g=geosIn(t);if(g.length)o.geo=g;
+  if(/mezz/i.test(t))o.ins='mezz';else if(/senior|\bloans?\b|\bdebt/i.test(t))o.ins='senior';else if(/equity|\bjv\b/i.test(t))o.ins='equity';else if(/\bany\b|all instruments/i.test(t))o.ins='any';
+  let m=t.match(/(\d+(?:[.,]\d+)?)\s*(?:-|–|to)\s*(\d+(?:[.,]\d+)?)\s*(m|mm|million|k)\b/i),v=null;
+  if(m){v=(+m[1].replace(',','.')+ +m[2].replace(',','.'))/2*((m[3]||'').toLowerCase()==='k'?1e3:1e6)}
+  else if(m=t.match(/(\d+(?:[.,]\d+)?)\s*(m|mm|million|k)\b/i)){v=+m[1].replace(',','.')*(m[2].toLowerCase()==='k'?1e3:1e6)}
+  if(v!=null)o.tk=v<1e6?'0.3,1':v<3e6?'1,3':v<6e6?'3,6':'6,20';
+  if(/villa|residential|apartment|housing/i.test(t))o.as='RES';else if(/build.to.rent|btr|rental/i.test(t))o.as='BTR';else if(/hotel|hospitality/i.test(t))o.as='HOS';else if(/any asset|all assets/i.test(t))o.as='any';
+  if(/only permit|permit(ted)? only|permit granted|granted only/i.test(t))o.lic=2;else if(/submitted/i.test(t))o.lic=1;else if(/any stage|early stage|land/i.test(t))o.lic=0;
+  return o}
+
+const GEOCH=Object.keys(GEO).map(k=>({l:GEO[k],v:k}));
+const Q={
+ dev:[
+  {k:'geo',tag:'Market',q:'Where is the project?',chips:GEOCH,ex:'12 villas in Marbella, permit granted, total cost €4M, I need €2.5M of senior loan',hint:'Try a market such as Costa del Sol, Barcelona, Lisbon or Porto.'},
+  {k:'as',tag:'Asset',q:'What are you building?',chips:[{l:'Residential for sale',v:'RES'},{l:'Luxury villas',v:'VIL'},{l:'Build-to-rent',v:'BTR'},{l:'Hospitality',v:'HOS'}],hint:'For example apartments, villas, build-to-rent or a hotel.'},
+  {k:'stage',tag:'Stage',q:'What stage is the project at?',chips:[{l:'Land, no permit yet',v:'none'},{l:'Permit submitted',v:'submitted'},{l:'Permit granted',v:'granted'},{l:'Under construction',v:'build'}],hint:'Say whether the permit is granted, submitted or not started.'},
+  {k:'cost',tag:'Cost',q:'What is the total project cost?',chips:[{l:'€2M',v:2e6},{l:'€4M',v:4e6},{l:'€8M',v:8e6}],money:1,hint:'Give an amount, for example €4M or 3,500,000.'},
+  {k:'ask',tag:'Raise',q:'How much capital do you need to raise?',chips:'ask',money:1,hint:'Give an amount, for example €2.5M.'},
+  {k:'ins',tag:'Capital',q:'What kind of capital do you want?',chips:[{l:'Senior loan',v:'senior'},{l:'Mezzanine',v:'mezz'},{l:'Equity partner',v:'equity'},{l:'Not sure yet',v:'any'}],hint:'Senior loan, mezzanine, equity partner, or not sure.'}],
+ inv:[
+  {k:'geo',tag:'Regions',q:'Which regions do you invest in? Pick all that apply, or type them.',chips:GEOCH,multi:1,ex:'Costa del Sol, Lisbon and Porto, any instrument, tickets of €1–3M, any asset, permit submitted or better',hint:'Name one or more regions, for example Costa del Sol and Lisbon.'},
+  {k:'ins',tag:'Instrument',q:'Which instruments do you write?',chips:[{l:'Senior loan',v:'senior'},{l:'Mezzanine',v:'mezz'},{l:'Equity',v:'equity'},{l:'Any',v:'any'}],hint:'Senior loan, mezzanine, equity, or any.'},
+  {k:'tk',tag:'Ticket',q:'What ticket size fits?',chips:Object.keys(TKL).map(k=>({l:TKL[k],v:k})),hint:'Give a size such as €1–3M.'},
+  {k:'as',tag:'Asset',q:'Which asset types?',chips:[{l:'Any',v:'any'},{l:'Residential',v:'RES'},{l:'Build-to-rent',v:'BTR'},{l:'Hospitality',v:'HOS'}],hint:'Residential, build-to-rent, hospitality, or any.'},
+  {k:'lic',tag:'Stage',q:'What is the earliest stage you accept?',chips:[{l:'Permit granted only',v:2},{l:'Permit submitted or better',v:1},{l:'Any stage',v:0}],hint:'Permit granted only, submitted or better, or any stage.'}]
+};
+const ST={};
+['dev','inv'].forEach(m=>ST[m]={msgs:[],a:{},qi:0,done:false,gated:false,typing:false,tmp:[]});
+const GATE={dev:4,inv:3}; /* answers after which the agent asks the visitor to create an account */
+
+/* matching with unknown = never excluded */
+function devPart(a){
+  const full=['geo','as','stage','cost','ask','ins'].every(k=>a[k]!==undefined);
+  const ltc=a.ask&&a.cost?a.ask/a.cost:null,asc=a.as?code(a.as):null,lic=a.stage?(a.stage==='build'?'granted':a.stage):null;
+  const res=DB.map(i=>{const f=[];
+    if(a.geo&&!i.geo.includes(a.geo))f.push('hard');
+    if(asc&&!i.as.includes(asc))f.push('hard');
+    if(a.ins&&a.ins!=='any'&&!i.ins.includes(a.ins))f.push('hard');
+    if(a.ask&&(a.ask<i.min||a.ask>i.max))f.push('hard');
+    if(lic&&LR[lic]<LR[i.lic])f.push('lic');
+    const debt=a.ins?(a.ins==='any'?!i.ins.includes('equity'):a.ins!=='equity'):true;
+    if(ltc&&debt&&ltc>i.ltc&&i.ins.some(x=>x!=='equity'))f.push('ltc');
+    return {i,f}});
+  const live=res.filter(r=>!r.f.includes('hard'));
+  const fit=live.filter(r=>!r.f.length),rest=live.filter(r=>r.f.length);
+  return {full,res,fit,later:full?rest:[],poss:full?[]:live,n:full?fit.length:live.length,N:res.length,
+    licN:res.filter(r=>r.f.length===1&&r.f[0]==='lic').length,ltcN:res.filter(r=>r.f.length===1&&r.f[0]==='ltc').length,ltc}
+}
+function invPart(a){
+  const full=['geo','ins','tk','as','lic'].every(k=>a[k]!==undefined);
+  const band=a.tk?a.tk.split(',').map(x=>+x*1e6):null;
+  const base=PRJ.filter(p=>(!a.geo||a.geo.includes(p.geo))&&(!a.ins||a.ins==='any'||p.ins===a.ins)&&(!band||(p.ask>=band[0]&&p.ask<=band[1]))&&(!a.as||a.as==='any'||p.as===a.as));
+  const m=base.filter(p=>a.lic===undefined||p.lic>=a.lic).sort((x,y)=>score(y)-score(x));
+  return {full,m,n:m.length,N:PRJ.length,near:a.lic===undefined?0:base.filter(p=>p.lic<a.lic).length}
+}
+function score(p){return Math.min(99,68+(p.lic===2?10:p.lic===1?4:0)+(p.margin>=.2?8:3)+(p.ltc<=.6?8:3)+(p.track>=5?5:1))}
+
+function stat(){
+  const s=ST[aud];
+  if(aud==='dev'){const r=devPart(s.a);return {n:r.n,N:r.N,full:r.full,sub:r.full?`investors fit today${r.later.length?', +'+r.later.length+' after you close a gap':''}`:`of ${r.N} investors still match`,a:r.fit.length/r.N*100,b:(r.later.length+r.poss.length-(r.full?0:r.fit.length))/r.N*100}}
+  const r=invPart(s.a);return {n:r.n,N:r.N,full:r.full,sub:r.full?'live projects match your mandate today':`of ${r.N} live projects still match`,a:r.full?r.n/r.N*100:0,b:r.full?0:r.n/r.N*100}
+}
+function curChips(){
+  const s=ST[aud],q=Q[aud][s.qi];if(s.done||!q)return [];
+  let c=q.chips;
+  if(c==='ask'){const cost=s.a.cost||4e6;c=[.25,.5,.65].map(p=>({l:`${eur(Math.round(cost*p/5e4)*5e4)} (${Math.round(p*100)}%)`,v:Math.round(cost*p/5e4)*5e4}))}
+  return c;
+}
+function renderChat(){
+  const s=ST[aud],Qs=Q[aud],q=Qs[s.qi],st=stat();
+  $('c-prog').innerHTML=Qs.map((x,i)=>`<span class="${s.a[x.k]!==undefined?'done':(i===s.qi&&!s.done?'now':'')}"><i></i><em>${x.tag}</em></span>`).join('');
+  $('m-n').textContent=st.n;$('m-l').textContent=st.sub;$('s-a').style.width=st.a+'%';$('s-b').style.width=Math.max(0,st.b)+'%';
+  const dots='<div class="m a"><span class="who"><i></i>Cobuildy agent</span><div class="b typing"><i></i><i></i><i></i></div></div>';
+  $('c-msgs').innerHTML=s.msgs.map(m=>m.r==='u'?`<div class="m u"><div class="b${m.hold?' hold':''}">${esc(m.t)}</div></div>`:`<div class="m a"><span class="who"><i></i>Cobuildy agent</span><div class="b ${m.html?'rich':''}">${m.html?m.t:esc(m.t)}</div></div>`).join('')+(s.typing?dots:'');
+  const box=$('c-msgs');box.scrollTop=box.scrollHeight;
+  let h='';
+  if(s.gated&&!s.done){h=`<span class="mono muted lbl">Create your free account to continue</span><div class="set"><button class="go" type="button" data-signup="${aud}" data-auto="google">Continue with Google →</button><button type="button" data-signup="${aud}">Use email instead</button><button type="button" data-act="reset">Change my answers</button></div>`}
+  else if(s.done){h=`<span class="mono muted lbl">Next step</span><div class="set"><button class="go" type="button" data-signup="${aud}">${aud==='dev'?'Save this project':'Get alerts for new matches'} →</button><button type="button" data-act="reset">Change my answers</button></div>`}
+  else if(q){const c=curChips();
+    h=`<span class="step"><b>${s.qi+1} / ${Qs.length}</b>${q.multi?'Tap one or more, then press Continue':'Tap your answer'}${s.qi===0?'<span class="arr" aria-hidden="true">↓</span>':''}</span><div class="set">`+c.map((x,i)=>{const on=q.multi&&s.tmp.includes(x.v);return `<button type="button" data-i="${i}" ${q.multi?`aria-pressed="${on}"`:''}>${esc(x.l)}</button>`}).join('')+
+    (q.multi?`<button class="go" type="button" data-act="cont" ${s.tmp.length?'':'disabled'}>Continue →</button>`:'')+
+    (q.ex?`<button class="ex" type="button" data-act="ex">Or write it in your own words</button>`:'')+'</div>'}
+  $('c-chips').innerHTML=h;$('c-chips').hidden=!h;
+}
+async function say(s,t,html,ms){s.typing=true;renderChat();await sleep(ms??520);s.typing=false;s.msgs.push({r:'a',t,html:!!html});renderChat()}
+function nextQ(s){const Qs=Q[aud];const i=Qs.findIndex(q=>s.a[q.k]===undefined);s.qi=i<0?Qs.length:i;return i}
+function labelOf(k,v){
+  if(k==='geo')return Array.isArray(v)?v.map(g=>GEO[g]).join(', '):GEO[v];
+  if(k==='as')return ASL[v];if(k==='stage')return STL[v];if(k==='ins')return INSL[v];
+  if(k==='cost'||k==='ask')return eur(v);if(k==='tk')return TKL[v];if(k==='lic')return LICL[v];return v}
+let busy=false;
+async function submit(text,direct){
+  if(busy)return;const s=ST[aud],q=Q[aud][s.qi];if(s.done||!q)return;
+  if(s.gated){busy=true;s.msgs.push({r:'u',t:text});renderChat();await say(s,'To continue, create your free account with the button below. Everything you told me is saved to your project.');busy=false;renderChat();return}
+  busy=true;s.msgs.push({r:'u',t:text});renderChat();
+  let found={};
+  if(direct!==undefined){found[q.k]=direct}
+  else{found=aud==='dev'?xDev(text):xInv(text);
+    if(q.money&&found[q.k]===undefined){const m=money(text);if(m)found[q.k]=m}
+    if(q.k==='geo'&&aud==='dev'&&found.geo===undefined){}
+  }
+  const keys=Object.keys(found).filter(k=>Q[aud].some(x=>x.k===k));
+  if(!keys.length){await say(s,`I did not catch that. ${q.hint}`);busy=false;renderChat();return}
+  const notes=[];
+  keys.forEach(k=>{s.a[k]=found[k];notes.push(`${Q[aud].find(x=>x.k===k).tag.toLowerCase()}: ${labelOf(k,found[k])}`)});
+  s.tmp=[];
+  if(aud==='dev'&&s.a.ask&&s.a.cost&&s.a.ask>s.a.cost){s.a.ask=s.a.cost;notes.push('the ask is capped at the total cost')}
+  const st=stat(),more=nextQ(s)>=0;
+  let msg=`Got it (${notes.join('; ')}). `+(aud==='dev'?`${st.n} of ${st.N} investors still match.`:`${st.n} of ${st.N} live projects still match.`);
+  const nAns=Q[aud].filter(x=>s.a[x.k]!==undefined).length;
+  if(more&&nAns>=GATE[aud]){await say(s,msg,false,350);await gate(s,nAns)}
+  else if(more){await say(s,msg+'\n\n'+Q[aud][s.qi].q)}
+  else{await say(s,msg,false,350);await finish(s)}
+  busy=false;renderChat();
+}
+async function gate(s,n){
+  s.gated=true;
+  const sum=Q[aud].filter(x=>s.a[x.k]!==undefined).map(x=>esc(labelOf(x.k,s.a[x.k]))).join(' · ');
+  const html=`<span>Good start. I already have ${n} answers: ${sum}.</span><ul class="sl"><li>To continue, create a free account. It takes one click with Google.</li><li>Everything you told me is saved into ${aud==='dev'?'your project':'your mandate'}, so we pick up at the next question.</li></ul><button class="btn plan sm" type="button" data-signup="${aud}" data-auto="google">Continue with Google</button>`;
+  await say(s,html,true,650);
+}
+async function finish(s){
+  s.done=true;let html;
+  if(aud==='dev'){
+    const r=devPart(s.a),say_=[];
+    if(!r.fit.length&&!r.later.length)say_.push('Nobody in the database matches this market, asset and ticket yet. A different capital type or a smaller ask would change that, and I can re-run it.');
+    if(r.licN>0&&s.a.stage!=='granted'&&s.a.stage!=='build')say_.push(`A granted permit would add ${plural(r.licN,'investor')}. I would plan the permit first.`);
+    if(r.ltcN>0)say_.push(`Your ask is ${Math.round(r.ltc*100)}% of cost. Lowering it to about ${Math.round((r.ltc-.1)*100)}% with more sponsor equity would add ${plural(r.ltcN,'lender')}.`);
+    if(s.a.ask>8e6)say_.push('Tickets above €8M narrow the field to larger funds. Splitting the stack into senior and equity widens it.');
+    if(s.a.ins==='any')say_.push('With the capital type open, you see every route. I would narrow it after we look at your margin.');
+    if(r.fit.length&&say_.length<3)say_.push('Next I would collect the land title, budget and permit evidence. Those answers make the project ready for a first teaser.');
+    const top=[...r.fit].sort((x,y)=>Math.abs((x.i.min+x.i.max)/2-s.a.ask)-Math.abs((y.i.min+y.i.max)/2-s.a.ask)).slice(0,3);
+    html=`<span>${r.fit.length?`Here is my first read. ${plural(r.fit.length,'investor')} in the database fit this project today.`:'Here is my first read.'}</span><ul class="sl">${say_.slice(0,3).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`+
+      (top.length?`<div class="rows">${top.map(x=>`<div class="r"><b style="font-weight:500">${x.i.t}</b><span class="pill">Fits today</span><small>${eur(x.i.min)}–${eur(x.i.max)} · ${x.i.ins.map(y=>INSL[y]).join(' / ')} · ${x.i.geo.slice(0,2).map(g=>GEO[g]).join(', ')}${x.i.geo.length>2?' +'+(x.i.geo.length-2):''}</small></div>`).join('')}</div>`:'')+
+      `<button class="btn plan sm" type="button" data-signup="dev">Save this project, continue with my agent</button>`;
+  }else{
+    const r=invPart(s.a),say_=[];
+    if(!r.n)say_.push('Nothing matches right now. I will alert you the moment a project does, and I can show what is one step away if you widen the stage or the ticket.');
+    else{say_.push(`I checked ${r.N} projects against your mandate. ${plural(r.n,'project')} pass every criterion.`);
+      if(r.near)say_.push(`${plural(r.near,'more project')} would match if you accepted an earlier stage.`);
+      say_.push('I keep reading new submissions overnight and will message you as soon as a new one fits.')}
+    html=`<span>Here is what your mandate returns today.</span><ul class="sl">${say_.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`+
+      (r.m.length?`<div class="rows">${r.m.slice(0,3).map(p=>`<div class="r"><b style="font-weight:500">${AS[p.as]} · ${GEO[p.geo]}</b><span class="pill b">Fit ${score(p)}%</span><small>${INS[p.ins]} ${eur(p.ask)} · ${p.ins==='equity'?'equity '+Math.round(p.ltc*100)+'% of cost':'LTC '+Math.round(p.ltc*100)+'%'} · margin ${Math.round(p.margin*100)}% · ${LICN[p.lic].toLowerCase()} · sponsor delivered ${plural(p.track,'project')}</small></div>`).join('')}</div>`:'')+
+      `<button class="btn plan sm" type="button" data-signup="inv">Get alerts for new matches</button>`;
+  }
+  await say(s,html,true,650);
+}
+function resetChat(m){
+  ST[m]={msgs:[],a:{},qi:0,done:false,gated:false,typing:false,tmp:[]};const s=ST[m];
+  s.msgs.push({r:'a',t:(m==='dev'?'Hi, I am your Cobuildy agent. I check your project against our investor database as we go.':'Hi, I am your Cobuildy agent. I screen live projects against your mandate as we go.')+'\n\n'+Q[m][0].q});
+}
+$('c-form').addEventListener('submit',e=>{e.preventDefault();const t=$('c-in').value.trim();if(!t)return;$('c-in').value='';submit(t)});
+$('c-reset').onclick=()=>{if(busy)return;resetChat(aud);renderChat()};
+$('c-chips').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.dataset.signup!==undefined||busy||flying)return;const s=ST[aud],q=Q[aud][s.qi];
+  if(b.dataset.act==='reset'){resetChat(aud);renderChat();return}
+  if(b.dataset.act==='ex'){submit(q.ex);return}
+  if(b.dataset.act==='cont'){if(s.tmp.length)submit(labelOf('geo',s.tmp),[...s.tmp]);return}
+  if(b.dataset.i===undefined||!q)return;const c=curChips()[+b.dataset.i];
+  if(q.multi){const v=c.v;s.tmp=s.tmp.includes(v)?s.tmp.filter(x=>x!==v):[...s.tmp,v];renderChat();return}
+  pickFly(b,c);
+});
+/* A chosen answer turns green with a tick for a moment, then flies into the user's message bubble. */
+let flying=false;
+const REDUCED=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function pickFly(btn,c){
+  if(REDUCED||!btn.animate){submit(c.l,c.v);return}
+  flying=true;stopHint();btn.classList.add('picked');
+  setTimeout(()=>{
+    try{
+      const from=btn.getBoundingClientRect(),bg=getComputedStyle(btn).backgroundColor,fg=getComputedStyle(btn).color;
+      const fly=document.createElement('div');fly.className='fly';
+      fly.innerHTML='<span class="ck">\u2713</span><span></span>';fly.lastChild.textContent=c.l;
+      Object.assign(fly.style,{left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px'});
+      document.body.appendChild(fly);
+      submit(c.l,c.v);                       // the user's message is added synchronously
+      const s=ST[aud],m=[...s.msgs].reverse().find(x=>x.r==='u');
+      if(m){m.hold=true;renderChat()}
+      const target=[...document.querySelectorAll('#c-msgs .b.hold')].pop();
+      const done=()=>{fly.remove();if(m)m.hold=false;document.querySelectorAll('#c-msgs .b.hold').forEach(x=>{x.classList.remove('hold');x.classList.add('pop')});flying=false};
+      if(!target){done();return}
+      const to=target.getBoundingClientRect(),tcs=getComputedStyle(target);
+      fly.firstChild.animate([{maxWidth:'1.2em',marginRight:'6px',opacity:1},{maxWidth:'0px',marginRight:'0px',opacity:0}],{duration:360,fill:'forwards'});
+      fly.animate([
+        {left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px',background:bg,borderColor:bg,color:fg,borderRadius:'999px'},
+        {left:to.left+'px',top:to.top+'px',width:to.width+'px',height:to.height+'px',background:tcs.backgroundColor,borderColor:tcs.backgroundColor,color:tcs.color,borderRadius:'16px 6px 16px 16px'}
+      ],{duration:560,easing:'cubic-bezier(.45,0,.2,1)',fill:'forwards'}).onfinish=done;
+      setTimeout(()=>{if(flying)done()},1500);   // safety net
+    }catch(err){flying=false;document.querySelectorAll('.fly').forEach(x=>x.remove())}
+  },380);
+}
+/* First-view hint: the question and its answer buttons breathe three times when the chat scrolls into view, once per visit. */
+let hintOver=false;
+function stopHint(){hintOver=true;['demo','c-chips','c-msgs'].forEach(i=>$(i).classList.remove('hint'))}
+if(!REDUCED&&'IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>{
+    if(hintOver||!es.some(e=>e.isIntersecting))return;io.disconnect();
+    setTimeout(()=>{const s=ST[aud];if(hintOver||s.done||s.qi!==0||Object.keys(s.a).length)return;
+      ['demo','c-chips','c-msgs'].forEach(i=>$(i).classList.add('hint'));setTimeout(stopHint,5600)},500)
+  },{threshold:.8});
+  io.observe($('c-chips'));
+}
+$('c-in').addEventListener('focus',stopHint);
+$('c-chips').addEventListener('pointerdown',stopHint);
+/* ---------- audience switch ---------- */
+let aud='dev';
+const COPY={
+ dev:{chips:['<b>From 1%</b> success fee, only on results','<b>24/7</b> agent on your side','<b>90%+</b> of routine work automated','You approve every send'],t:'An AI agent that raises <em>your project’s</em> capital.',l:'It knows every lender and fund active in Spain and Portugal and what each one asks for. It builds your profile, finds the gaps, makes the introductions and follows up. You decide. We are paid only when capital arrives.',n:'Try the agent in the chat. No sign-up needed.',
+  ah:'An agent that never clocks out',ap:'While you build, it watches the market, keeps your profile ready and moves your outreach forward. It knows what each investor requires and what you still owe them.',know:['Lender and fund mandates','Ticket sizes and LTC limits','Permit requirements','Your documents and gaps','Open questions from investors','Market comparables'],
+  sh:'From a first message to a term sheet',steps:[['Tell the agent','Describe the project in your own words, or upload what you have. The profile builds beside the chat and shows what is missing.','Step 1 · You'],['Approve the plan','The agent drafts the teaser, picks the investors and writes the messages. You review and confirm before anything is sent.','Step 2 · Agent drafts, you approve'],['Get introduced','Interested investors get the data room. Your team and ours handle calls, terms and closing. The agent keeps chasing the details.','Step 3 · Agent chases, people close']],
+  fh:'Put an agent to work on your project today',
+  log:['Re-checked 41 lender mandates against your project','A new fund opened a €2–8M senior mandate for Costa del Sol. Fit count +3','Flagged a conflict: the owner on the nota simple differs from your project company','Built the teaser. Waiting for your approval before anything is sent','Investor C-17 asked for the nota simple. Reply drafted for your OK','Sent the 7-day follow-up to 4 silent investors (wave approved by you)','Weekly status prepared for your Monday call']},
+ inv:{chips:['<b>Off-market</b> deals, only for investors on file','<b>24/7</b> agents match every new project','<b>First alert</b> when a project fits','<b>5 quick questions</b> to get on file'],t:'An AI agent that finds deals <em>that fit</em> your mandate.',l:'It reads every project we receive, checks it against your criteria and brings you only the matches, with numbers already structured and gaps flagged. You decide what to review. Introductions are always opt-in.',n:'Try the agent in the chat. No sign-up needed.',
+  ah:'An agent that screens while you sleep',ap:'It reads new submissions as they arrive, compares them with your mandate and with the market, and tells you what is worth your time.',know:['Your mandate and limits','Every live project','Sponsor track records','Pricing against comparables','Data room completeness','What you passed on and why'],
+  sh:'From a mandate to a decision',steps:[['Set your mandate','Regions, instruments, ticket size and the minimum stage you accept. Change it any time.','Step 1 · You'],['Review the shortlist','The agent screens every project, structures the numbers and drafts questions for the sponsor. You open only what fits.','Step 2 · Agent screens, you choose'],['Meet the sponsor','Opt in to an introduction and get the data room. You run the diligence and decide. We stay out of your decision.','Step 3 · You decide']],
+  fh:'Put an agent on your mandate today',
+  log:['Read 6 new submissions overnight. 2 pass your mandate','New senior project on the Costa del Sol: LTC 58%, permit granted. Added to your shortlist','Compared the asking price per m² with 14 recent sales nearby','Sponsor track record checked for 3 shortlisted deals','Data room for L-08 is complete and ready for your review','Drafted three questions for the sponsor. Waiting for your OK','A project you passed on last month was repriced. Fit moved from 71% to 86%']}
+};
+function setAud(k){
+  aud=k;const c=COPY[k];hvSync(k);
+  $('aud-dev').setAttribute('aria-pressed',k==='dev');$('aud-inv').setAttribute('aria-pressed',k==='inv');
+  $('proof').innerHTML=c.chips.map(x=>`<li>${x}</li>`).join('');$('h-title').innerHTML=c.t;$('h-lede').textContent=c.l;$('h-note').textContent='Tap an answer in the chat. No sign-up needed.';
+  $('d-tag').textContent=k==='dev'?'Try it now':'Set your mandate';
+  $('ag-h').textContent=c.ah;$('ag-p').textContent=c.ap;$('ag-know').innerHTML=c.know.map(x=>`<span>${x}</span>`).join('');
+  $('st-h').textContent=c.sh;$('f-h').textContent=c.fh;
+  $('steps').innerHTML=c.steps.map(s=>`<article class="card"><span class="mono t">${s[2]}</span><h3>${s[0]}</h3><p>${s[1]}</p></article>`).join('');
+  $('h-cta').textContent='Answer the first question';$('f-cta').textContent=k==='inv'?'Start receiving matches':'Get started free';document.querySelectorAll('.final [data-signup]').forEach(b=>b.dataset.signup=k);
+  logInit();
+  renderChat();
+}
+$('aud-dev').onclick=()=>setAud('dev');$('aud-inv').onclick=()=>setAud('inv');
+
+/* ---------- agent log (illustrative, ticks while visible) ---------- */
+let logIdx=0,logMin=3*60+12,logTimer=null;
+const hhmm=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+function logLine(txt,isNew){const needs=/Waiting for your|for your OK|your review/.test(txt);return `<div class="ev ${isNew?'new':''}"><time>${hhmm(logMin)}</time><span>${txt}${needs?'<em>needs you</em>':''}</span></div>`}
+function logInit(){
+  const L=COPY[aud].log;logIdx=0;logMin=3*60+12;let h='';
+  for(let i=0;i<5;i++){h=logLine(L[logIdx%L.length],false)+h;logIdx++;logMin+=2+i}
+  $('log').innerHTML=h;
+}
+function logTick(){
+  if(document.hidden)return;const L=COPY[aud].log;logMin+=1+(logIdx%3);
+  const box=$('log');box.insertAdjacentHTML('afterbegin',logLine(L[logIdx%L.length],true));logIdx++;
+  while(box.children.length>5)box.lastElementChild.remove();
+}
+if(!matchMedia('(prefers-reduced-motion:reduce)').matches)logTimer=setInterval(logTick,3400);
+
+/* ---------- sign-up dialog (nothing is sent) ---------- */
+let role='dev',ctxDev='',ctxInv='';
+function ctxText(r){
+  const a=ST[r].a;
+  if(r==='dev'){const x=devPart(a);return [`${a.as?ASL[a.as]:'Asset not set'} · ${a.geo?GEO[a.geo]:'market not set'}`,`${a.stage?STL[a.stage]:'Stage not set'} · ${a.ins?INSL[a.ins]:'capital type open'}`,`Cost ${a.cost?eur(a.cost):'not set'} · raise ${a.ask?eur(a.ask):'not set'}`,`${plural(x.fit.length,'investor')} fit${x.full?' today':' so far'}`]}
+  const x=invPart(a);return [a.geo?a.geo.map(g=>GEO[g]).join(', '):'No region yet',`${a.ins?(a.ins==='any'?'Any instrument':INSL[a.ins]):'Instrument open'} · ticket ${a.tk?TKL[a.tk]:'open'}`,`${plural(x.n,'live project')} match${x.n===1?'es':''} ${x.full?'today':'so far'}`]
+}
+function setRole(r){
+  role=r;$('r-dev').setAttribute('aria-pressed',r==='dev');$('r-inv').setAttribute('aria-pressed',r==='inv');
+  $('dl-p').textContent=r==='dev'?'Tell us who you are. The agent continues where this page stopped.':'Tell us who you are. You can save your mandate and receive matches.';
+  const c=$('dl-carry'),t=ctxText(r);c.hidden=false;c.innerHTML='<span class="mono">Carried over from this page</span>'+t.map(x=>`<div>${x}</div>`).join('');
+}
+function openSignup(r){
+  setRole(r||aud);$('dl-form').hidden=false;$('dl-done').hidden=true;$('su-err').hidden=true;$('ov').hidden=false;
+  setTimeout(()=>$('su-name').focus(),30);
+}
+function closeSignup(){$('ov').hidden=true}
+const LOGIN='/login';
+function saveCarry(){try{localStorage.setItem('cb.carry.v1',JSON.stringify({role:aud,dev:ST.dev.a,inv:ST.inv.a,ts:Date.now()}))}catch(e){}}
+addEventListener('pagehide',saveCarry);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveCarry()});
+$('h-cta').addEventListener('click',()=>{const d=$('demo'),c=$('c-chips'),m=$('c-msgs');d.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'});
+  [d,c,m].forEach(x=>x.classList.remove('hint'));void d.offsetWidth;setTimeout(()=>[d,c,m].forEach(x=>x.classList.add('hint')),350)});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-signup]');if(b){saveCarry();const r=b.dataset.signup||aud;location.href=LOGIN+'?role='+(r==='inv'?'investor':'developer')+(b.dataset.auto?'&auto='+b.dataset.auto:'');return}
+  if(e.target===$('ov'))closeSignup();
+  });
+$('dl-x').onclick=closeSignup;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSignup()}});
+$('r-dev').onclick=()=>setRole('dev');$('r-inv').onclick=()=>setRole('inv');
+$('su').addEventListener('submit',async e=>{
+  e.preventDefault();const n=$('su-name').value.trim(),m=$('su-mail').value.trim().toLowerCase();
+  if(!n||!/.+@.+\..+/.test(m)){$('su-err').hidden=false;return}
+  $('su-err').hidden=true;const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/access_requests',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
+      body:JSON.stringify({name:n,email:m,role:role==='dev'?'developer':'investor',context:ctxText(role).join(' | ').slice(0,500)})});
+    if(!r.ok&&r.status!==409)throw new Error('http '+r.status);
+  }catch(err){btn.disabled=false;$('su-err').textContent='Something went wrong. Please try again or write to info@cobuildy.com.';$('su-err').hidden=false;return}
+  btn.disabled=false;$('dn-name').textContent=n.split(' ')[0];
+  $('dn-steps').innerHTML=['We review your request, usually within one working day','You receive an email with a sign-in link','You sign in and continue with the details you entered here'].map(x=>`<li>${x}</li>`).join('');
+  const t=ctxText(role);$('dn-carry').hidden=false;$('dn-carry').innerHTML='<span class="mono">Saved from this page</span>'+t.map(x=>`<div>${x}</div>`).join('');
+  $('dn-cta').innerHTML='<a class="btn plan block" href="/login">Sign in</a>';
+  $('dl-form').hidden=true;$('dl-done').hidden=false;
+});
+
+/* ---------- init ---------- */
+
+/* ===== hero redesign: shared logic ===== */
+function hvSync(k){
+  document.body.dataset.aud=k;
+  const hv=$('hv'),demo=$('demo'),hero=document.querySelector('.hero');
+  [['aud-dev2','dev'],['aud-inv2','inv']].forEach(([id,v])=>{const b=$(id);if(b)b.setAttribute('aria-pressed',String(v===k))});
+  if(k==='dev'&&hv.classList.contains('chatting'))$('hv-stage').appendChild(demo);else hero.appendChild(demo);
+}
+function hvStart(){
+  const hv=$('hv');hv.classList.add('chatting');$('hv-stage').appendChild($('demo'));
+  const d=$('demo');d.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'});
+  [d,$('c-chips'),$('c-msgs')].forEach(x=>x.classList.remove('hint'));void d.offsetWidth;setTimeout(()=>[d,$('c-chips'),$('c-msgs')].forEach(x=>x.classList.add('hint')),350);
+}
+$('aud-dev2').onclick=()=>setAud('dev');$('aud-inv2').onclick=()=>setAud('inv');
+$('hv-go').onclick=()=>hvStart();
+resetChat('dev');resetChat('inv');setAud('dev');
+</script>
