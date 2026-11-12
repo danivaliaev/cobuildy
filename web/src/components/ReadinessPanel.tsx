@@ -52,7 +52,7 @@ export function ReadinessPanel({ asking, fields, status, dbStage, onAsk, onSubmi
           {c.stage >= 1 && <b className="ready-t">Teaser ready. You can submit it now.</b>}
           <button className="btn pri" disabled={busy || c.stage < 1 || dbStage < 1} onClick={onSubmit}>Submit teaser for review</button>
           {c.stage < 1
-            ? <span className="muted">{done(1)} of {stageFields(1).length} teaser fields done. Finish them to submit.</span>
+            ? null
             : dbStage < 1 ? <span className="muted">Saving…</span> : <span className="muted">Cobuildy reviews the teaser before any investor sees it.</span>}
           <ErrorLine error={error} />
         </div>
