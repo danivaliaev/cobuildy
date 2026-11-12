@@ -84,7 +84,7 @@
    "gate": 1,
    "weight": 1,
    "kind": "text",
-   "question": "Where exactly is the project?",
+   "question": "Which city, town or village is the project in?",
    "why": "Local market depth decides who will lend.",
    "chips": [
     {
@@ -100,7 +100,7 @@
      "unknown": false
     }
    ],
-   "task": "Confirm exact address and cadastral reference"
+   "task": "Name the town or village"
   },
   {
    "key": "a_units",
@@ -232,7 +232,7 @@
     }
    ],
    "task": "Order a nota simple and review the charges",
-   "doc": "Nota simple (land registry extract)"
+   "doc": "Nota simple (land registry extract) and cadastral reference"
   },
   {
    "key": "l_zone",
