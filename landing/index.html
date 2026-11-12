@@ -34,7 +34,7 @@ html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--f-body);-webkit-font-smoothing:antialiased;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
 a{color:inherit}
-h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
+h1,h2,h3{margin:0;font-weight:400;text-wrap:pretty}
 p{margin:0}
 :focus-visible{outline:2px solid var(--plan);outline-offset:3px;border-radius:6px}
 .wrap{max-width:1180px;margin:0 auto}
@@ -82,11 +82,14 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .seg button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
 .hero h1{font-family:var(--f-display);font-size:clamp(42px,5.6vw,76px);line-height:.99;letter-spacing:-.03em;margin:22px 0 20px}
 .hero h1 em{font-style:italic;color:var(--em);background:linear-gradient(transparent 64%,var(--mark) 64% 90%,transparent 90%);-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .06em}
-.lede:empty{display:none}
-.proof:empty{display:none}.proof:empty+.cta-row{margin-top:30px}
-.lede{font-size:clamp(17px,1.7vw,19.5px);color:var(--ink-2);max-width:50ch}
+.lede{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin:22px 0 0;max-width:none}
+.lede span{display:block;width:fit-content;max-width:100%;padding:9px 20px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);font:500 clamp(17px,1.6vw,20px)/1.3 var(--f-body);color:var(--ink)}
+
+.lede.plain{max-width:54ch}.lede.plain span{display:inline;width:auto;border:0;background:none;border-radius:0;padding:0;font:400 clamp(18px,1.7vw,21px)/1.55 var(--f-body)}
+.lede b{font-weight:600;color:var(--brand)}
 .proof{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 28px;padding:0;list-style:none}
 .proof li{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13.5px}
+.proof:empty{display:none}.proof:empty+.cta-row{margin-top:32px}
 .proof li b{color:var(--plan);font-weight:600}
 .cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .small{font-size:13.5px;color:var(--ink-2)}
@@ -311,6 +314,39 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
   .menu .pop{width:min(300px,calc(100vw - 32px))}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.stack i{transition:none}.live::before,.ev.new{animation:none}.demo.hint,.cchips.hint,.cmsgs.hint .m.a:last-child .b,.m.u .b.pop{animation:none}}
+
+/* clarity pass (prototype): larger type, explicit instruction, chat directly under the headline on phones */
+#d-tag{font:600 15px var(--f-body);letter-spacing:0;text-transform:none}
+.demo-h .link{font-size:15px}
+.cchips{gap:12px;padding:16px 14px 14px}
+.cchips .step{display:flex;align-items:center;gap:10px;font:600 17px/1.3 var(--f-body);color:var(--ink)}
+.cchips .step b{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 9px;border-radius:999px;background:var(--brand);color:var(--on-brand);font:600 14px var(--f-body);white-space:nowrap}
+.cchips .step .arr{margin-left:auto;font-size:24px;line-height:1;color:var(--plan);animation:nudgey 1.2s ease-in-out 4}
+@keyframes nudgey{50%{transform:translateY(5px)}}
+.cchips .lbl{font:600 16px var(--f-body);letter-spacing:0;text-transform:none;color:var(--ink)}
+.cchips .set{gap:10px}
+.cchips button{min-height:48px;padding:10px 18px;font-size:17px}
+.cin input{height:52px;font-size:17px}
+.send{width:52px;height:52px}
+.m .b{font-size:17px;line-height:1.45}
+.who{font-size:12.5px}
+.prog em{font-size:12px}
+.mstrip .big span{font-size:15.5px}
+.hero #h-note{font-size:16px;color:var(--ink-2)}
+@media (max-width:980px){
+  .hero{gap:20px}
+  .hl{display:contents}
+  .hl>.seg{order:1;justify-self:start}.hl>h1{order:2;margin:0}.demo{order:3}
+  .hl>.lede{order:4}.hl>.proof{order:5;margin:0}.hl>.cta-row{order:6}.hl>#h-note{order:7}
+  #h-cta,#h-note{display:none}
+}
+@media (max-width:640px){
+  .demo{padding:16px}.demo-h{margin-bottom:8px}.prog{margin-bottom:8px}
+  .mstrip{padding:8px 12px;gap:6px}.mstrip .big{gap:8px}.mstrip .big b{font-size:30px}.mstrip .big span{font-size:14px}
+  .cmsgs{padding:8px 2px;margin-top:2px}.m .b{font-size:16px;padding:8px 12px}
+  .cchips{padding:12px 14px 10px;gap:10px}
+}
+@media (prefers-reduced-motion:reduce){.cchips .step .arr{animation:none}}
 </style>
 
 <header>
@@ -332,7 +368,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 <main id="top">
 <div class="wrap hero">
   <div class="grid-bg" aria-hidden="true"></div>
-  <div>
+  <div class="hl">
     <div class="seg" role="group" aria-label="I am a">
       <button id="aud-dev" aria-pressed="true" type="button">I'm a developer</button>
       <button id="aud-inv" aria-pressed="false" type="button">I'm an investor</button>
@@ -346,7 +382,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
       <li>You approve every send</li>
     </ul>
     <div class="cta-row">
-      <button class="btn" type="button" data-signup="" id="h-cta">Get started free</button>
+      <button class="btn" type="button" id="h-cta">Answer the first question</button>
       <a class="btn ghost" href="#how">See how it works</a>
     </div>
     <p class="small" style="margin-top:14px" id="h-note"></p>
@@ -362,7 +398,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
     <div class="cmsgs" id="c-msgs" aria-live="polite"></div>
     <div class="cchips" id="c-chips"></div>
     <form class="cin" id="c-form" autocomplete="off">
-      <input id="c-in" type="text" aria-label="Message to the agent" placeholder="Type an answer or tell me everything at once">
+      <input id="c-in" type="text" aria-label="Message to the agent" placeholder="Or type your answer here">
       <button class="send" type="submit" aria-label="Send">↑</button>
     </form>
   </div>
@@ -659,9 +695,9 @@ function renderChat(){
   if(s.gated&&!s.done){h=`<span class="mono muted lbl">Create your free account to continue</span><div class="set"><button class="go" type="button" data-signup="${aud}" data-auto="google">Continue with Google →</button><button type="button" data-signup="${aud}">Use email instead</button><button type="button" data-act="reset">Change my answers</button></div>`}
   else if(s.done){h=`<span class="mono muted lbl">Next step</span><div class="set"><button class="go" type="button" data-signup="${aud}">${aud==='dev'?'Save this project':'Get alerts for new matches'} →</button><button type="button" data-act="reset">Change my answers</button></div>`}
   else if(q){const c=curChips();
-    h=`<span class="mono muted lbl">Asking about · ${q.tag}</span><div class="set">`+c.map((x,i)=>{const on=q.multi&&s.tmp.includes(x.v);return `<button type="button" data-i="${i}" ${q.multi?`aria-pressed="${on}"`:''}>${esc(x.l)}</button>`}).join('')+
+    h=`<span class="step"><b>${s.qi+1} / ${Qs.length}</b>${q.multi?'Tap one or more, then press Continue':'Tap your answer'}${s.qi===0?'<span class="arr" aria-hidden="true">↓</span>':''}</span><div class="set">`+c.map((x,i)=>{const on=q.multi&&s.tmp.includes(x.v);return `<button type="button" data-i="${i}" ${q.multi?`aria-pressed="${on}"`:''}>${esc(x.l)}</button>`}).join('')+
     (q.multi?`<button class="go" type="button" data-act="cont" ${s.tmp.length?'':'disabled'}>Continue →</button>`:'')+
-    (q.ex?`<button class="ex" type="button" data-act="ex">Or describe it in one message ↗</button>`:'')+'</div>'}
+    (q.ex?`<button class="ex" type="button" data-act="ex">Or write it in your own words</button>`:'')+'</div>'}
   $('c-chips').innerHTML=h;$('c-chips').hidden=!h;
 }
 async function say(s,t,html,ms){s.typing=true;renderChat();await sleep(ms??520);s.typing=false;s.msgs.push({r:'a',t,html:!!html});renderChat()}
@@ -787,12 +823,12 @@ $('c-chips').addEventListener('pointerdown',stopHint);
 /* ---------- audience switch ---------- */
 let aud='dev';
 const COPY={
- dev:{chips:[],t:'Hi! I am here to raise <em>capital</em> for your project.',l:'I work for you 24/7 across Spain and Portugal, matching your project with institutional lenders and investors and handling the routine work. You pay only when capital arrives: 1.5% on the first €3M and 1% on everything above.',n:'Try the agent in the chat. No sign-up needed.',
+ dev:{chips:[],t:'Hi! I am here to raise <em>capital</em> for your project.',l:'I work for you <b>24/7</b> across Spain and Portugal, matching your project with institutional lenders and investors and handling the routine work. You pay <b>only when capital arrives</b>: 1.5% on the first €3M and 1% on everything above.',n:'Try the agent in the chat. No sign-up needed.',
   ah:'An agent that never clocks out',ap:'While you build, it watches the market, keeps your profile ready and moves your outreach forward. It knows what each investor requires and what you still owe them.',know:['Lender and fund mandates','Ticket sizes and LTC limits','Permit requirements','Your documents and gaps','Open questions from investors','Market comparables'],
   sh:'From a first message to a term sheet',steps:[['Tell the agent','Describe the project in your own words, or upload what you have. The profile builds beside the chat and shows what is missing.','Step 1 · You'],['Approve the plan','The agent drafts the teaser, picks the investors and writes the messages. You review and confirm before anything is sent.','Step 2 · Agent drafts, you approve'],['Get introduced','Interested investors get the data room. Your team and ours handle calls, terms and closing. The agent keeps chasing the details.','Step 3 · Agent chases, people close']],
   fh:'Put an agent to work on your project today',
   log:['Re-checked 41 lender mandates against your project','A new fund opened a €2–8M senior mandate for Costa del Sol. Fit count +3','Flagged a conflict: the owner on the nota simple differs from your project company','Built the teaser. Waiting for your approval before anything is sent','Investor C-17 asked for the nota simple. Reply drafted for your OK','Sent the 7-day follow-up to 4 silent investors (wave approved by you)','Weekly status prepared for your Monday call']},
- inv:{chips:['<b>Off-market</b> deals, only for investors on file','<b>24/7</b> agents match every new project','<b>First alert</b> when a project fits','<b>5 quick questions</b> to get on file'],t:'Hi! I am here to find deals <em>that fit</em> your mandate.',l:'It reads every project we receive, checks it against your criteria and brings you only the matches, with numbers already structured and gaps flagged. You decide what to review. Introductions are always opt-in.',n:'Try the agent in the chat. No sign-up needed.',
+ inv:{chips:['<b>Off-market</b> deals, only for investors on file','<b>24/7</b> I match every new project','<b>First alert</b> when a project fits','<b>5 quick questions</b> to get on file'],t:'Hi! I am here to find deals <em>that fit</em> your mandate.',l:['I check <b>every new project</b> against your criteria','You see <b>only the matches</b>','Numbers ready, <b>gaps flagged</b>','No introductions <b>without your yes</b>'],n:'Try the agent in the chat. No sign-up needed.',
   ah:'An agent that screens while you sleep',ap:'It reads new submissions as they arrive, compares them with your mandate and with the market, and tells you what is worth your time.',know:['Your mandate and limits','Every live project','Sponsor track records','Pricing against comparables','Data room completeness','What you passed on and why'],
   sh:'From a mandate to a decision',steps:[['Set your mandate','Regions, instruments, ticket size and the minimum stage you accept. Change it any time.','Step 1 · You'],['Review the shortlist','The agent screens every project, structures the numbers and drafts questions for the sponsor. You open only what fits.','Step 2 · Agent screens, you choose'],['Meet the sponsor','Opt in to an introduction and get the data room. You run the diligence and decide. We stay out of your decision.','Step 3 · You decide']],
   fh:'Put an agent on your mandate today',
@@ -801,12 +837,12 @@ const COPY={
 function setAud(k){
   aud=k;const c=COPY[k];
   $('aud-dev').setAttribute('aria-pressed',k==='dev');$('aud-inv').setAttribute('aria-pressed',k==='inv');
-  $('proof').innerHTML=c.chips.map(x=>`<li>${x}</li>`).join('');$('h-title').innerHTML=c.t;$('h-lede').textContent=c.l;$('h-note').textContent=c.n;
-  $('d-tag').textContent=k==='dev'?'Try your agent now':'Set your mandate';
+  $('proof').innerHTML=c.chips.map(x=>`<li>${x}</li>`).join('');$('h-title').innerHTML=c.t;$('h-lede').classList.toggle('plain',typeof c.l==='string');$('h-lede').innerHTML=(typeof c.l==='string'?[c.l]:c.l).map(x=>`<span>${x}</span>`).join('');$('h-note').textContent='Tap an answer in the chat. No sign-up needed.';
+  $('d-tag').textContent=k==='dev'?'Try it now':'Set your mandate';
   $('ag-h').textContent=c.ah;$('ag-p').textContent=c.ap;$('ag-know').innerHTML=c.know.map(x=>`<span>${x}</span>`).join('');
   $('st-h').textContent=c.sh;$('f-h').textContent=c.fh;
   $('steps').innerHTML=c.steps.map(s=>`<article class="card"><span class="mono t">${s[2]}</span><h3>${s[0]}</h3><p>${s[1]}</p></article>`).join('');
-  $('h-cta').dataset.signup=k;$('h-cta').textContent=$('f-cta').textContent=k==='inv'?'Start receiving matches':'Get started free';document.querySelectorAll('.final [data-signup]').forEach(b=>b.dataset.signup=k);
+  $('h-cta').textContent='Answer the first question';$('f-cta').textContent=k==='inv'?'Start receiving matches':'Get started free';document.querySelectorAll('.final [data-signup]').forEach(b=>b.dataset.signup=k);
   logInit();
   renderChat();
 }
@@ -848,6 +884,8 @@ function closeSignup(){$('ov').hidden=true}
 const LOGIN='https://cobuildy.dv-ac6.workers.dev/login';
 function saveCarry(){try{localStorage.setItem('cb.carry.v1',JSON.stringify({role:aud,dev:ST.dev.a,inv:ST.inv.a,ts:Date.now()}))}catch(e){}}
 addEventListener('pagehide',saveCarry);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveCarry()});
+$('h-cta').addEventListener('click',()=>{const d=$('demo'),c=$('c-chips'),m=$('c-msgs');d.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'});
+  [d,c,m].forEach(x=>x.classList.remove('hint'));void d.offsetWidth;setTimeout(()=>[d,c,m].forEach(x=>x.classList.add('hint')),350)});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-signup]');if(b){saveCarry();const r=b.dataset.signup||aud;location.href=LOGIN+'?role='+(r==='inv'?'investor':'developer')+(b.dataset.auto?'&auto='+b.dataset.auto:'');return}
   if(e.target===$('ov'))closeSignup();
   });
