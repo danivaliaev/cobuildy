@@ -82,6 +82,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .seg button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
 .hero h1{font-family:var(--f-display);font-size:clamp(42px,5.6vw,76px);line-height:.99;letter-spacing:-.03em;margin:22px 0 20px}
 .hero h1 em{font-style:italic;color:var(--em);background:linear-gradient(transparent 64%,var(--mark) 64% 90%,transparent 90%);-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .06em}
+.lede:empty{display:none}
 .lede{font-size:clamp(17px,1.7vw,19.5px);color:var(--ink-2);max-width:50ch}
 .proof{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 28px;padding:0;list-style:none}
 .proof li{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13.5px}
@@ -785,7 +786,7 @@ $('c-chips').addEventListener('pointerdown',stopHint);
 /* ---------- audience switch ---------- */
 let aud='dev';
 const COPY={
- dev:{chips:['<b>From 1%</b> success fee, only on results','<b>24/7</b> agent on your side','<b>90%+</b> of routine work automated','You approve every send'],t:'Hi! I am here to raise <em>capital</em> for your project.',l:'It knows every lender and fund active in Spain and Portugal and what each one asks for. It builds your profile, finds the gaps, makes the introductions and follows up. You decide. We are paid only when capital arrives.',n:'Try the agent in the chat. No sign-up needed.',
+ dev:{chips:['<b>Institutional</b> lenders and investors','<b>Spain and Portugal</b>','<b>1.5%</b>, only on results','I work for you <b>24/7</b>, routine included'],t:'Hi! I am here to raise <em>capital</em> for your project.',l:'',n:'Try the agent in the chat. No sign-up needed.',
   ah:'An agent that never clocks out',ap:'While you build, it watches the market, keeps your profile ready and moves your outreach forward. It knows what each investor requires and what you still owe them.',know:['Lender and fund mandates','Ticket sizes and LTC limits','Permit requirements','Your documents and gaps','Open questions from investors','Market comparables'],
   sh:'From a first message to a term sheet',steps:[['Tell the agent','Describe the project in your own words, or upload what you have. The profile builds beside the chat and shows what is missing.','Step 1 · You'],['Approve the plan','The agent drafts the teaser, picks the investors and writes the messages. You review and confirm before anything is sent.','Step 2 · Agent drafts, you approve'],['Get introduced','Interested investors get the data room. Your team and ours handle calls, terms and closing. The agent keeps chasing the details.','Step 3 · Agent chases, people close']],
   fh:'Put an agent to work on your project today',
