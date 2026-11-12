@@ -262,6 +262,19 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 .cchips button.ex{border-style:dashed;color:var(--ink-2)}
 .cchips button[aria-pressed="true"]{background:var(--plan);border-color:var(--plan);color:var(--bg)}
 .cchips button:disabled{opacity:.45;cursor:default}
+/* first-view hint: the question and its answers breathe three times, once per visit */
+.cchips.hint{outline:2px solid transparent;outline-offset:8px;border-radius:16px;animation:breathe 1.8s ease-in-out 3}
+.cmsgs.hint .m.a:last-child .b{animation:breatheb 1.8s ease-in-out 3}
+@keyframes breathe{0%,100%{outline-color:transparent;box-shadow:0 0 0 0 transparent}50%{outline-color:var(--plan);box-shadow:0 0 24px 2px color-mix(in srgb,var(--plan) 26%,transparent)}}
+@keyframes breatheb{0%,100%{border-color:var(--line);box-shadow:0 0 0 0 transparent}50%{border-color:var(--plan);box-shadow:0 0 18px 1px color-mix(in srgb,var(--plan) 22%,transparent)}}
+/* a chosen answer turns green with a tick, then flies into the user's message */
+.cchips button.picked{background:var(--good);border-color:var(--good);color:var(--bg);transition:background .18s,color .18s,border-color .18s}
+.cchips button.picked::before{content:"\2713\00a0"}
+.fly{position:fixed;z-index:60;display:flex;align-items:center;padding:0 14px;margin:0;border:1px solid var(--good);border-radius:999px;background:var(--good);color:var(--bg);font:500 14px var(--f-body);white-space:nowrap;overflow:hidden;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.14)}
+.fly .ck{display:inline-block;overflow:hidden;max-width:1.2em;margin-right:6px}
+.m.u .b.hold{visibility:hidden}
+.m.u .b.pop{animation:pop .22s ease-out}
+@keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
 .cin{display:flex;gap:8px;margin-top:12px}
 .cin input{flex:1;min-width:0;height:46px;border-radius:999px;padding:0 18px}
 .send{width:46px;height:46px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font-size:20px;cursor:pointer;flex:none}
@@ -286,7 +299,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
   .foot{grid-template-columns:1fr}
   .menu .pop{width:min(300px,calc(100vw - 32px))}
 }
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.stack i{transition:none}.live::before,.ev.new{animation:none}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.stack i{transition:none}.live::before,.ev.new{animation:none}.cchips.hint,.cmsgs.hint .m.a:last-child .b,.m.u .b.pop{animation:none}}
 </style>
 
 <header>
@@ -629,7 +642,7 @@ function renderChat(){
   $('c-prog').innerHTML=Qs.map((x,i)=>`<span class="${s.a[x.k]!==undefined?'done':(i===s.qi&&!s.done?'now':'')}"><i></i><em>${x.tag}</em></span>`).join('');
   $('m-n').textContent=st.n;$('m-l').textContent=st.sub;$('s-a').style.width=st.a+'%';$('s-b').style.width=Math.max(0,st.b)+'%';
   const dots='<div class="m a"><span class="who"><i></i>Cobuildy agent</span><div class="b typing"><i></i><i></i><i></i></div></div>';
-  $('c-msgs').innerHTML=s.msgs.map(m=>m.r==='u'?`<div class="m u"><div class="b">${esc(m.t)}</div></div>`:`<div class="m a"><span class="who"><i></i>Cobuildy agent</span><div class="b ${m.html?'rich':''}">${m.html?m.t:esc(m.t)}</div></div>`).join('')+(s.typing?dots:'');
+  $('c-msgs').innerHTML=s.msgs.map(m=>m.r==='u'?`<div class="m u"><div class="b${m.hold?' hold':''}">${esc(m.t)}</div></div>`:`<div class="m a"><span class="who"><i></i>Cobuildy agent</span><div class="b ${m.html?'rich':''}">${m.html?m.t:esc(m.t)}</div></div>`).join('')+(s.typing?dots:'');
   const box=$('c-msgs');box.scrollTop=box.scrollHeight;
   let h='';
   if(s.gated&&!s.done){h=`<span class="mono muted lbl">Create your free account to continue</span><div class="set"><button class="go" type="button" data-signup="${aud}" data-auto="google">Continue with Google →</button><button type="button" data-signup="${aud}">Use email instead</button><button type="button" data-act="reset">Change my answers</button></div>`}
@@ -711,14 +724,56 @@ function resetChat(m){
 $('c-form').addEventListener('submit',e=>{e.preventDefault();const t=$('c-in').value.trim();if(!t)return;$('c-in').value='';submit(t)});
 $('c-reset').onclick=()=>{if(busy)return;resetChat(aud);renderChat()};
 $('c-chips').addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b||b.dataset.signup!==undefined||busy)return;const s=ST[aud],q=Q[aud][s.qi];
+  const b=e.target.closest('button');if(!b||b.dataset.signup!==undefined||busy||flying)return;const s=ST[aud],q=Q[aud][s.qi];
   if(b.dataset.act==='reset'){resetChat(aud);renderChat();return}
   if(b.dataset.act==='ex'){submit(q.ex);return}
   if(b.dataset.act==='cont'){if(s.tmp.length)submit(labelOf('geo',s.tmp),[...s.tmp]);return}
   if(b.dataset.i===undefined||!q)return;const c=curChips()[+b.dataset.i];
   if(q.multi){const v=c.v;s.tmp=s.tmp.includes(v)?s.tmp.filter(x=>x!==v):[...s.tmp,v];renderChat();return}
-  submit(c.l,c.v);
+  pickFly(b,c);
 });
+/* A chosen answer turns green with a tick for a moment, then flies into the user's message bubble. */
+let flying=false;
+const REDUCED=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function pickFly(btn,c){
+  if(REDUCED||!btn.animate){submit(c.l,c.v);return}
+  flying=true;stopHint();btn.classList.add('picked');
+  setTimeout(()=>{
+    try{
+      const from=btn.getBoundingClientRect(),bg=getComputedStyle(btn).backgroundColor,fg=getComputedStyle(btn).color;
+      const fly=document.createElement('div');fly.className='fly';
+      fly.innerHTML='<span class="ck">\u2713</span><span></span>';fly.lastChild.textContent=c.l;
+      Object.assign(fly.style,{left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px'});
+      document.body.appendChild(fly);
+      submit(c.l,c.v);                       // the user's message is added synchronously
+      const s=ST[aud],m=[...s.msgs].reverse().find(x=>x.r==='u');
+      if(m){m.hold=true;renderChat()}
+      const target=[...document.querySelectorAll('#c-msgs .b.hold')].pop();
+      const done=()=>{fly.remove();if(m)m.hold=false;document.querySelectorAll('#c-msgs .b.hold').forEach(x=>{x.classList.remove('hold');x.classList.add('pop')});flying=false};
+      if(!target){done();return}
+      const to=target.getBoundingClientRect(),tcs=getComputedStyle(target);
+      fly.firstChild.animate([{maxWidth:'1.2em',marginRight:'6px',opacity:1},{maxWidth:'0px',marginRight:'0px',opacity:0}],{duration:360,fill:'forwards'});
+      fly.animate([
+        {left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px',background:bg,borderColor:bg,color:fg,borderRadius:'999px'},
+        {left:to.left+'px',top:to.top+'px',width:to.width+'px',height:to.height+'px',background:tcs.backgroundColor,borderColor:tcs.backgroundColor,color:tcs.color,borderRadius:'16px 6px 16px 16px'}
+      ],{duration:560,easing:'cubic-bezier(.45,0,.2,1)',fill:'forwards'}).onfinish=done;
+      setTimeout(()=>{if(flying)done()},1500);   // safety net
+    }catch(err){flying=false;document.querySelectorAll('.fly').forEach(x=>x.remove())}
+  },380);
+}
+/* First-view hint: the question and its answer buttons breathe three times when the chat scrolls into view, once per visit. */
+let hintOver=false;
+function stopHint(){hintOver=true;$('c-chips').classList.remove('hint');$('c-msgs').classList.remove('hint')}
+if(!REDUCED&&'IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>{
+    if(hintOver||!es.some(e=>e.isIntersecting))return;io.disconnect();
+    setTimeout(()=>{const s=ST[aud];if(hintOver||s.done||s.qi!==0||Object.keys(s.a).length)return;
+      $('c-chips').classList.add('hint');$('c-msgs').classList.add('hint');setTimeout(stopHint,5600)},500)
+  },{threshold:.8});
+  io.observe($('c-chips'));
+}
+$('c-in').addEventListener('focus',stopHint);
+$('c-chips').addEventListener('pointerdown',stopHint);
 /* ---------- audience switch ---------- */
 let aud='dev';
 const COPY={
