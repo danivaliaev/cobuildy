@@ -195,7 +195,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 .fn{min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
 .fn-top{padding:16px 20px;text-align:center}.fn-logo{font:600 18px/1 var(--f-body);letter-spacing:-.02em;text-transform:uppercase}
 .fn-main{width:min(640px,100%);margin:0 auto;padding:8px 18px 64px;display:grid;gap:20px;align-content:start}
-.fn-intro{display:grid;gap:10px;text-align:center}.fn-intro h1{font-size:clamp(30px,6vw,42px)}.fn-intro p{margin:0;color:var(--ink-2);font-size:16px}
+.fn-intro{display:grid;gap:10px;text-align:left}@media (min-width:768px){.fn-intro{text-align:center}}.fn-intro h1{font-size:clamp(30px,6vw,42px)}.fn-intro p{margin:0;color:var(--ink-2);font-size:16px}
 .fn-chat{display:grid;gap:14px}.fn-turn{display:grid;gap:8px}
 .fn-q{background:var(--surface);border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:14px 16px;font-size:17px;max-width:92%;display:grid;gap:4px}
 .fn-n{font:500 11px var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
