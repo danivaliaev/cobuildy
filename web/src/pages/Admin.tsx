@@ -4,7 +4,7 @@ import { supabase, rpc } from '../lib/supabase'
 import { useAuth } from '../auth'
 import { eur, when } from '../lib/format'
 import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
-import { GEO, ASSET, type Invitation, type Investor, type Project, type Role } from '../lib/types'
+import { GEO, ASSET, CHANNEL, STAGE_LABEL, type InvestorReply, type Invitation, type Investor, type Project, type Role } from '../lib/types'
 
 
 function Invitations({ reloadKey }: { reloadKey: number }) {
@@ -203,7 +203,40 @@ function Companies() {
   )
 }
 
+function Replies() {
+  const list = useLoad(() => rpc<InvestorReply[]>('admin_investor_replies'))
+  const act = useAction(list.reload)
+  const [form, setForm] = useState<Record<string, { channel: string; note: string }>>({})
+  const f = (id: string) => form[id] ?? { channel: 'email', note: '' }
+  const set = (id: string, v: Partial<{ channel: string; note: string }>) => setForm({ ...form, [id]: { ...f(id), ...v } })
+  const rec = (id: string, reply: 'interest' | 'pass') => void act.run(() => rpc('record_investor_reply', { p_deal: id, p_reply: reply, p_channel: f(id).channel, p_note: f(id).note || null }))
+  const waiting = (list.data ?? []).filter(r => r.stage === 'sent')
+  const done = (list.data ?? []).filter(r => r.reply)
+  return (
+    <section className="card">
+      <h2>Investor replies</h2>
+      <p className="muted">Investors loaded from the CRM have no login. When one answers a teaser by email, phone or message, record the answer here. The deal moves as if they had answered, the developer is notified, and the entry is logged with your name and the channel.</p>
+      <ErrorLine error={act.error ?? list.error} />
+      {waiting.length === 0 ? <Empty>No teasers waiting for an answer.</Empty> : waiting.map(r => (
+        <div className="card soft" key={r.deal_id}>
+          <div className="row"><b>{r.investor_name}</b><span className="muted">{r.investor_code} · {r.investor_category}</span><span className="sp" /><span className="muted">{r.project_code} · sent {when(r.sent_at)}</span></div>
+          <div className="row">
+            <select style={{ maxWidth: 160 }} value={f(r.deal_id).channel} onChange={e => set(r.deal_id, { channel: e.target.value })}>{Object.entries(CHANNEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+            <input className="sp" placeholder="Note, e.g. replied to our email, wants the NDA (if passing: the reason, the developer will see it)" value={f(r.deal_id).note} onChange={e => set(r.deal_id, { note: e.target.value })} />
+            <button className="btn sm pri" disabled={act.busy} onClick={() => rec(r.deal_id, 'interest')}>Record interest</button>
+            <button className="btn sm" disabled={act.busy} onClick={() => rec(r.deal_id, 'pass')}>Record pass</button>
+          </div>
+        </div>
+      ))}
+      {done.length > 0 && <>
+        <h3>Recorded</h3>
+        {done.map(r => <div className="muted" key={r.deal_id}>{r.investor_name} · {r.project_code}: {r.reply === 'interest' ? 'interest' : 'pass'} recorded by {r.recorded_by ?? 'staff'} via {CHANNEL[r.channel ?? ''] ?? r.channel}, {when(r.recorded_at ?? '')} · now {STAGE_LABEL[r.stage]}{r.note ? ` · ${r.note}` : ''}</div>)}
+      </>}
+    </section>
+  )
+}
+
 export function Admin() {
   const [k, setK] = useState(0)
-  return <><h1>Admin</h1><Requests onInvited={() => setK(k + 1)} /><Invitations reloadKey={k} /><Teasers /><Companies /><Investors /></>
+  return <><h1>Admin</h1><Requests onInvited={() => setK(k + 1)} /><Invitations reloadKey={k} /><Teasers /><Replies /><Companies /><Investors /></>
 }

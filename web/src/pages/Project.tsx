@@ -8,7 +8,7 @@ import { ReadinessPanel } from '../components/ReadinessPanel'
 import { DataRoom } from '../components/DataRoom'
 import { FIELDS, blank, calc, columnsFor, hydrate, keyChanges, patchFor, type FieldState, type Fields } from '../lib/profile'
 import { kindLabel, countryName } from '../lib/investorKinds'
-import { STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
+import { CHANNEL, STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
 type Tab = 'profile' | 'investors' | 'room'
 
@@ -239,6 +239,7 @@ function Deals({ project, docs: all }: { project: Project; docs: ProjectDoc[] })
             <div className="row"><b>{d.investor_name ?? d.investor_code}</b><span className="muted">{kindLabel(d.investor_kind)}</span><span className="sp" />
               <Pill tone={d.stage === 'passed' ? 'bad' : d.stage === 'call' ? 'good' : 'plan'}>{STAGE_LABEL[d.stage]}</Pill></div>
             {d.reason && <div className="muted">Reason: {d.reason}</div>}
+            {d.recorded_channel && <div className="muted">Reply recorded by the Cobuildy team ({CHANNEL[d.recorded_channel] ?? d.recorded_channel})</div>}
             {ms.map(x => <div key={x.id} className={`q ${x.kind === 'answer' ? 'a' : ''}`}><span className="mono">{x.kind}</span><div>{x.body}</div></div>)}
             <div className="row">
               {d.stage === 'interested' && <>
