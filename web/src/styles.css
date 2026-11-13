@@ -269,3 +269,13 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
   .fn-col{background:var(--surface);border:1px solid var(--line);border-radius:28px;padding:28px;box-shadow:0 18px 50px rgba(15,61,30,.07)}
   .fn-q{background:var(--bg,#f0efeb)}.fn-think,.fn-result{border:0;padding:0;background:none}
 }
+
+/* First screen after signing in from the ad funnel */
+.welcome{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px 22px;display:grid;gap:14px;margin:8px 0 16px}
+.welcome-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.welcome-head h2{font-size:clamp(22px,3.2vw,30px);margin:4px 0 0}
+.welcome-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.wstat{background:var(--bg,#f0efeb);border-radius:14px;padding:14px 16px;display:grid;gap:2px;text-align:left;border:0;font:inherit;color:inherit}
+.wstat b{font:400 38px/1.1 var(--f-display)}.wstat b small{font-size:16px;color:var(--ink-2)}.wstat>small{color:var(--ink-2);font-size:13px;line-height:1.35}
+.wbtn{cursor:pointer}.wbtn:hover,.wbtn:focus-visible{outline:2px solid var(--plan);outline-offset:0}
+.welcome-carried{margin:0;font-size:15px;line-height:1.45}
+@media (max-width:720px){.welcome-grid{grid-template-columns:1fr}}

@@ -24,6 +24,20 @@ function read(): Carry | null {
 }
 const clear = () => { try { localStorage.removeItem(CARRY_KEY) } catch { /* ignore */ } }
 
+/** True when this browser holds answers from the ad funnel, so sign-in screens can speak to that visitor. */
+export const hasFunnelCarry = (): boolean => { const c = read(); return !!(c && c.role === 'dev' && c.sid) }
+
+const WELCOME_KEY = 'cb.welcome.v1'
+/** The project made from the funnel answers, so the first screen after sign-in can be that project rather than the list. */
+export function peekWelcome(): { id: string; score: number } | null {
+  try {
+    const w = JSON.parse(localStorage.getItem(WELCOME_KEY) ?? 'null') as { id?: string; score?: number; ts?: number } | null
+    if (!w?.id || !/^[0-9a-f-]{36}$/.test(w.id) || !w.ts || Date.now() - w.ts > 36e5) return null
+    return { id: w.id, score: typeof w.score === 'number' ? w.score : 0 }
+  } catch { return null }
+}
+export const clearWelcome = () => { try { localStorage.removeItem(WELCOME_KEY) } catch { /* ignore */ } }
+
 /** The name left in the funnel, to pre-fill the first sign-in screen. */
 export const carryName = (): string => read()?.name ?? ''
 
@@ -69,17 +83,18 @@ export function devUpdates(a: DevA): Update[] {
   return u
 }
 
-async function importDeveloper(userId: string, a: DevA) {
+async function importDeveloper(userId: string, a: DevA): Promise<string | null> {
   const updates = devUpdates(a)
-  if (!updates.length) return
+  if (!updates.length) return null
   const { data: existing } = await supabase.from('projects').select('id').eq('owner_id', userId).limit(1)
-  if (existing && existing.length) return // never touch an account that already has projects
+  if (existing && existing.length) return null // never touch an account that already has projects
   const { data: co } = await supabase.from('companies').select('id').eq('owner_id', userId).maybeSingle()
   const { next } = applyUpdates(emptyFields(), updates, 'site')
   const title = [a.as ? ASSET_TEXT[a.as] : strategyLabel(a.strategy) ?? 'My project', a.geo ? (a.city ?? GEO[a.geo]) : ''].filter(Boolean).join(' · ').slice(0, 120)
   const { data: p, error } = await supabase.from('projects').insert({ title, owner_id: userId, company_id: co?.id ?? null, status: 'draft' }).select('id,profile').single()
-  if (error || !p) return
+  if (error || !p) return null
   await supabase.from('projects').update(patchFor({ profile: (p.profile as Record<string, unknown> | null) ?? null }, next)).eq('id', p.id)
+  return p.id as string
 }
 
 const TK: Record<string, [number, number]> = { '0.3,1': [3e5, 1e6], '1,3': [1e6, 3e6], '3,6': [3e6, 6e6], '6,20': [6e6, 2e7] }
@@ -112,7 +127,10 @@ export async function importCarry(userId: string, role: string): Promise<void> {
       if (!c && got?.answers && complete(got.answers)) c = toCarry(got.answers, score(got.answers).total, { sid, name: got.name, phone: got.phone })
     }
     if (!c) return
-    if (role === 'developer' && c.dev) await importDeveloper(userId, c.dev)
+    if (role === 'developer' && c.dev) {
+      const id = await importDeveloper(userId, c.dev)
+      if (id && c.sid) { try { localStorage.setItem(WELCOME_KEY, JSON.stringify({ id, score: c.dev.score ?? 0, ts: Date.now() })) } catch { /* ignore */ } }
+    }
     else if (role === 'investor' && c.inv) await importInvestor(userId, c.inv)
   } catch { /* ignore */ }
 }

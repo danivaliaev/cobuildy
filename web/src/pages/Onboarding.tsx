@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { supabase, errText } from '../lib/supabase'
 import { useAuth } from '../auth'
-import { carryName, carryRole } from '../lib/carry'
+import { carryName, carryRole, hasFunnelCarry } from '../lib/carry'
 import { ErrorLine } from '../components/ui'
 import { InvestorProfileForm, type InvestorProfileValue } from '../components/InvestorProfileForm'
 
@@ -19,6 +19,20 @@ export function Onboarding() {
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState<1 | 2>(1)
 
+  // Someone who answered the ad funnel already said they develop a project and left their name: open the workspace straight away.
+  const auto = useRef(hasFunnelCarry() && hinted !== 'investor' && carryRole() === 'developer' && name.trim().length > 1)
+  const [autoFailed, setAutoFailed] = useState(false)
+  useEffect(() => {
+    if (!auto.current) return
+    auto.current = false
+    void (async () => {
+      const { error: err } = await supabase.rpc('complete_signup', { p_role: 'developer', p_name: name.trim(), p_company: null })
+      if (err) { setAutoFailed(true); setError(errText(err.message)); return }
+      reload()
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   async function finishInvestor(v: InvestorProfileValue) {
     setBusy(true); setError(null)
     const { error: err } = await supabase.rpc('complete_investor_signup', { p_name: name.trim(), p_firm: v.name, p_kind: v.kind, p_country: v.country, p_phone: v.phone })
@@ -34,6 +48,10 @@ export function Onboarding() {
     if (err) { setBusy(false); setError(errText(err.message)); return }
     reload()
   }
+
+  if (hasFunnelCarry() && !autoFailed && role === 'developer' && name.trim().length > 1 && hinted !== 'investor') return (
+    <div className="login"><div className="card"><span className="mono">Cobuildy</span><h2>Setting up your workspace…</h2><p className="muted">Your answers are being added to your project.</p></div></div>
+  )
 
   if (role === 'investor' && step === 2) return (
     <div className="login">

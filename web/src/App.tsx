@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
 import { configured } from './lib/supabase'
 import { Login } from './pages/Login'
 import { Funnel } from './pages/Funnel'
 import { Onboarding } from './pages/Onboarding'
+import { peekWelcome } from './lib/carry'
 import { Admin } from './pages/Admin'
 import { Developer } from './pages/Developer'
 import { ProjectPage } from './pages/Project'
@@ -39,6 +40,13 @@ function Shell({ children }: { children: React.ReactNode }) {
   )
 }
 
+/** A visitor who came from the funnel lands on the project made from their answers, not on an empty-looking list. */
+function DeveloperHome() {
+  const [w] = useState(() => peekWelcome())
+  if (w) return <Navigate to={`/developer/projects/${w.id}?welcome=${w.score}`} replace />
+  return <Developer />
+}
+
 /** Signed-out visitors see the landing page; /login is the sign-in form. A returning magic link keeps its parameters and is not redirected. */
 function SignedOut() {
   const { pathname, search, hash } = useLocation()
@@ -61,7 +69,7 @@ export function App() {
     <Shell>
       <Routes>
         <Route path="/admin/*" element={profile.role === 'admin' || profile.role === 'expert' ? <Admin /> : <Navigate to={home} replace />} />
-        <Route path="/developer" element={profile.role === 'developer' ? <Developer /> : <Navigate to={home} replace />} />
+        <Route path="/developer" element={profile.role === 'developer' ? <DeveloperHome /> : <Navigate to={home} replace />} />
         <Route path="/developer/projects/:id" element={profile.role === 'developer' ? <ProjectPage /> : <Navigate to={home} replace />} />
         <Route path="/investor" element={profile.role === 'investor' ? <Investor /> : <Navigate to={home} replace />} />
         <Route path="/settings" element={<Settings />} />

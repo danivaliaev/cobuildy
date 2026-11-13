@@ -5,8 +5,11 @@ import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components
 import { ProfileChat } from '../components/ProfileChat'
 import { ProfileView } from '../components/ProfileView'
 import { ReadinessPanel } from '../components/ReadinessPanel'
+import { Welcome } from '../components/Welcome'
+import { clearWelcome } from '../lib/carry'
+import { useAuth } from '../auth'
 import { DataRoom } from '../components/DataRoom'
-import { FIELDS, blank, calc, columnsFor, hydrate, keyChanges, patchFor, type FieldState, type Fields } from '../lib/profile'
+import { FIELDS, blank, calc, columnsFor, nextField, hydrate, keyChanges, patchFor, type FieldState, type Fields } from '../lib/profile'
 import { kindLabel, countryName } from '../lib/investorKinds'
 import { CHANNEL, STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
@@ -31,6 +34,10 @@ export function ProjectPage() {
   const submit = useAction(async () => { await proj.reload() })
   const [sp, setSp] = useSearchParams()
   const tab: Tab = (['profile', 'investors', 'room'] as const).find(t => t === sp.get('tab')) ?? 'profile'
+  const { profile } = useAuth()
+  const [welcome, setWelcome] = useState(() => sp.has('welcome'))
+  const [welcomeScore] = useState(() => Math.max(0, Math.min(100, parseInt(sp.get('welcome') ?? '0', 10) || 0)))
+  useEffect(() => { if (sp.has('welcome')) { clearWelcome(); setSp(t => { const n = new URLSearchParams(t); n.delete('welcome'); return n }, { replace: true }) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const setTab = (t: Tab) => setSp(t === 'profile' ? {} : { tab: t }, { replace: true })
   // Investor matches are recalculated shortly after the profile changes, so the numbers on this page follow the answers.
   const [wave, setWave] = useState(0)
@@ -93,6 +100,11 @@ export function ProjectPage() {
         {p.status === 'draft' && <button className="linkbtn" type="button" onClick={() => setDel(true)}>Delete project</button>}
         <Pill tone={p.status === 'draft' ? undefined : 'good'}>{p.status.replace('_', ' ')}</Pill></div>
       <h1>{p.code} · {p.title}</h1>
+      {welcome && p.status === 'draft' && (
+        <Welcome name={(profile?.full_name ?? '').split(' ')[0]} score={welcomeScore} fields={fields} matches={matches.data}
+          completeness={calc(fields).score} openToTeaser={calc(fields).blockers.length}
+          onContinue={() => { setWelcome(false); ask(nextField(fields) ?? '') }} onInvestors={() => { setWelcome(false); setTab('investors') }} onClose={() => setWelcome(false)} />
+      )}
       {del && (
         <div className="modal" role="dialog" aria-modal="true" aria-label="Delete project"><div className="card">
           <h2>Delete this project?</h2>

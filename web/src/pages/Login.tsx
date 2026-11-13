@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { supabase, errText } from '../lib/supabase'
 import { ErrorLine } from '../components/ui'
+import { hasFunnelCarry } from '../lib/carry'
 
 export function Login() {
   const [email, setEmail] = useState('')
@@ -8,6 +9,7 @@ export function Login() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const role = new URLSearchParams(window.location.search).get('role')
+  const fromFunnel = hasFunnelCarry()
   const back = window.location.origin + (role === 'investor' || role === 'developer' ? `/?role=${role}` : '')
 
   // The landing sends people here with ?auto=google so that one click starts Google sign-in.
@@ -38,7 +40,8 @@ export function Login() {
     <div className="login">
       <div className="card" style={{ display: 'grid', gap: 14 }}>
         <span className="mono">Cobuildy</span>
-        <h1>Sign in or create an account</h1>
+        <h1>{fromFunnel ? 'Your assessment is ready' : 'Sign in or create an account'}</h1>
+        {fromFunnel && !sent && <p className="muted" style={{ margin: 0 }}>Create your free account to unlock your investor matches. Your answers are saved and will be waiting for you.</p>}
         {sent ? (
           <p>We sent a sign-in link to <b>{email}</b>. Open it on this device.</p>
         ) : (
@@ -50,7 +53,7 @@ export function Login() {
               <button className="btn" disabled={busy || !email} type="submit">{busy ? 'Sending…' : 'Send sign-in link'}</button>
             </form>
             <ErrorLine error={error} />
-            <p className="muted">New here? The same buttons create your account. You choose your role on the next screen.</p>
+            <p className="muted">{fromFunnel ? 'It takes one click. No password to remember.' : 'New here? The same buttons create your account. You choose your role on the next screen.'}</p>
           </>
         )}
       </div>
