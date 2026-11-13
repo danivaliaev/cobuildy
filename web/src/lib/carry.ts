@@ -2,7 +2,8 @@ import { supabase } from './supabase'
 import { GEO } from './types'
 import { applyUpdates, emptyFields, patchFor, type Update } from './profile'
 import { eur } from './format'
-import { STAGES, STRATEGY, type Strategy } from './funnel'
+import { STAGES, STRATEGY, complete, score, toCarry, type Strategy, type Answers } from './funnel'
+import { forgetSession } from './funnelTrack'
 
 /** Answers a visitor gave to the demo agent on the landing page. The landing saves them in this browser; the app imports them once after sign-in. */
 export const CARRY_KEY = 'cb.carry.v1'
@@ -10,7 +11,7 @@ const MAX_AGE = 30 * 864e5
 
 interface DevA { geo?: string; city?: string; as?: string; stage?: string; cost?: number; ask?: number; ins?: string; strategy?: string; fstage?: string; gdv?: number; equity?: number; score?: number }
 interface InvA { geo?: string[]; ins?: string; tk?: string; as?: string; lic?: number }
-export interface Carry { role?: 'dev' | 'inv'; dev?: DevA; inv?: InvA; ts?: number }
+export interface Carry { role?: 'dev' | 'inv'; dev?: DevA; inv?: InvA; ts?: number; sid?: string; name?: string; phone?: string }
 
 function read(): Carry | null {
   try {
@@ -22,6 +23,9 @@ function read(): Carry | null {
   } catch { return null }
 }
 const clear = () => { try { localStorage.removeItem(CARRY_KEY) } catch { /* ignore */ } }
+
+/** The name left in the funnel, to pre-fill the first sign-in screen. */
+export const carryName = (): string => read()?.name ?? ''
 
 /** Which role the visitor was exploring on the landing, if they answered anything. */
 export function carryRole(): 'developer' | 'investor' | null {
@@ -96,11 +100,20 @@ async function importInvestor(userId: string, a: InvA) {
 
 /** Imports the saved landing answers into the account, once. Failures are silent: the person can always answer again. */
 export async function importCarry(userId: string, role: string): Promise<void> {
-  const c = read()
-  if (!c) return
+  let c = read()
   clear()
   try {
+    // A visitor of the funnel takes their saved session. If the browser lost the answers, the database still has them.
+    const sid = c?.sid ?? funnelSid()
+    if (role === 'developer' && sid) {
+      const { data } = await supabase.rpc('funnel_claim', { p_id: sid })
+      forgetSession()
+      const got = data as { answers?: Answers; name?: string; phone?: string } | null
+      if (!c && got?.answers && complete(got.answers)) c = toCarry(got.answers, score(got.answers).total, { sid, name: got.name, phone: got.phone })
+    }
+    if (!c) return
     if (role === 'developer' && c.dev) await importDeveloper(userId, c.dev)
     else if (role === 'investor' && c.inv) await importInvestor(userId, c.inv)
   } catch { /* ignore */ }
 }
+const funnelSid = (): string | null => { try { const v = localStorage.getItem('cb.funnel.sid'); return v && /^[0-9a-f-]{36}$/.test(v) ? v : null } catch { return null } }

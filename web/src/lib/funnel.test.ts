@@ -100,3 +100,19 @@ describe('places', () => {
     expect(geoCode('Arrecife, Canary Islands')).toBe('ISL')
   })
 })
+
+import { trafficSource, validName, validPhone } from './funnelTrack'
+describe('funnel tracking helpers', () => {
+  it('reads the ad tags, the Meta click id and the referrer', () => {
+    expect(trafficSource('?utm_source=facebook&utm_campaign=spring_a&fbclid=abc', 'https://l.facebook.com/x', 'cobuildy.com')).toEqual({ utm_source: 'facebook', utm_campaign: 'spring_a', fbclid: '1', referrer: 'l.facebook.com' })
+    expect(trafficSource('', '', 'cobuildy.com')).toEqual({})
+  })
+  it('accepts normal names and phones, rejects the rest', () => {
+    expect(validName('  Ana   García ')).toBe('Ana García'); expect(validName('A')).toBeNull()
+    expect(validPhone('+34 600 123 456')).toBe('+34 600 123 456'); expect(validPhone('600123')).toBeNull(); expect(validPhone('call me')).toBeNull()
+  })
+  it('the carry holds the session, so the account can claim it', () => {
+    const c = toCarry({ strategy: 'land', geo: 'BCN', stage: 'licensed', gdv: 1e7, ask: 5e6, equity: 2e6, permit: 'granted' }, 90, { sid: 's1', name: 'Ana', phone: '+34 600 123 456' })
+    expect(c.sid).toBe('s1'); expect(c.name).toBe('Ana')
+  })
+})

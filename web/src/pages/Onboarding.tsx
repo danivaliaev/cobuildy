@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { supabase, errText } from '../lib/supabase'
 import { useAuth } from '../auth'
-import { carryRole } from '../lib/carry'
+import { carryName, carryRole } from '../lib/carry'
 import { ErrorLine } from '../components/ui'
 import { InvestorProfileForm, type InvestorProfileValue } from '../components/InvestorProfileForm'
 
@@ -13,7 +13,7 @@ export function Onboarding() {
   const meta = (session?.user.user_metadata ?? {}) as Record<string, unknown>
   const hinted = new URLSearchParams(window.location.search).get('role')
   const [role, setRole] = useState<Pick>(hinted === 'investor' ? 'investor' : hinted === 'developer' ? 'developer' : carryRole() ?? 'developer')
-  const [name, setName] = useState(String(meta.full_name ?? meta.name ?? ''))
+  const [name, setName] = useState(String(meta.full_name ?? meta.name ?? '') || carryName())
   const [company, setCompany] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)

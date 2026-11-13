@@ -4,6 +4,7 @@ import { CARRY_KEY } from '../lib/carry'
 import { eur } from '../lib/format'
 import { geoCode } from '../lib/profile'
 import { loadPlaces, type Place, type Places } from '../lib/places'
+import { save, sessionId, trafficSource, validName, validPhone } from '../lib/funnelTrack'
 import {
   COUNTRIES, PERMITS, REGIONS, STAGES, cleanCity, STRATEGY, compatibility, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdict,
   type Answers, type Complete, type Matches, type Strategy, type Unit,
@@ -32,7 +33,12 @@ export function Funnel() {
   const [unit, setUnit] = useState<Unit>('m')
   const [places, setPlaces] = useState<Places | null>(null)
   const [pending, setPending] = useState<string | null>(null) // a typed place we could not place in a region yet
-  const [phase, setPhase] = useState<'ask' | 'think' | 'result'>('ask')
+  const [phase, setPhase] = useState<'ask' | 'contact' | 'think' | 'result'>('ask')
+  const sid = useMemo(() => sessionId(), [])
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [contactBad, setContactBad] = useState<'name' | 'phone' | null>(null)
+  const [who, setWho] = useState<{ name: string; phone: string } | null>(null)
   const [shown, setShown] = useState(0)
   const [matches, setMatches] = useState<Matches | null>(null)
   const [investors, setInvestors] = useState<number | null>(null)
@@ -44,6 +50,7 @@ export function Funnel() {
     document.title = 'Is your project ready for financing? · Cobuildy'
     const m = document.createElement('meta'); m.name = 'robots'; m.content = 'noindex'; document.head.appendChild(m)
     initPixel()
+    void save(sid, { step: 0, source: trafficSource() })
     void loadPlaces().then(setPlaces, () => setPlaces(null))
     void supabase.rpc('funnel_stats').then(({ data }) => { const n = (data as { investors?: number } | null)?.investors; if (typeof n === 'number' && n > 0) setInvestors(n) })
     return () => { m.remove() }
@@ -69,22 +76,38 @@ export function Funnel() {
     if (patch.strategy && patch.strategy !== a.strategy) delete merged.stage
     setA(merged); setText(''); setBad(false); setUnit('m'); setPending(null)
     track('FunnelAnswered', true, { step: step, n: i + 1 })
+    void save(sid, { step: i + 1, answers: merged })
     if (i < STEPS.length - 1) { setI(i + 1); return }
-    if (complete(merged)) finish(merged)
+    if (complete(merged)) setPhase('contact')
   }
-  function back() { if (i > 0 && phase === 'ask') { setI(i - 1); setText(''); setBad(false) } }
+  function back() {
+    if (phase === 'contact') { setPhase('ask'); setContactBad(null); return }
+    if (i > 0 && phase === 'ask') { setI(i - 1); setText(''); setBad(false) }
+  }
 
-  function finish(done: Complete) {
+  function submitContact(e: FormEvent) {
+    e.preventDefault()
+    const n = validName(name), ph = validPhone(phone)
+    if (!n) return setContactBad('name')
+    if (!ph) return setContactBad('phone')
+    if (!complete(a)) return
+    setContactBad(null); setWho({ name: n, phone: ph })
+    void save(sid, { step: 8, answers: a, name: n, phone: ph })
+    track('Contact')
+    finish(a, { name: n, phone: ph })
+  }
+
+  function finish(done: Complete, contact: { name: string; phone: string }) {
     const n = numbers(done)
     const sc = score(done)
     const lic = PERMITS.find(p => p.v === done.permit)!.license
-    try { localStorage.setItem(CARRY_KEY, JSON.stringify(toCarry(done, sc.total))) } catch { /* private mode: the answers are simply not carried over */ }
+    try { localStorage.setItem(CARRY_KEY, JSON.stringify(toCarry(done, sc.total, { sid, ...contact }))) } catch { /* private mode: the answers are simply not carried over */ }
     setPhase('think'); setShown(0)
     const timer = window.setInterval(() => setShown(s => Math.min(CHECKS.length, s + 1)), 750)
     const wait = new Promise(r => window.setTimeout(r, 750 * CHECKS.length + 500))
     const call = supabase.rpc('funnel_match', { p_geo: done.geo, p_ask: done.ask, p_license: lic, p_ltc: Math.round(n.ltc * 1000) / 1000, p_margin: Math.round(n.margin * 1000) / 1000 })
       .then(({ data }) => (data as Matches | null) ?? null, () => null)
-    void Promise.all([wait, call]).then(([, m]) => { window.clearInterval(timer); setMatches(m); setPhase('result'); track('FunnelCompleted', true, { score: sc.total }) })
+    void Promise.all([wait, call]).then(([, m]) => { window.clearInterval(timer); setMatches(m); setPhase('result'); track('FunnelCompleted', true, { score: sc.total }); void save(sid, { result: { score: sc.total, matches: m } }) })
   }
 
   const pick = (p: Place) => next({ geo: p.geo, city: p.label })
@@ -111,6 +134,7 @@ export function Funnel() {
 
   async function unlock() {
     track('Lead')
+    await Promise.race([save(sid, { cta: true }), new Promise(r => window.setTimeout(r, 800))])
     const { data } = await supabase.auth.getSession()
     window.location.assign(data.session ? '/' : '/login?role=developer')
   }
@@ -183,6 +207,24 @@ export function Funnel() {
               {i > 0 && <button type="button" className="fn-link" onClick={back}>← Back</button>}
             </div>
           )}
+
+          {phase === 'contact' && (
+            <div className="fn-input">
+              <div className="fn-q"><span className="fn-n">Last step</span>Where should we save your results? Leave your name and phone, so your answers are not lost while you create your account. Our team can also call you if anything goes wrong.</div>
+              <form className="fn-contact" onSubmit={submitContact}>
+                <input autoFocus autoComplete="name" autoCapitalize="words" aria-label="Your name" placeholder="Your name" maxLength={120} value={name}
+                  onChange={e => { setName(e.target.value); setContactBad(null) }} aria-invalid={contactBad === 'name'} />
+                <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Your phone" placeholder="Phone, e.g. +34 600 123 456" maxLength={24} value={phone}
+                  onChange={e => { setPhone(e.target.value); setContactBad(null) }} aria-invalid={contactBad === 'phone'} />
+                {contactBad && <span className="fn-bad" role="alert">{contactBad === 'name' ? 'Enter your name.' : 'Enter a phone number with the country code, for example +34 600 123 456.'}</span>}
+                <button className="fn-cta" type="submit">Show my assessment</button>
+                <span className="fn-fine">We use your details only to help you with this project.</span>
+              </form>
+              <button type="button" className="fn-link" onClick={back}>← Back</button>
+            </div>
+          )}
+
+          {who && phase !== 'ask' && phase !== 'contact' && <div className="fn-a">{who.name} · {who.phone}</div>}
 
           {phase === 'think' && (
             <div className="fn-think" role="status">

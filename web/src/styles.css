@@ -219,3 +219,5 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 @media (prefers-reduced-motion:reduce){.fn-bar i,.fn-think li{transition:none}}
 
 .fn-units{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fn-chip.on{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}.fn-pre{font-weight:600;font-size:17px;margin-left:4px}
+
+.fn-contact{display:grid;gap:10px}.fn-contact input{min-height:50px;font-size:17px;border-radius:14px}.fn-contact .fn-cta{margin-top:4px}

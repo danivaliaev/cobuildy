@@ -102,10 +102,10 @@ export function compatibility(m: Matches): string {
 const PERMIT_STAGE: Record<Permit, string> = { granted: 'granted', submitted: 'submitted', process: 'prep', none: 'none', notreq: 'notreq' }
 
 /** What the account gets once the visitor registers: the same shape the landing agent saves. */
-export function toCarry(a: Complete, total: number) {
+export function toCarry(a: Complete, total: number, who?: { sid?: string; name?: string; phone?: string }) {
   const n = numbers(a)
   return {
-    role: 'dev' as const, ts: Date.now(),
+    role: 'dev' as const, ts: Date.now(), sid: who?.sid, name: who?.name, phone: who?.phone,
     dev: { geo: a.geo, city: a.city, strategy: a.strategy, fstage: a.stage, gdv: a.gdv, ask: a.ask, equity: a.equity, cost: n.cost, stage: PERMIT_STAGE[a.permit], score: total },
   }
 }
