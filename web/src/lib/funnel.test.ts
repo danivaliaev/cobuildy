@@ -2,6 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { complete, numbers, parseMoney, score, toCarry, verdict, compatibility } from './funnel'
 import { devUpdates } from './carry'
 
+describe('parseMoney with a unit', () => {
+  it('a small bare number takes the chosen unit, a large one is euros', () => {
+    expect(parseMoney('5', false, 'm')).toBe(5_000_000); expect(parseMoney('2,5', false, 'm')).toBe(2_500_000); expect(parseMoney('750', false, 'k')).toBe(750_000)
+    expect(parseMoney('5000000', false, 'm')).toBe(5_000_000); expect(parseMoney('5m', false, 'k')).toBe(5_000_000)
+  })
+  it('without a unit a few euros is not an amount', () => { expect(parseMoney('5')).toBeNull(); expect(parseMoney('999')).toBeNull(); expect(parseMoney('0', true, 'm')).toBe(0) })
+})
+
 describe('parseMoney', () => {
   it('reads common ways to write an amount', () => {
     expect(parseMoney('4.5M')).toBe(4_500_000); expect(parseMoney('€4,500,000')).toBe(4_500_000); expect(parseMoney('750k')).toBe(750_000)

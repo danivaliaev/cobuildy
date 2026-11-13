@@ -4,12 +4,12 @@ import { CARRY_KEY } from '../lib/carry'
 import { eur } from '../lib/format'
 import {
   PERMITS, REGIONS, STAGES, STRATEGY, compatibility, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdict,
-  type Answers, type Matches, type Strategy,
+  type Answers, type Matches, type Strategy, type Unit,
 } from '../lib/funnel'
 
 type Step = 'strategy' | 'geo' | 'stage' | 'gdv' | 'ask' | 'equity' | 'permit'
 const STEPS: Step[] = ['strategy', 'geo', 'stage', 'gdv', 'ask', 'equity', 'permit']
-const MONEY_HINT = 'For example 4.5M or 750k'
+const MONEY_HINT = 'For example 4.5 or 750'
 const CHECKS = ['Evaluating project stage', 'Checking financing readiness', 'Assessing capital structure', 'Identifying potential funding options']
 
 const QUESTION: Record<Step, string> = {
@@ -27,6 +27,7 @@ export function Funnel() {
   const [i, setI] = useState(0)
   const [text, setText] = useState('')
   const [bad, setBad] = useState(false)
+  const [unit, setUnit] = useState<Unit>('m')
   const [phase, setPhase] = useState<'ask' | 'think' | 'result'>('ask')
   const [shown, setShown] = useState(0)
   const [matches, setMatches] = useState<Matches | null>(null)
@@ -60,7 +61,7 @@ export function Funnel() {
     const merged = { ...a, ...patch }
     // a different project type has different stages, so the old stage no longer applies
     if (patch.strategy && patch.strategy !== a.strategy) delete merged.stage
-    setA(merged); setText(''); setBad(false)
+    setA(merged); setText(''); setBad(false); setUnit('m')
     track('FunnelAnswered', true, { step: step, n: i + 1 })
     if (i < STEPS.length - 1) { setI(i + 1); return }
     if (complete(merged)) finish(merged)
@@ -82,11 +83,12 @@ export function Funnel() {
 
   function submitMoney(e: FormEvent) {
     e.preventDefault()
-    const v = parseMoney(text, step === 'equity')
+    const v = parseMoney(text, step === 'equity', unit)
     if (v == null) return setBad(true)
     next(step === 'gdv' ? { gdv: v } : step === 'ask' ? { ask: v } : { equity: v })
   }
 
+  const typed = parseMoney(text, true, unit)
   const result = useMemo(() => (phase === 'result' && complete(a) ? score(a) : null), [phase, a])
   const heading = investors ? `${investors} investors are waiting.` : 'Investors are waiting.'
 
@@ -132,6 +134,11 @@ export function Funnel() {
                   <input autoFocus inputMode="decimal" autoComplete="off" aria-label={QUESTION[step]} placeholder={MONEY_HINT} value={text}
                     onChange={e => { setText(e.target.value); setBad(false) }} aria-invalid={bad} />
                   <button className="fn-go" type="submit" disabled={!text.trim()}>Next</button>
+                  <div className="fn-units" role="group" aria-label="Unit">
+                    <button type="button" className={`fn-chip${unit === 'k' ? ' on' : ''}`} aria-pressed={unit === 'k'} onClick={() => setUnit('k')}>thousand</button>
+                    <button type="button" className={`fn-chip${unit === 'm' ? ' on' : ''}`} aria-pressed={unit === 'm'} onClick={() => setUnit('m')}>million</button>
+                    {text.trim() && typed != null && <span className="fn-pre" aria-live="polite">= {typed === 0 ? '€0' : eur(typed)}</span>}
+                  </div>
                   {bad && <span className="fn-bad" role="alert">{step === 'equity' ? 'Enter an amount, or 0 if you have none. ' : 'Enter an amount in euros. '}{MONEY_HINT}.</span>}
                   {step === 'equity' && <button type="button" className="fn-link" onClick={() => next({ equity: 0 })}>I have no equity to contribute</button>}
                 </form>

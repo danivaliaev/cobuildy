@@ -42,7 +42,9 @@ export const complete = (a: Answers): a is Required<Answers> =>
   !!(a.strategy && a.geo && a.stage && a.gdv && a.ask && a.equity != null && a.permit)
 
 /** "4.5M", "€4,500,000", "750k", "1.2 m", "2 000 000" → euros. Returns null when it is not a usable amount. */
-export function parseMoney(text: string, allowZero = false): number | null {
+export type Unit = 'k' | 'm'
+/** `unit` is what a bare number means when it is small: with unit 'm', "5" is five million. A bare number of 1,000 or more is taken as euros. */
+export function parseMoney(text: string, allowZero = false, unit?: Unit): number | null {
   const t = text.toLowerCase().replace(/[€\s]/g, '').replace(/eur(os?)?/, '')
   const m = t.match(/^(\d+(?:[.,]\d+)?|\d{1,3}(?:[.,]\d{3})+)(k|m|mm|mln)?$/)
   if (!m) return null
@@ -50,9 +52,11 @@ export function parseMoney(text: string, allowZero = false): number | null {
   if (m[2]) num = num.replace(',', '.')                       // "1,5m" means 1.5 million
   else if (/^\d{1,3}([.,]\d{3})+$/.test(num)) num = num.replace(/[.,]/g, '') // "4,500,000" or "4.500.000"
   else num = num.replace(',', '.')
-  const x = parseFloat(num) * (m[2] === 'k' ? 1e3 : m[2] ? 1e6 : 1)
+  const bare = !m[2] && unit && parseFloat(num) < 1000 ? (unit === 'k' ? 1e3 : 1e6) : 1
+  const x = parseFloat(num) * (m[2] === 'k' ? 1e3 : m[2] ? 1e6 : bare)
   if (!Number.isFinite(x) || x > 5e9) return null
   if (x === 0) return allowZero ? 0 : null
+  if (x < 1000) return null // nobody finances a project of a few euros: the amount was meant in thousands or millions
   return Math.round(x)
 }
 
