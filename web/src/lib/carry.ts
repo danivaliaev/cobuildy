@@ -71,6 +71,7 @@ const strategyLabel = (v?: string) => STRATEGY.find(x => x.v === v)?.label
 export function devUpdates(a: DevA): Update[] {
   const u: Update[] = []
   const strat = strategyLabel(a.strategy); if (strat) u.push({ key: 'a_strategy', status: 'filled', display: strat })
+  const stageLabel = STAGES[a.strategy as Strategy]?.find(x => x.v === a.fstage)?.label; if (stageLabel) u.push({ key: 'a_stage', status: 'filled', display: stageLabel })
   if (a.as && ASSET_TEXT[a.as]) u.push({ key: 'a_type', status: 'filled', display: ASSET_TEXT[a.as] })
   if (a.geo && GEO[a.geo]) u.push({ key: 'a_loc', status: 'filled', display: a.city && /^[^<>]{1,80}$/.test(a.city) ? a.city : GEO[a.geo] })
   if (a.stage && STAGE_TEXT[a.stage]) u.push({ key: 'p_status', status: a.stage === 'granted' || a.stage === 'build' || a.stage === 'notreq' ? 'filled' : 'partial', display: STAGE_TEXT[a.stage] })

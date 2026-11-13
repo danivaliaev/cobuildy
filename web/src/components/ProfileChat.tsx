@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { supabase, errText } from '../lib/supabase'
 import { ErrorLine } from './ui'
 import { eur } from '../lib/format'
-import { FK, MILESTONES, SECTIONS, applyUpdates, calc, firstInt, nextField, parseMoney, type Chip, type FieldState, type Fields, type Update } from '../lib/profile'
+import { FK, MILESTONES, SECTIONS, applyUpdates, calc, chipsFor, firstInt, nextField, parseMoney, type Chip, type FieldState, type Fields, type Update } from '../lib/profile'
 
 interface Saved { key: string; st: FieldState['st'] }
 interface Msg { r: 'a' | 'u'; t: string; saved?: Saved[]; undo?: Record<string, FieldState>; undone?: boolean }
@@ -137,7 +137,7 @@ export function ProfileChat({ projectId, fields, commit, editable, askReq, onCur
     await ask(Object.keys(m.undo)[0])
   })
 
-  const chips: Chip[] = cur && editable ? [...FK[cur].chips, UNKNOWN_CHIP] : []
+  const chips: Chip[] = cur && editable ? [...chipsFor(FK[cur], live.current), UNKNOWN_CHIP] : []
   const label = (k: string) => `${SECTIONS.find(s => s.id === FK[k].section)?.title} › ${FK[k].label}`
   const mark = (s: FieldState['st']) => (s === 'unknown' ? '!' : s === 'partial' ? '~' : '✓')
 

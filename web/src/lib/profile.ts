@@ -2,9 +2,9 @@ import data from './fields.json'
 import { eur } from './format'
 import type { Project } from './types'
 
-/** The guided project profile: 31 fields in 8 sections, ported from the prototype. Single source: fields.json. */
+/** The guided project profile: 32 fields in 8 sections, ported from the prototype. Single source: fields.json. */
 export type Status = 'empty' | 'filled' | 'partial' | 'unknown'
-export interface FieldState { st: Status; v: string; n: number | null; src: '' | 'chat' | 'edit' | 'form' | 'site' }
+export interface FieldState { st: Status; v: string; n: number | null; src: '' | 'chat' | 'edit' | 'form' | 'site' | 'system' }
 export type Fields = Record<string, FieldState>
 export interface Chip { label: string; value: string; amount?: number; partial: boolean; unknown: boolean; note?: string; task?: string }
 export interface FieldDef {
@@ -16,6 +16,22 @@ export const SECTIONS = data.sections as Array<{ id: string; title: string }>
 export const GATE_NAMES = data.gates as string[]
 export const FIELDS = data.fields as FieldDef[]
 export const FK: Record<string, FieldDef> = Object.fromEntries(FIELDS.map(f => [f.key, f]))
+
+/** The stages a project can be at depend on its type: the options are listed per type in fields.json. */
+const STAGE_OPTIONS = (data as { stageOptions: Record<string, string[]> }).stageOptions
+export function chipsFor(d: FieldDef, f: Fields): Chip[] {
+  if (d.key !== 'a_stage') return d.chips
+  const s = f.a_strategy
+  const code = s && s.st !== 'empty' ? strategyCode(s.v) : null
+  const labels = code ? STAGE_OPTIONS[code] : null
+  return labels ? labels.map(l => ({ label: l, value: l, partial: false, unknown: false })) : d.chips
+}
+/** What the stage says about the land: only an identified or reserved site is not yet fully the developer's. */
+export function landFromStage(label: string): { st: 'filled' | 'partial'; v: string } {
+  if (/identified/i.test(label)) return { st: 'partial', v: 'Identified, not yet secured' }
+  if (/reserved|offer accepted/i.test(label)) return { st: 'filled', v: 'Reserved (option)' }
+  return { st: 'filled', v: 'Owned' }
+}
 
 export const blank = (): FieldState => ({ st: 'empty', v: '', n: null, src: '' })
 export const emptyFields = (): Fields => Object.fromEntries(FIELDS.map(f => [f.key, blank()]))
@@ -213,6 +229,16 @@ export function applyUpdates(f: Fields, updates: Update[], src: FieldState['src'
       next[u.key] = { st: u.status, v, n: d.kind === 'text' && d.key !== 'e_presales' ? null : amount, src }
     }
     keys.push(u.key)
+  }
+  // A different project type means a different list of stages; a stage that no longer fits is cleared.
+  if (keys.includes('a_strategy') && !keys.includes('a_stage') && next.a_stage && next.a_stage.st !== 'empty') {
+    const code = strategyCode(next.a_strategy?.v ?? '')
+    if (code && !STAGE_OPTIONS[code].includes(next.a_stage.v)) { next.a_stage = blank(); keys.push('a_stage') }
+  }
+  // The stage tells how much control the developer has over the land, so that question need not be asked again.
+  if (keys.includes('a_stage') && next.a_stage?.st === 'filled' && (!next.l_own || next.l_own.st === 'empty')) {
+    next.l_own = { ...landFromStage(next.a_stage.v), n: null, src }
+    keys.push('l_own')
   }
   return { next, keys }
 }

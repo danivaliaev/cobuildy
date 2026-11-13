@@ -78,6 +78,91 @@
       "task": "Confirm the project type"
     },
     {
+      "key": "a_stage",
+      "section": "asset",
+      "label": "Current stage",
+      "gate": 1,
+      "weight": 1,
+      "kind": "text",
+      "question": "How far along is the project?",
+      "why": "Investors fund a project differently depending on how far it has come.",
+      "chips": [
+        {
+          "label": "Land identified",
+          "value": "Land identified",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Land reserved",
+          "value": "Land reserved",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Land purchased",
+          "value": "Land purchased",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Building licence granted",
+          "value": "Building licence granted",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Construction started",
+          "value": "Construction started",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Construction partially completed",
+          "value": "Construction partially completed",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Near completion",
+          "value": "Near completion",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Property identified",
+          "value": "Property identified",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Property acquired",
+          "value": "Property acquired",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Renovation started",
+          "value": "Renovation started",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Renovation completed",
+          "value": "Renovation completed",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Offer accepted or reserved",
+          "value": "Offer accepted or reserved",
+          "partial": false,
+          "unknown": false
+        }
+      ],
+      "task": "Confirm the current stage"
+    },
+    {
       "key": "a_type",
       "section": "asset",
       "label": "Asset type",
@@ -986,5 +1071,29 @@
       ],
       "task": "Write the sales timeline"
     }
-  ]
+  ],
+  "stageOptions": {
+    "land": [
+      "Land identified",
+      "Land reserved",
+      "Land purchased",
+      "Building licence granted"
+    ],
+    "wip": [
+      "Construction started",
+      "Construction partially completed",
+      "Near completion"
+    ],
+    "refurb": [
+      "Property identified",
+      "Property acquired",
+      "Renovation started",
+      "Renovation completed"
+    ],
+    "acq": [
+      "Property identified",
+      "Offer accepted or reserved",
+      "Property acquired"
+    ]
+  }
 }

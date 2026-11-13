@@ -3,8 +3,8 @@ import { FIELDS, applyUpdates, calc, columnsFor, derived, emptyFields, hydrate, 
 import type { Project } from './types'
 
 describe('profile model', () => {
-  it('has 31 fields in 8 sections, every one with a question', () => {
-    expect(FIELDS.length).toBe(31)
+  it('has 32 fields in 8 sections, every one with a question', () => {
+    expect(FIELDS.length).toBe(32)
     expect(new Set(FIELDS.map(f => f.section)).size).toBe(8)
     expect(FIELDS.every(f => f.question && f.chips.length > 0)).toBe(true)
   })
@@ -21,6 +21,7 @@ describe('profile model', () => {
   it('reaches the teaser stage when gate 1 is filled, and maps columns', () => {
     const { next } = applyUpdates(emptyFields(), [
       { key: 'a_strategy', status: 'filled', display: 'Land development' },
+      { key: 'a_stage', status: 'filled', display: 'Land purchased' },
       { key: 'a_type', status: 'filled', display: 'Residential for sale' },
       { key: 'a_loc', status: 'filled', display: 'Marbella, Costa del Sol' },
       { key: 'a_units', status: 'filled', display: '12 apartments · ~1,250 m²' },
@@ -29,9 +30,9 @@ describe('profile model', () => {
       { key: 'k_ask', status: 'filled', amount: 3e6 },
       { key: 'k_instr', status: 'filled', display: 'Senior + mezzanine' },
     ])
-    // land control, own equity and exit strategy are also required for a teaser
+    // own equity and exit strategy are also required (land control is filled from the stage)
     expect(calc(next).stage).toBe(0)
-    expect(calc(next).blockers.map(b => b.key)).toEqual(['l_own', 'k_equity', 'e_strategy'])
+    expect(calc(next).blockers.map(b => b.key)).toEqual(['k_equity', 'e_strategy'])
     const full = applyUpdates(next, [
       { key: 'l_own', status: 'filled', display: 'Owned outright' },
       { key: 'k_equity', status: 'filled', amount: 2.4e6 },
@@ -41,7 +42,7 @@ describe('profile model', () => {
     expect(columnsFor(full)).toMatchObject({ strategy: 'land', asset: 'RES', geo: 'CS', city: 'Marbella', units: 12, cost_eur: 5.4e6, gdv_eur: 6.5e6, ask_eur: 3e6, instrument: ['senior', 'mezz'], ltc: 0.556, margin: 0.204 })
   })
   it('a partly met answer still counts for the teaser gate', () => {
-    const keys = ['a_strategy', 'a_type', 'a_loc', 'a_units', 'l_own', 'f_cost', 'f_gdv', 'k_ask', 'k_instr', 'k_equity', 'e_strategy']
+    const keys = ['a_strategy', 'a_stage', 'a_type', 'a_loc', 'a_units', 'l_own', 'f_cost', 'f_gdv', 'k_ask', 'k_instr', 'k_equity', 'e_strategy']
     const ups = keys.map(key => ({ key, status: (key === 'l_own' ? 'partial' : 'filled') as 'partial' | 'filled', display: 'x', amount: 1e6 }))
     expect(calc(applyUpdates(emptyFields(), ups).next).stage).toBe(1)
   })
