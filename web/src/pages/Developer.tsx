@@ -5,6 +5,8 @@ import { useAuth } from '../auth'
 import { ErrorLine, Pill, useAction, useLoad } from '../components/ui'
 import { eur } from '../lib/format'
 import { GEO, type Project, type ProjectDeal } from '../lib/types'
+import { FirstRun } from '../components/Welcome'
+import { clearWelcome } from '../lib/carry'
 import { activity, attention, nextStep, plural, reply, totals, view, type ProjView } from '../lib/dashboard'
 
 const NAMES = ['Not ready', 'Teaser-ready', 'Ready for outreach', 'Data room complete']
@@ -31,8 +33,10 @@ function Assistant({ views }: { views: ProjView[] }) {
   )
 }
 
-export function Developer() {
+export function Developer({ firstRun = false }: { firstRun?: boolean }) {
   const nav = useNavigate()
+  const [showFirst, setShowFirst] = useState(firstRun)
+  const closeFirst = () => { clearWelcome(); setShowFirst(false) }
   const { profile } = useAuth()
   const data = useLoad(async () => {
     const { data: ps, error } = await supabase.from('projects').select('*').eq('owner_id', profile!.id).neq('status', 'discarded').order('created_at', { ascending: false })
@@ -72,6 +76,7 @@ export function Developer() {
   const tone = (s: Project['status']) => (s === 'live' || s === 'approved' ? 'good' : s === 'teaser_review' ? 'warn' : undefined)
   return (
     <div className="dash">
+      {showFirst && <FirstRun name={(profile?.full_name ?? '').split(' ')[0]} busy={act.busy} onStart={() => { clearWelcome(); create() }} onClose={closeFirst} />}
       <div className="dgreet">
         <span className="mono muted">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
         <div className="row"><h1>{greet}{first ? `, ${first}` : ''}</h1><span className="sp" />

@@ -29,14 +29,20 @@ export const hasFunnelCarry = (): boolean => { const c = read(); return !!(c && 
 
 const WELCOME_KEY = 'cb.welcome.v1'
 /** The project made from the funnel answers, so the first screen after sign-in can be that project rather than the list. */
-export function peekWelcome(): { id: string; score: number } | null {
+export function peekWelcome(): { id: string | null; score: number } | null {
   try {
-    const w = JSON.parse(localStorage.getItem(WELCOME_KEY) ?? 'null') as { id?: string; score?: number; ts?: number } | null
-    if (!w?.id || !/^[0-9a-f-]{36}$/.test(w.id) || !w.ts || Date.now() - w.ts > 36e5) return null
-    return { id: w.id, score: typeof w.score === 'number' ? w.score : 0 }
+    const w = JSON.parse(localStorage.getItem(WELCOME_KEY) ?? 'null') as { id?: string | null; score?: number; ts?: number } | null
+    if (!w || !w.ts || Date.now() - w.ts > 36e5) return null
+    if (w.id && !/^[0-9a-f-]{36}$/.test(w.id)) return null
+    return { id: w.id ?? null, score: typeof w.score === 'number' ? w.score : 0 }
   } catch { return null }
 }
+/** A new developer with no project yet: the first screen after sign-in offers to add one (no project id to open). */
+export const markFirstRun = () => { try { localStorage.setItem(WELCOME_KEY, JSON.stringify({ id: null, score: 0, ts: Date.now() })) } catch { /* ignore */ } }
 export const clearWelcome = () => { try { localStorage.removeItem(WELCOME_KEY) } catch { /* ignore */ } }
+
+/** The phone left in the funnel or the landing chat. A developer who has none is asked for it during onboarding. */
+export const carryPhone = (): string => read()?.phone ?? ''
 
 /** The name left in the funnel, to pre-fill the first sign-in screen. */
 export const carryName = (): string => read()?.name ?? ''
@@ -131,7 +137,7 @@ export async function importCarry(userId: string, role: string): Promise<void> {
     if (!c) return
     if (role === 'developer' && c.dev) {
       const id = await importDeveloper(userId, c.dev)
-      if (id && c.sid) { try { localStorage.setItem(WELCOME_KEY, JSON.stringify({ id, score: c.dev.score ?? 0, ts: Date.now() })) } catch { /* ignore */ } }
+      if (id) { try { localStorage.setItem(WELCOME_KEY, JSON.stringify({ id, score: c.dev.score ?? 0, ts: Date.now() })) } catch { /* ignore */ } }
     }
     else if (role === 'investor' && c.inv) await importInvestor(userId, c.inv)
   } catch { /* ignore */ }

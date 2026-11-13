@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { devUpdates } from './carry'
+import { clearWelcome, devUpdates, markFirstRun, peekWelcome } from './carry'
 import { applyUpdates, calc, columnsFor, emptyFields } from './profile'
 
 describe('landing answers import', () => {
@@ -16,5 +16,22 @@ describe('landing answers import', () => {
   it('open capital type is a partial answer with no instrument', () => {
     const { next } = applyUpdates(emptyFields(), devUpdates({ ins: 'any' }), 'site')
     expect(columnsFor(next).instrument).toEqual([])
+  })
+})
+
+describe('first-run marker', () => {
+  it('a developer with no project gets a marker without a project id', () => {
+    localStorage.clear()
+    expect(peekWelcome()).toBeNull()
+    markFirstRun()
+    expect(peekWelcome()).toEqual({ id: null, score: 0 })
+    clearWelcome()
+    expect(peekWelcome()).toBeNull()
+  })
+  it('ignores a marker with a malformed project id or an old one', () => {
+    localStorage.setItem('cb.welcome.v1', JSON.stringify({ id: 'x', score: 1, ts: Date.now() }))
+    expect(peekWelcome()).toBeNull()
+    localStorage.setItem('cb.welcome.v1', JSON.stringify({ id: null, score: 0, ts: Date.now() - 2 * 36e5 }))
+    expect(peekWelcome()).toBeNull()
   })
 })

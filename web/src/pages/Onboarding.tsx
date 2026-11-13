@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { supabase, errText } from '../lib/supabase'
 import { useAuth } from '../auth'
-import { carryName, carryRole, hasFunnelCarry } from '../lib/carry'
+import { carryName, carryPhone, carryRole, hasFunnelCarry, markFirstRun } from '../lib/carry'
+import { validPhone } from '../lib/funnelTrack'
 import { ErrorLine } from '../components/ui'
 import { InvestorProfileForm, type InvestorProfileValue } from '../components/InvestorProfileForm'
 
@@ -15,6 +16,9 @@ export function Onboarding() {
   const [role, setRole] = useState<Pick>(hinted === 'investor' ? 'investor' : hinted === 'developer' ? 'developer' : carryRole() ?? 'developer')
   const [name, setName] = useState(String(meta.full_name ?? meta.name ?? '') || carryName())
   const [company, setCompany] = useState('')
+  const [phone, setPhone] = useState('')
+  // Someone who left a phone in the chat or the funnel is not asked again.
+  const needPhone = !carryPhone()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState<1 | 2>(1)
@@ -45,9 +49,12 @@ export function Onboarding() {
   async function submit(e: FormEvent) {
     e.preventDefault(); setError(null)
     if (role === 'investor') { setStep(2); return }
+    const ph = needPhone ? validPhone(phone) : null
+    if (needPhone && !ph) { setError('Enter a phone number with the country code, for example +34 600 123 456.'); return }
     setBusy(true)
-    const { error: err } = await supabase.rpc('complete_signup', { p_role: role, p_name: name.trim(), p_company: company.trim() || null })
+    const { error: err } = await supabase.rpc('complete_signup', { p_role: role, p_name: name.trim(), p_company: company.trim() || null, p_phone: ph })
     if (err) { setBusy(false); setError(errText(err.message)); return }
+    markFirstRun() // the project from carried answers, if there is one, replaces this marker
     reload()
   }
 
@@ -77,9 +84,10 @@ export function Onboarding() {
           <button type="button" role="radio" aria-checked={role === 'investor'} className={`btn ${role === 'investor' ? 'pri' : ''}`} onClick={() => setRole('investor')}>I invest or lend</button>
         </div>}
         <label className="f"><span>Your name</span><input required maxLength={120} value={name} onChange={e => setName(e.target.value)} autoComplete="name" /></label>
+        {role === 'developer' && needPhone && <label className="f"><span>Phone</span><input required type="tel" inputMode="tel" maxLength={24} placeholder="+34 600 123 456" value={phone} onChange={e => setPhone(e.target.value)} autoComplete="tel" /></label>}
         {role === 'developer' && <label className="f"><span>Company (optional)</span><input maxLength={160} value={company} onChange={e => setCompany(e.target.value)} autoComplete="organization" /></label>}
         <ErrorLine error={error} />
-        <button className="btn pri" type="submit" disabled={busy || !name.trim()}>{busy ? 'Saving…' : role === 'investor' ? 'Continue' : 'Open my workspace'}</button>
+        <button className="btn pri" type="submit" disabled={busy || !name.trim() || (role === 'developer' && needPhone && !phone.trim())}>{busy ? 'Saving…' : role === 'investor' ? 'Continue' : 'Open my workspace'}</button>
         <button className="linkbtn" type="button" onClick={() => void signOut()}>Use another account</button>
       </form>
     </div>

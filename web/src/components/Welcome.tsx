@@ -60,3 +60,33 @@ export function Welcome({ name, fields, matches, completeness, openToTeaser, onC
     </div>
   )
 }
+
+/** A new developer who arrived without any answers: a dialog over the dashboard that starts the first project. */
+export function FirstRun({ name, busy, onStart, onClose }: { name: string; busy: boolean; onStart: () => void; onClose: () => void }) {
+  const go = useRef<HTMLButtonElement>(null)
+  const close = useRef(onClose)
+  close.current = onClose
+  useEffect(() => {
+    go.current?.focus()
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') close.current() }
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', key)
+    return () => { window.removeEventListener('keydown', key); document.body.style.overflow = prev }
+  }, [])
+  return (
+    <div className="modal welcome-veil" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <section className="welcome" role="dialog" aria-modal="true" aria-labelledby="firstrun-h">
+        <div className="welcome-head">
+          <div>
+            <span className="mono muted">Your account is ready</span>
+            <h2 id="firstrun-h">{name ? `Welcome, ${name}.` : 'Welcome.'} Let’s set up your first project.</h2>
+          </div>
+          <button type="button" className="linkbtn" onClick={onClose} aria-label="Close this message">Close</button>
+        </div>
+        <p className="welcome-carried">Answer a few questions and the agent builds your project profile. Investors that fit are checked as you go.</p>
+        <div className="row"><button ref={go} type="button" className="btn pri" disabled={busy} onClick={onStart}>Add my first project</button></div>
+      </section>
+    </div>
+  )
+}

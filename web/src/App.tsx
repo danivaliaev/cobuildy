@@ -43,8 +43,8 @@ function Shell({ children }: { children: React.ReactNode }) {
 /** A visitor who came from the funnel lands on the project made from their answers, not on an empty-looking list. */
 function DeveloperHome() {
   const [w] = useState(() => peekWelcome())
-  if (w) return <Navigate to={`/developer/projects/${w.id}?welcome=${w.score}`} replace />
-  return <Developer />
+  if (w?.id) return <Navigate to={`/developer/projects/${w.id}?welcome=${w.score}`} replace />
+  return <Developer firstRun={!!w} />
 }
 
 /** Signed-out visitors see the landing page; /login is the sign-in form. A returning magic link keeps its parameters and is not redirected. */
