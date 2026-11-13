@@ -65,6 +65,26 @@ export function parseMoney(text: string, allowZero = false, unit?: Unit): number
   return Math.round(x)
 }
 
+/** Everything a visitor answered, as short labelled parts for the admin lead tables. */
+export function describeAnswers(a: Record<string, unknown> | null | undefined): string[] {
+  if (!a) return []
+  const x = a as Answers & Record<string, unknown>
+  const str = STRATEGY.find(s => s.v === x.strategy)
+  const stage = x.strategy ? STAGES[x.strategy as Strategy]?.find(s => s.v === x.stage) : undefined
+  const place = typeof x.city === 'string' && x.city ? x.city : REGIONS.find(r => r.v === x.geo)?.label ?? COUNTRIES.find(c => c.v === x.geo)?.label
+  const m = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
+  const gdv = m(x.gdv), ask = m(x.ask), eq = m(x.equity)
+  const fmt = (v: number) => (v >= 1e6 ? `€${Math.round(v / 1e5) / 10}M` : `€${Math.round(v / 1e3)}k`)
+  return [
+    str?.label, place, stage?.label,
+    gdv ? `GDV ${fmt(gdv)}` : null, ask ? `Ask ${fmt(ask)}` : null,
+    eq === 0 ? 'No own equity' : eq ? `Own equity ${fmt(eq)}` : null,
+    PERMITS.find(p => p.v === x.permit)?.label ? `Permits: ${PERMITS.find(p => p.v === x.permit)!.label}` : null,
+  ].filter((v): v is string => !!v)
+}
+/** Where a lead started: the Meta ad page, or the chat on the main site. Older leads all came from the Meta page. */
+export const ENTRY_LABEL: Record<string, string> = { meta: 'Meta page', site: 'Main site' }
+
 export interface Numbers { cost: number; ltc: number; margin: number; equityShare: number }
 /** Total cost is what the developer needs plus what they put in. The funnel does not ask for it separately. */
 export function numbers(a: { gdv: number; ask: number; equity: number }): Numbers {

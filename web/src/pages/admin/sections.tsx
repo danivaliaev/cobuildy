@@ -4,7 +4,7 @@ import { supabase, rpc } from '../../lib/supabase'
 import { useAuth } from '../../auth'
 import { eur, when } from '../../lib/format'
 import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../../components/ui'
-import { STRATEGY } from '../../lib/funnel'
+import { ENTRY_LABEL, describeAnswers } from '../../lib/funnel'
 import { notifyChanged } from './counts'
 import { GEO, ASSET, INV_GEO, INV_ASSET, INSTRUMENT, CHANNEL, STAGE_LABEL, type InvestorReply, type Invitation, type Investor, type Project, type Role } from '../../lib/types'
 
@@ -253,16 +253,17 @@ export function Replies() {
 
 type FunnelReport = {
   steps: number[]; completed: number; cta: number; registered: number
-  campaigns: Array<{ campaign: string; started: number; contacts: number; completed: number; registered: number }>
+  campaigns: Array<{ entry: string; campaign: string; started: number; contacts: number; completed: number; registered: number }>
   leads: Array<{ id: string; at: string; name: string | null; phone: string | null; step: number; score: number | null; completed: boolean; cta: boolean; registered: boolean
-    strategy: string | null; city: string | null; geo: string | null; ask: number | null; campaign: string }>
+    answers: Record<string, unknown> | null; entry: string; campaign: string }>
 }
 const FUNNEL_STEPS = ['Opened the page', 'Project type', 'Location', 'Project stage', 'GDV', 'Capital needed', 'Own equity', 'Permits', 'Left name and phone']
 const pct = (n: number, of: number) => (of > 0 ? `${Math.round((100 * n) / of)}%` : '—')
 
 export function Funnel() {
   const [days, setDays] = useState(30)
-  const rep = useLoad(() => rpc<FunnelReport>('admin_funnel_report', { p_days: days }), [days])
+  const [entry, setEntry] = useState('')
+  const rep = useLoad(() => rpc<FunnelReport>('admin_funnel_report', { p_days: days, p_entry: entry || null }), [days, entry])
   const r = rep.data
   const opened = r?.steps[0] ?? 0
   const rows: Array<[string, number]> = r ? [
@@ -272,7 +273,9 @@ export function Funnel() {
   return (
     <section className="adm-card">
       <div className="row"><select aria-label="Period" value={days} onChange={e => setDays(+e.target.value)}>
-        <option value={7}>Last 7 days</option><option value={30}>Last 30 days</option><option value={90}>Last 90 days</option><option value={0}>All time</option></select></div>
+        <option value={7}>Last 7 days</option><option value={30}>Last 30 days</option><option value={90}>Last 90 days</option><option value={0}>All time</option></select>
+        <select aria-label="Source" value={entry} onChange={e => setEntry(e.target.value)}>
+          <option value="">All sources</option><option value="meta">Meta page</option><option value="site">Main site chat</option></select></div>
       <ErrorLine error={rep.error} />
       {r && (opened === 0 ? <Empty>Nobody opened the funnel in this period.</Empty> : <>
         <div className="scrollx"><table>
@@ -282,19 +285,19 @@ export function Funnel() {
         </table></div>
         <h3>Campaigns</h3>
         <div className="scrollx"><table>
-          <thead><tr><th>Campaign</th><th>Opened</th><th>Left contacts</th><th>Saw result</th><th>Registered</th></tr></thead>
-          <tbody>{r.campaigns.map(c => <tr key={c.campaign}><td>{c.campaign}</td><td>{c.started}</td><td>{c.contacts} ({pct(c.contacts, c.started)})</td><td>{c.completed}</td><td>{c.registered} ({pct(c.registered, c.started)})</td></tr>)}</tbody>
+          <thead><tr><th>Source</th><th>Campaign</th><th>Opened</th><th>Left contacts</th><th>Saw result</th><th>Registered</th></tr></thead>
+          <tbody>{r.campaigns.map(c => <tr key={`${c.entry}|${c.campaign}`}><td>{ENTRY_LABEL[c.entry] ?? c.entry}</td><td>{c.campaign}</td><td>{c.started}</td><td>{c.contacts} ({pct(c.contacts, c.started)})</td><td>{c.completed}</td><td>{c.registered} ({pct(c.registered, c.started)})</td></tr>)}</tbody>
         </table></div>
         <h3>Leads</h3>
         {r.leads.length === 0 ? <Empty>No leads yet.</Empty> : <div className="scrollx"><table>
-          <thead><tr><th>When</th><th>Name</th><th>Phone</th><th>Project</th><th>Score</th><th>Got to</th><th>Campaign</th><th>Account</th></tr></thead>
+          <thead><tr><th>When</th><th>Name</th><th>Phone</th><th>Project</th><th>Score</th><th>Got to</th><th>Source</th><th>Campaign</th><th>Account</th></tr></thead>
           <tbody>{r.leads.map(l => (
             <tr key={l.id}>
               <td>{when(l.at)}</td><td>{l.name ?? '—'}</td><td>{l.phone ? <a href={`tel:${l.phone.replace(/[^+0-9]/g, '')}`}>{l.phone}</a> : '—'}</td>
-              <td>{[STRATEGY.find(x => x.v === l.strategy)?.label, l.city ?? GEO[l.geo ?? ''], l.ask ? `ask ${eur(l.ask)}` : null].filter(Boolean).join(' · ') || '—'}</td>
+              <td>{describeAnswers(l.answers).join(' · ') || '—'}</td>
               <td>{l.score ?? '—'}</td>
               <td>{l.cta ? 'Pressed Unlock' : l.completed ? 'Saw result' : l.step >= 8 ? 'Left contacts' : `Question ${l.step}`}</td>
-              <td>{l.campaign}</td><td>{l.registered ? <Pill tone="good">yes</Pill> : <Pill>no</Pill>}</td>
+              <td>{ENTRY_LABEL[l.entry] ?? l.entry}</td><td>{l.campaign}</td><td>{l.registered ? <Pill tone="good">yes</Pill> : <Pill>no</Pill>}</td>
             </tr>))}</tbody>
         </table></div>}
       </>)}

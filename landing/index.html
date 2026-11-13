@@ -715,7 +715,7 @@ function labelOf(k,v){
 /* ---------- the visitor's session: answers, name and phone are saved the same way as in the ad funnel ---------- */
 let CONTACT=null;
 function sid(){try{const o=localStorage.getItem('cb.funnel.sid');if(o&&/^[0-9a-f-]{36}$/.test(o))return o;const n=crypto.randomUUID();localStorage.setItem('cb.funnel.sid',n);return n}catch(e){return window.__sid||(window.__sid=crypto.randomUUID())}}
-function trafficSrc(){const q=new URLSearchParams(location.search),o={};['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k=>{const v=q.get(k);if(v)o[k]=v.slice(0,120)});if(q.get('fbclid'))o.fbclid='1';
+function trafficSrc(){const q=new URLSearchParams(location.search),o={entry:'site'};['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k=>{const v=q.get(k);if(v)o[k]=v.slice(0,120)});if(q.get('fbclid'))o.fbclid='1';
   try{const h=document.referrer?new URL(document.referrer).hostname:'';if(h&&h!==location.hostname)o.referrer=h.slice(0,120)}catch(e){}return o}
 const devAnswers=()=>{const a=ST.dev.a;return {strategy:a.strategy,geo:a.geo,city:a.city,stage:a.fstage,gdv:a.gdv,ask:a.ask,equity:a.equity,permit:a.permit}};
 function saveStep(n){rpc('funnel_save',{p_id:sid(),p_step:n,p_answers:devAnswers(),p_source:trafficSrc()})}

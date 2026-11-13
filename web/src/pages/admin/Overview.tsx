@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom'
 import { supabase, rpc } from '../../lib/supabase'
-import { eur, when } from '../../lib/format'
+import { when } from '../../lib/format'
 import { Empty, ErrorLine, Pill, useLoad } from '../../components/ui'
 import { STAGE_LABEL, type DealStage, type ProjectStatus } from '../../lib/types'
-import { STRATEGY } from '../../lib/funnel'
+import { ENTRY_LABEL, describeAnswers } from '../../lib/funnel'
 import { Kpi, PageHead, num } from './ui'
 import { useCounts } from './counts'
 
-type Report = { steps: number[]; registered: number; completed: number; leads: Array<{ id: string; at: string; name: string | null; phone: string | null; registered: boolean; step: number; strategy: string | null; city: string | null; ask: number | null; campaign: string }> }
+type Report = { steps: number[]; registered: number; completed: number; leads: Array<{ id: string; at: string; name: string | null; phone: string | null; registered: boolean; step: number; answers: Record<string, unknown> | null; entry: string; campaign: string }> }
 const STATUS: Record<ProjectStatus, string> = { draft: 'Draft', teaser_review: 'Teaser in review', approved: 'Approved', live: 'Live', closed_won: 'Closed, funded', closed_lost: 'Closed, lost', discarded: 'Discarded' }
 
 export function Overview() {
@@ -89,11 +89,11 @@ export function Overview() {
           <div className="row"><h2 className="sp">Latest leads</h2><Link to="/admin/funnel">All leads →</Link></div>
           {!d?.funnel || d.funnel.leads.length === 0 ? <Empty>No leads in the last 7 days.</Empty> : (
             <div className="scrollx"><table>
-              <thead><tr><th>When</th><th>Name</th><th>Phone</th><th>Project</th><th>Campaign</th><th>Account</th></tr></thead>
+              <thead><tr><th>When</th><th>Name</th><th>Phone</th><th>Project</th><th>Source</th><th>Campaign</th><th>Account</th></tr></thead>
               <tbody>{d.funnel.leads.slice(0, 6).map(l => (
                 <tr key={l.id}><td>{when(l.at)}</td><td>{l.name ?? '—'}</td><td>{l.phone ? <a href={`tel:${l.phone.replace(/[^+0-9]/g, '')}`}>{l.phone}</a> : '—'}</td>
-                  <td>{[STRATEGY.find(x => x.v === l.strategy)?.label, l.city, l.ask ? `ask ${eur(l.ask)}` : null].filter(Boolean).join(' · ') || '—'}</td>
-                  <td>{l.campaign}</td><td>{l.registered ? <Pill tone="good">yes</Pill> : <Pill>no</Pill>}</td></tr>))}</tbody>
+                  <td>{describeAnswers(l.answers).join(' · ') || '—'}</td>
+                  <td>{ENTRY_LABEL[l.entry] ?? l.entry}</td><td>{l.campaign}</td><td>{l.registered ? <Pill tone="good">yes</Pill> : <Pill>no</Pill>}</td></tr>))}</tbody>
             </table></div>
           )}
         </section>

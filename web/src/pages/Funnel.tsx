@@ -50,7 +50,7 @@ export function Funnel() {
     document.title = 'Is your project ready for financing? · Cobuildy'
     const m = document.createElement('meta'); m.name = 'robots'; m.content = 'noindex'; document.head.appendChild(m)
     initPixel()
-    void save(sid, { step: 0, source: trafficSource() })
+    void save(sid, { step: 0, source: { ...trafficSource(), entry: 'meta' } })
     void loadPlaces().then(setPlaces, () => setPlaces(null))
     void supabase.rpc('funnel_stats').then(({ data }) => { const n = (data as { investors?: number } | null)?.investors; if (typeof n === 'number' && n > 0) setInvestors(n) })
     return () => { m.remove() }

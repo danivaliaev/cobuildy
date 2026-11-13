@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { complete, numbers, parseMoney, score, toCarry, verdict, compatibility } from './funnel'
+import { describeAnswers, ENTRY_LABEL, complete, numbers, parseMoney, score, toCarry, verdict, compatibility } from './funnel'
 import { devUpdates } from './carry'
 
 describe('parseMoney with a unit', () => {
@@ -114,5 +114,17 @@ describe('funnel tracking helpers', () => {
   it('the carry holds the session, so the account can claim it', () => {
     const c = toCarry({ strategy: 'land', geo: 'BCN', stage: 'licensed', gdv: 1e7, ask: 5e6, equity: 2e6, permit: 'granted' }, 90, { sid: 's1', name: 'Ana', phone: '+34 600 123 456' })
     expect(c.sid).toBe('s1'); expect(c.name).toBe('Ana')
+  })
+})
+
+describe('describeAnswers', () => {
+  it('lists every answer in plain words', () => {
+    expect(describeAnswers({ strategy: 'land', geo: 'BCN', city: 'Sant Cugat del Vallès, Barcelona', stage: 'purchased', gdv: 12e6, ask: 3.3e6, equity: 0, permit: 'submitted' })).toEqual([
+      'Land development', 'Sant Cugat del Vallès, Barcelona', 'Land purchased', 'GDV €12M', 'Ask €3.3M', 'No own equity', 'Permits: Application submitted'])
+  })
+  it('shows only what was answered, and handles an empty lead', () => {
+    expect(describeAnswers({ strategy: 'wip', geo: 'CS' })).toEqual(['Work in progress', 'Costa del Sol'])
+    expect(describeAnswers(null)).toEqual([])
+    expect(ENTRY_LABEL.meta).toBe('Meta page')
   })
 })
