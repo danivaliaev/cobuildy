@@ -83,6 +83,8 @@ const GEO_WORDS: Array<[RegExp, string]> = [
   [/barcelona|sitges|girona|catalonia|catalu/i, 'BCN'], [/madrid/i, 'MAD'], [/valencia|alicante|denia/i, 'VLC'],
   [/mallorca|ibiza|palma|menorca|tenerife|canar|balear/i, 'ISL'], [/lisbon|lisboa|cascais|sintra/i, 'LIS'],
   [/porto|oporto/i, 'OPO'], [/algarve|faro|lagos|albufeira|vilamoura/i, 'ALG'],
+  // a place the list does not know, followed by its country
+  [/,\s*spain$/i, 'XES'], [/,\s*portugal$/i, 'XPT'], [/,\s*other country$/i, 'XX'],
 ]
 export const geoCode = (t: string): string | null => GEO_WORDS.find(([re]) => re.test(t))?.[1] ?? null
 const round = (n: number, d: number) => Math.round(n * 10 ** d) / 10 ** d

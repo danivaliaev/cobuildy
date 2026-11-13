@@ -60,3 +60,16 @@ describe('carry into the account', () => {
     expect(u.find(x => x.key === 'l_own')!.status).toBe('partial'); expect(u.find(x => x.key === 'p_status')!.display).toMatch(/not yet submitted/i)
   })
 })
+
+import { geoCode } from './profile'
+describe('typed place', () => {
+  it('known towns resolve to a region, unknown ones need a country', () => {
+    expect(geoCode('Marbella')).toBe('CS'); expect(geoCode('Sitges')).toBe('BCN'); expect(geoCode('Sevilla')).toBeNull()
+    expect(geoCode('Sevilla, Spain')).toBe('XES'); expect(geoCode('Braga, Portugal')).toBe('XPT'); expect(geoCode('Paris, other country')).toBe('XX')
+  })
+  it('the typed place becomes the project location in the account', () => {
+    const u = devUpdates({ geo: 'XES', city: 'Sevilla, Spain' })
+    expect(u.find(x => x.key === 'a_loc')!.display).toBe('Sevilla, Spain')
+    expect(devUpdates({ geo: 'BCN' }).find(x => x.key === 'a_loc')!.display).toBe('Barcelona')
+  })
+})

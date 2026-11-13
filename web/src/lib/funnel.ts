@@ -35,10 +35,14 @@ export const PERMITS: Array<{ v: Permit; label: string; pts: number; license: 'g
   { v: 'notreq', label: 'Not required', pts: 25, license: 'granted' },
 ]
 /** Regions offered as answers to "Where is your project located?" */
-export const REGIONS = ['CS', 'BCN', 'MAD', 'VLC', 'ISL', 'LIS', 'OPO', 'ALG', 'XES', 'XPT'].map(v => ({ v, label: GEO[v] }))
+export const REGIONS = ['CS', 'BCN', 'MAD', 'VLC', 'ISL', 'LIS', 'OPO', 'ALG'].map(v => ({ v, label: GEO[v] }))
+/** Asked only when the typed place is not one the platform knows. */
+export const COUNTRIES = [{ v: 'XES', label: 'Spain' }, { v: 'XPT', label: 'Portugal' }, { v: 'XX', label: 'Other country' }]
+export const cleanCity = (t: string) => t.replace(/\s+/g, ' ').trim().slice(0, 80)
 
-export interface Answers { strategy?: Strategy; geo?: string; stage?: string; gdv?: number; ask?: number; equity?: number; permit?: Permit }
-export const complete = (a: Answers): a is Required<Answers> =>
+export interface Answers { strategy?: Strategy; geo?: string; city?: string; stage?: string; gdv?: number; ask?: number; equity?: number; permit?: Permit }
+export type Complete = Required<Omit<Answers, 'city'>> & { city?: string }
+export const complete = (a: Answers): a is Complete =>
   !!(a.strategy && a.geo && a.stage && a.gdv && a.ask && a.equity != null && a.permit)
 
 /** "4.5M", "€4,500,000", "750k", "1.2 m", "2 000 000" → euros. Returns null when it is not a usable amount. */
@@ -68,7 +72,7 @@ export function numbers(a: { gdv: number; ask: number; equity: number }): Number
 }
 
 /** 0–100: progress of the project (25), permits (25), the developer's own equity (25), profit on cost (25). */
-export function score(a: Required<Answers>): { total: number; parts: { stage: number; permits: number; equity: number; margin: number } } {
+export function score(a: Complete): { total: number; parts: { stage: number; permits: number; equity: number; margin: number } } {
   const n = numbers(a)
   const stage = STAGES[a.strategy].find(s => s.v === a.stage)?.pts ?? 0
   const permits = PERMITS.find(p => p.v === a.permit)?.pts ?? 0
@@ -93,11 +97,11 @@ export function compatibility(m: Matches): string {
 const PERMIT_STAGE: Record<Permit, string> = { granted: 'granted', submitted: 'submitted', process: 'prep', none: 'none', notreq: 'notreq' }
 
 /** What the account gets once the visitor registers: the same shape the landing agent saves. */
-export function toCarry(a: Required<Answers>, total: number) {
+export function toCarry(a: Complete, total: number) {
   const n = numbers(a)
   return {
     role: 'dev' as const, ts: Date.now(),
-    dev: { geo: a.geo, strategy: a.strategy, fstage: a.stage, gdv: a.gdv, ask: a.ask, equity: a.equity, cost: n.cost, stage: PERMIT_STAGE[a.permit], score: total },
+    dev: { geo: a.geo, city: a.city, strategy: a.strategy, fstage: a.stage, gdv: a.gdv, ask: a.ask, equity: a.equity, cost: n.cost, stage: PERMIT_STAGE[a.permit], score: total },
   }
 }
 

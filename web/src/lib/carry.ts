@@ -8,7 +8,7 @@ import { STAGES, STRATEGY, type Strategy } from './funnel'
 export const CARRY_KEY = 'cb.carry.v1'
 const MAX_AGE = 30 * 864e5
 
-interface DevA { geo?: string; as?: string; stage?: string; cost?: number; ask?: number; ins?: string; strategy?: string; fstage?: string; gdv?: number; equity?: number; score?: number }
+interface DevA { geo?: string; city?: string; as?: string; stage?: string; cost?: number; ask?: number; ins?: string; strategy?: string; fstage?: string; gdv?: number; equity?: number; score?: number }
 interface InvA { geo?: string[]; ins?: string; tk?: string; as?: string; lic?: number }
 export interface Carry { role?: 'dev' | 'inv'; dev?: DevA; inv?: InvA; ts?: number }
 
@@ -53,7 +53,7 @@ const strategyLabel = (v?: string) => STRATEGY.find(x => x.v === v)?.label
 export function devUpdates(a: DevA): Update[] {
   const u: Update[] = []
   if (a.as && ASSET_TEXT[a.as]) u.push({ key: 'a_type', status: 'filled', display: ASSET_TEXT[a.as] })
-  if (a.geo && GEO[a.geo]) u.push({ key: 'a_loc', status: 'filled', display: GEO[a.geo] })
+  if (a.geo && GEO[a.geo]) u.push({ key: 'a_loc', status: 'filled', display: a.city && /^[^<>]{1,80}$/.test(a.city) ? a.city : GEO[a.geo] })
   if (a.stage && STAGE_TEXT[a.stage]) u.push({ key: 'p_status', status: a.stage === 'granted' || a.stage === 'build' || a.stage === 'notreq' ? 'filled' : 'partial', display: STAGE_TEXT[a.stage] })
   const cost = num(a.cost); if (cost) u.push({ key: 'f_cost', status: 'filled', display: eur(cost), amount: cost })
   const gdv = num(a.gdv); if (gdv) u.push({ key: 'f_gdv', status: 'filled', display: eur(gdv), amount: gdv })
@@ -72,7 +72,7 @@ async function importDeveloper(userId: string, a: DevA) {
   if (existing && existing.length) return // never touch an account that already has projects
   const { data: co } = await supabase.from('companies').select('id').eq('owner_id', userId).maybeSingle()
   const { next } = applyUpdates(emptyFields(), updates, 'site')
-  const title = [a.as ? ASSET_TEXT[a.as] : strategyLabel(a.strategy) ?? 'My project', a.geo ? GEO[a.geo] : ''].filter(Boolean).join(' · ').slice(0, 120)
+  const title = [a.as ? ASSET_TEXT[a.as] : strategyLabel(a.strategy) ?? 'My project', a.geo ? (a.city ?? GEO[a.geo]) : ''].filter(Boolean).join(' · ').slice(0, 120)
   const { data: p, error } = await supabase.from('projects').insert({ title, owner_id: userId, company_id: co?.id ?? null, status: 'draft' }).select('id,profile').single()
   if (error || !p) return
   await supabase.from('projects').update(patchFor({ profile: (p.profile as Record<string, unknown> | null) ?? null }, next)).eq('id', p.id)

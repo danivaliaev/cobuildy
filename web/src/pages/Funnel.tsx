@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { CARRY_KEY } from '../lib/carry'
 import { eur } from '../lib/format'
+import { geoCode } from '../lib/profile'
 import {
-  PERMITS, REGIONS, STAGES, STRATEGY, compatibility, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdict,
-  type Answers, type Matches, type Strategy, type Unit,
+  COUNTRIES, PERMITS, REGIONS, STAGES, cleanCity, STRATEGY, compatibility, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdict,
+  type Answers, type Complete, type Matches, type Strategy, type Unit,
 } from '../lib/funnel'
 
 type Step = 'strategy' | 'geo' | 'stage' | 'gdv' | 'ask' | 'equity' | 'permit'
@@ -28,6 +29,7 @@ export function Funnel() {
   const [text, setText] = useState('')
   const [bad, setBad] = useState(false)
   const [unit, setUnit] = useState<Unit>('m')
+  const [pending, setPending] = useState<string | null>(null) // a typed place we could not place in a region yet
   const [phase, setPhase] = useState<'ask' | 'think' | 'result'>('ask')
   const [shown, setShown] = useState(0)
   const [matches, setMatches] = useState<Matches | null>(null)
@@ -48,7 +50,7 @@ export function Funnel() {
   const label = (s: Step): string | null => {
     switch (s) {
       case 'strategy': return STRATEGY.find(x => x.v === a.strategy)?.label ?? null
-      case 'geo': return a.geo ? REGIONS.find(x => x.v === a.geo)?.label ?? null : null
+      case 'geo': return a.city ?? (a.geo ? REGIONS.find(x => x.v === a.geo)?.label ?? null : null)
       case 'stage': return stages.find(x => x.v === a.stage)?.label ?? null
       case 'gdv': return a.gdv ? eur(a.gdv) : null
       case 'ask': return a.ask ? eur(a.ask) : null
@@ -61,14 +63,14 @@ export function Funnel() {
     const merged = { ...a, ...patch }
     // a different project type has different stages, so the old stage no longer applies
     if (patch.strategy && patch.strategy !== a.strategy) delete merged.stage
-    setA(merged); setText(''); setBad(false); setUnit('m')
+    setA(merged); setText(''); setBad(false); setUnit('m'); setPending(null)
     track('FunnelAnswered', true, { step: step, n: i + 1 })
     if (i < STEPS.length - 1) { setI(i + 1); return }
     if (complete(merged)) finish(merged)
   }
   function back() { if (i > 0 && phase === 'ask') { setI(i - 1); setText(''); setBad(false) } }
 
-  function finish(done: Required<Answers>) {
+  function finish(done: Complete) {
     const n = numbers(done)
     const sc = score(done)
     const lic = PERMITS.find(p => p.v === done.permit)!.license
@@ -81,6 +83,14 @@ export function Funnel() {
     void Promise.all([wait, call]).then(([, m]) => { window.clearInterval(timer); setMatches(m); setPhase('result'); track('FunnelCompleted', true, { score: sc.total }) })
   }
 
+  function submitCity(e: FormEvent) {
+    e.preventDefault()
+    const city = cleanCity(text)
+    if (city.length < 2) return setBad(true)
+    const geo = geoCode(city)
+    if (geo) next({ geo, city })
+    else setPending(city)
+  }
   function submitMoney(e: FormEvent) {
     e.preventDefault()
     const v = parseMoney(text, step === 'equity', unit)
@@ -121,12 +131,29 @@ export function Funnel() {
 
           {phase === 'ask' && (
             <div className="fn-input">
-              {(step === 'strategy' || step === 'geo' || step === 'stage' || step === 'permit') && (
+              {(step === 'strategy' || (step === 'geo' && !pending) || step === 'stage' || step === 'permit') && (
                 <div className="fn-chips" role="group" aria-label={QUESTION[step]}>
                   {step === 'strategy' && STRATEGY.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ strategy: o.v as Strategy })}>{o.label}</button>)}
-                  {step === 'geo' && REGIONS.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ geo: o.v })}>{o.label}</button>)}
+                  {step === 'geo' && REGIONS.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ geo: o.v, city: undefined })}>{o.label}</button>)}
                   {step === 'stage' && stages.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ stage: o.v })}>{o.label}</button>)}
                   {step === 'permit' && PERMITS.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ permit: o.v })}>{o.label}</button>)}
+                </div>
+              )}
+              {step === 'geo' && !pending && (
+                <form className="fn-money" onSubmit={submitCity}>
+                  <input autoComplete="off" autoCapitalize="words" aria-label="Type your city or town" placeholder="Or type the city or town" maxLength={80} value={text}
+                    onChange={e => { setText(e.target.value); setBad(false) }} aria-invalid={bad} />
+                  <button className="fn-go" type="submit" disabled={cleanCity(text).length < 2}>Next</button>
+                  {bad && <span className="fn-bad" role="alert">Enter the name of the city or town.</span>}
+                </form>
+              )}
+              {step === 'geo' && pending && (
+                <div className="fn-input">
+                  <div className="fn-q">Which country is {pending} in?</div>
+                  <div className="fn-chips" role="group" aria-label="Country">
+                    {COUNTRIES.map(c => <button key={c.v} className="fn-chip" onClick={() => next({ geo: c.v, city: c.v === 'XX' ? `${pending}, other country` : `${pending}, ${c.label}` })}>{c.label}</button>)}
+                  </div>
+                  <button type="button" className="fn-link" onClick={() => { setPending(null); setText(pending) }}>← Change the place</button>
                 </div>
               )}
               {(step === 'gdv' || step === 'ask' || step === 'equity') && (
