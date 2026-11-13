@@ -46,7 +46,7 @@ Hosting: Cloudflare Workers (static assets, see web/wrangler.jsonc) or Vercel, r
 
 ## AI agent (project chat)
 
-The project page is a guided profile: a chat, the profile it fills (30 fields in 8 sections) and a readiness panel. The field model (questions, answer options, gates, weights) lives in `web/src/lib/fields.json`. After changing it run `node scripts/sync-agent-fields.mjs` and redeploy the function.
+The project page is a guided profile: a chat, the profile it fills (31 fields in 8 sections) and a readiness panel. The field model (questions, answer options, gates, weights) lives in `web/src/lib/fields.json`. After changing it run `node scripts/sync-agent-fields.mjs` and redeploy the function.
 
 Answers are saved straight away (`profile` jsonb plus the matching columns, `stage` and `readiness`) and every answer can be undone. Suggested answers are saved without calling the model. Free text goes to `supabase/functions/agent-chat`, which runs with the caller's JWT, asks the Anthropic API which fields the text answers and returns validated updates; it never writes to the database. Usage is logged in `agent_calls` (`AGENT_DAILY_LIMIT`, default 300).
 

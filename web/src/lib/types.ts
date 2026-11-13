@@ -14,7 +14,7 @@ export interface Company {
 }
 export interface Project {
   id: string; code: string; company_id: string | null; owner_id: string; title: string; status: ProjectStatus
-  geo: string | null; city: string | null; asset: string | null; instrument: string[]
+  geo: string | null; city: string | null; asset: string | null; strategy: 'land' | 'wip' | 'refurb' | 'acq' | null; instrument: string[]
   ask_eur: number | null; cost_eur: number | null; gdv_eur: number | null; ltc: number | null; margin: number | null
   license: 'none' | 'submitted' | 'granted' | null; presales: number | null; units: number | null
   build_months: number | null; term_months: number | null; expected_return: number | null

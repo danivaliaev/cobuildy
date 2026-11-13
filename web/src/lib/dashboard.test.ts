@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { view, attention, totals, reply, activity } from './dashboard'
 import type { Project, ProjectDeal } from './types'
 
-const proj = (o: Partial<Project> = {}): Project => ({ id: 'p1', code: 'P-001', company_id: null, owner_id: 'u', title: 'Alba', status: 'draft', geo: null, city: null, asset: null, instrument: [], ask_eur: 5e6,
+const proj = (o: Partial<Project> = {}): Project => ({ id: 'p1', code: 'P-001', company_id: null, owner_id: 'u', title: 'Alba', status: 'draft', geo: null, city: null, asset: null, strategy: null, instrument: [], ask_eur: 5e6,
   cost_eur: null, gdv_eur: null, ltc: null, margin: null, license: null, presales: null, units: null, build_months: null, term_months: null, expected_return: null, readiness: 0, stage: 0, profile: null, ...o })
 const deal = (stage: ProjectDeal['stage']): ProjectDeal => ({ deal_id: 'd' + stage, investor_code: 'I-1', investor_kind: 'fund', stage, reason: null, investor_name: null, call_slot: null })
 

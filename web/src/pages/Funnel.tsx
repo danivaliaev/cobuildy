@@ -21,7 +21,7 @@ const QUESTION: Record<Step, string> = {
   stage: 'What is the current project stage?',
   gdv: 'What is the estimated Gross Development Value (GDV)?',
   ask: 'How much capital do you need?',
-  equity: 'How much equity can you contribute?',
+  equity: 'How much of your own capital goes in, including the land?',
   permit: 'Do you have the necessary permits?',
 }
 

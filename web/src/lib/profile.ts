@@ -2,7 +2,7 @@ import data from './fields.json'
 import { eur } from './format'
 import type { Project } from './types'
 
-/** The guided project profile: 30 fields in 8 sections, ported from the prototype. Single source: fields.json. */
+/** The guided project profile: 31 fields in 8 sections, ported from the prototype. Single source: fields.json. */
 export type Status = 'empty' | 'filled' | 'partial' | 'unknown'
 export interface FieldState { st: Status; v: string; n: number | null; src: '' | 'chat' | 'edit' | 'form' | 'site' }
 export type Fields = Record<string, FieldState>
@@ -110,6 +110,14 @@ export function assetCode(v: string): string | null {
   if (/residential|apartment|villa|house|flat/i.test(v)) return 'RES'
   return null
 }
+/** What the developer is doing with the project: land development, work in progress, refurbishment, acquisition. */
+export function strategyCode(v: string): 'land' | 'wip' | 'refurb' | 'acq' | null {
+  if (/land/i.test(v)) return 'land'
+  if (/progress|construction|under way|underway/i.test(v)) return 'wip'
+  if (/refurb|renovat/i.test(v)) return 'refurb'
+  if (/acqui|buy|purchase/i.test(v)) return 'acq'
+  return null
+}
 export function instrumentCodes(v: string): string[] {
   const out: string[] = []
   if (/senior|loan|debt/i.test(v)) out.push('senior')
@@ -142,6 +150,7 @@ export function columnsFor(f: Fields) {
   const loc = done('a_loc') ? s('a_loc').v : ''
   const units = done('a_units') ? firstInt(s('a_units').v) : null
   return {
+    strategy: done('a_strategy') ? strategyCode(s('a_strategy').v) : null,
     asset: done('a_type') ? assetCode(s('a_type').v) : null,
     geo: loc ? geoCode(loc) : null,
     city: loc ? loc.split(',')[0].trim().slice(0, 80) || null : null,
