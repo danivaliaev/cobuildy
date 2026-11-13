@@ -51,7 +51,7 @@ export function App() {
   const { loading, session, profile } = useAuth()
   if (!configured) return <div className="login"><div className="card"><h2>Configuration missing</h2><p className="muted">Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY. See web/.env.example.</p></div></div>
   // The ad funnel is public and has no menu, so nothing pulls the visitor away from the questions.
-  if (window.location.pathname === '/start') return <Funnel />
+  if (/^\/(meta|start)\/?$/.test(window.location.pathname)) return <Funnel />
   if (loading) return <div className="login"><span className="muted">Loading…</span></div>
   if (!session) return <SignedOut />
   if (!profile) return <Onboarding />
