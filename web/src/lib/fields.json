@@ -221,47 +221,97 @@
     {
       "key": "a_units",
       "section": "asset",
-      "label": "Units and area",
+      "label": "Number of units",
       "gate": 1,
       "weight": 1,
       "kind": "text",
-      "question": "How many units, and what total saleable area?",
-      "why": "Cost and revenue per m² are checked against this.",
+      "question": "How many units are you building?",
+      "why": "Cost and revenue per unit are checked against this.",
       "chips": [
         {
-          "label": "12 apartments · ~1,250 m²",
-          "value": "12 apartments · ~1,250 m²",
+          "label": "12 apartments",
+          "value": "12 apartments",
           "partial": false,
           "unknown": false
         },
         {
-          "label": "8 villas · ~1,600 m²",
-          "value": "8 villas · ~1,600 m²",
+          "label": "8 villas",
+          "value": "8 villas",
           "partial": false,
           "unknown": false
         }
       ],
-      "task": "Confirm unit count and saleable area from the design"
+      "task": "Confirm the unit count from the design"
     },
     {
-      "key": "a_mix",
+      "key": "a_area",
       "section": "asset",
-      "label": "Unit mix and target prices",
+      "label": "Saleable area",
       "gate": 2,
       "weight": 1,
       "kind": "text",
-      "question": "What is the unit mix and the target price per m²?",
-      "why": "Investors test your prices against local comparables.",
+      "question": "What is the total saleable area?",
+      "why": "Cost and revenue per m² are checked against this.",
       "chips": [
         {
-          "label": "2–3 bed apartments · ~€5,200/m²",
-          "value": "2–3 bed apartments · ~€5,200/m²",
+          "label": "~1,250 m²",
+          "value": "~1,250 m²",
           "partial": false,
           "unknown": false
         },
         {
-          "label": "Penthouses + 2 bed · ~€6,400/m²",
-          "value": "Penthouses + 2 bed · ~€6,400/m²",
+          "label": "~1,600 m²",
+          "value": "~1,600 m²",
+          "partial": false,
+          "unknown": false
+        }
+      ],
+      "task": "Confirm the saleable area from the design"
+    },
+    {
+      "key": "a_mix",
+      "section": "asset",
+      "label": "Unit mix",
+      "gate": 2,
+      "weight": 1,
+      "kind": "text",
+      "question": "What is the unit mix?",
+      "why": "Investors test the product against local demand.",
+      "chips": [
+        {
+          "label": "2–3 bed apartments",
+          "value": "2–3 bed apartments",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Penthouses + 2 bed",
+          "value": "Penthouses + 2 bed",
+          "partial": false,
+          "unknown": false
+        }
+      ],
+      "task": "Document the unit mix by type and size"
+    },
+    {
+      "key": "a_price",
+      "section": "asset",
+      "label": "Target price per m²",
+      "gate": 2,
+      "weight": 1,
+      "kind": "text",
+      "question": "What is the target price per m²?",
+      "why": "Investors test your prices against local comparables.",
+      "chips": [
+        {
+          "label": "~€5,200/m²",
+          "value": "~€5,200/m²",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "~€6,400/m²",
+          "value": "~€6,400/m²",
           "partial": false,
           "unknown": false
         }
@@ -308,7 +358,7 @@
       "gate": 2,
       "weight": 1,
       "kind": "money",
-      "question": "What did the land cost, or what will it cost?",
+      "question": "How much does the land cost?",
       "why": "Land is usually the first number a lender compares with the valuation.",
       "chips": [
         {
@@ -328,7 +378,7 @@
       "gate": 2,
       "weight": 2,
       "kind": "text",
-      "question": "Do you have a recent nota simple, and is the land free of charges?",
+      "question": "Is the land free of charges, such as a mortgage?",
       "why": "A lender’s lawyer checks this first. A mortgage or lien changes who ranks first.",
       "chips": [
         {
@@ -412,19 +462,19 @@
       "gate": 2,
       "weight": 2,
       "kind": "text",
-      "question": "How many projects have you delivered, and what size?",
+      "question": "How many projects have you delivered?",
       "why": "First-time sponsors usually need a stronger team or more equity.",
       "chips": [
         {
-          "label": "6 projects · €28M delivered",
-          "value": "6 projects · €28M delivered",
+          "label": "6 projects delivered",
+          "value": "6 projects delivered",
           "partial": false,
           "unknown": false,
           "note": "A delivered track record is one of the strongest items in a lender’s file."
         },
         {
-          "label": "2 projects · €6M delivered",
-          "value": "2 projects · €6M delivered",
+          "label": "2 projects delivered",
+          "value": "2 projects delivered",
           "partial": false,
           "unknown": false
         },
@@ -447,7 +497,7 @@
       "gate": 3,
       "weight": 1,
       "kind": "text",
-      "question": "Who is on the team: architect, project manager, contractor?",
+      "question": "Who is on your core team?",
       "why": "Data room reviewers want names, roles and licences.",
       "chips": [
         {
@@ -541,7 +591,7 @@
       "gate": 2,
       "weight": 2,
       "kind": "text",
-      "question": "Do you have a line-by-line cost budget with a contingency?",
+      "question": "Do you have a line-by-line cost budget?",
       "why": "Lenders review the budget and the contingency before anything else.",
       "chips": [
         {
@@ -572,11 +622,11 @@
     {
       "key": "f_model",
       "section": "fin",
-      "label": "Financial model and sensitivities",
+      "label": "Financial model",
       "gate": 3,
       "weight": 1,
       "kind": "text",
-      "question": "Do you have a financial model with price and cost sensitivities?",
+      "question": "Do you have a financial model?",
       "why": "Shows how the deal behaves if prices or costs move.",
       "chips": [
         {
@@ -674,7 +724,7 @@
       "gate": 3,
       "weight": 1,
       "kind": "text",
-      "question": "Are utilities, taxes (ICIO) and other approvals confirmed?",
+      "question": "Are all other approvals confirmed, such as utilities and the ICIO tax?",
       "why": "Data room reviewers check that nothing else can stop the build.",
       "chips": [
         {
@@ -797,16 +847,16 @@
     {
       "key": "c_ins",
       "section": "build",
-      "label": "Insurance and supervision",
+      "label": "Decennial insurance",
       "gate": 3,
       "weight": 1,
       "kind": "text",
-      "question": "Are decennial insurance and technical supervision arranged?",
+      "question": "Is decennial insurance arranged?",
       "why": "Required in Spain for new residential. Lenders ask for proof.",
       "chips": [
         {
-          "label": "Both arranged",
-          "value": "Decennial insurance and supervision arranged",
+          "label": "Yes, arranged",
+          "value": "Decennial insurance arranged",
           "partial": false,
           "unknown": false
         },
@@ -815,10 +865,10 @@
           "value": "Not arranged",
           "partial": true,
           "unknown": false,
-          "task": "Arrange decennial insurance and a technical supervisor"
+          "task": "Arrange decennial insurance"
         }
       ],
-      "task": "Arrange decennial insurance and technical supervision"
+      "task": "Arrange decennial insurance"
     },
     {
       "key": "k_ask",
@@ -916,16 +966,16 @@
     {
       "key": "k_repay",
       "section": "cap",
-      "label": "Repayment and security",
+      "label": "Repayment",
       "gate": 2,
       "weight": 1,
       "kind": "text",
-      "question": "How will the loan be repaid, and what security can you offer?",
-      "why": "Defines what the lender can fall back on.",
+      "question": "How will the loan be repaid?",
+      "why": "Shows the lender where the money comes back from.",
       "chips": [
         {
-          "label": "Unit sales + first mortgage on the land",
-          "value": "Unit sales proceeds + first mortgage on the land",
+          "label": "Unit sales",
+          "value": "Unit sales proceeds",
           "partial": false,
           "unknown": false
         },
@@ -940,10 +990,42 @@
           "value": "Not defined",
           "partial": true,
           "unknown": false,
-          "task": "Define the repayment waterfall and security package"
+          "task": "Define the repayment waterfall"
         }
       ],
-      "task": "Define the repayment waterfall and security package"
+      "task": "Define the repayment waterfall"
+    },
+    {
+      "key": "k_security",
+      "section": "cap",
+      "label": "Security offered",
+      "gate": 2,
+      "weight": 1,
+      "kind": "text",
+      "question": "What security can you offer?",
+      "why": "Defines what the lender can fall back on.",
+      "chips": [
+        {
+          "label": "First mortgage on the land",
+          "value": "First mortgage on the land",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Mortgage and sponsor guarantee",
+          "value": "Mortgage and sponsor guarantee",
+          "partial": false,
+          "unknown": false
+        },
+        {
+          "label": "Not defined",
+          "value": "Not defined",
+          "partial": true,
+          "unknown": false,
+          "task": "Define the security package"
+        }
+      ],
+      "task": "Define the security package"
     },
     {
       "key": "e_strategy",
@@ -952,7 +1034,7 @@
       "gate": 1,
       "weight": 2,
       "kind": "text",
-      "question": "How will you exit: who buys, and when?",
+      "question": "How will you exit: who will buy?",
       "why": "Lenders are repaid from the exit, so they underwrite it first.",
       "chips": [
         {

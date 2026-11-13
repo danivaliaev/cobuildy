@@ -3,8 +3,8 @@ import { FIELDS, applyUpdates, calc, columnsFor, derived, emptyFields, hydrate, 
 import type { Project } from './types'
 
 describe('profile model', () => {
-  it('has 32 fields in 8 sections, every one with a question', () => {
-    expect(FIELDS.length).toBe(32)
+  it('has 35 fields in 8 sections, every one with a question', () => {
+    expect(FIELDS.length).toBe(35)
     expect(new Set(FIELDS.map(f => f.section)).size).toBe(8)
     expect(FIELDS.every(f => f.question && f.chips.length > 0)).toBe(true)
   })
