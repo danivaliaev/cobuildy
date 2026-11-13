@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { clearWelcome, devUpdates, markFirstRun, peekWelcome } from './carry'
 import { applyUpdates, calc, columnsFor, emptyFields } from './profile'
 
@@ -20,6 +20,12 @@ describe('landing answers import', () => {
 })
 
 describe('first-run marker', () => {
+  const store = new Map<string, string>()
+  beforeEach(() => {
+    store.clear()
+    vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v), removeItem: (k: string) => void store.delete(k), clear: () => store.clear() })
+  })
+  afterEach(() => { vi.unstubAllGlobals() })
   it('a developer with no project gets a marker without a project id', () => {
     localStorage.clear()
     expect(peekWelcome()).toBeNull()
