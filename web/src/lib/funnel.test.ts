@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { readDraft, complete, numbers, parseMoney, score, toCarry, verdict, compatibility } from './funnel'
+import { complete, numbers, parseMoney, score, toCarry, verdict, compatibility } from './funnel'
 import { devUpdates } from './carry'
 
 describe('parseMoney with a unit', () => {
@@ -114,25 +114,5 @@ describe('funnel tracking helpers', () => {
   it('the carry holds the session, so the account can claim it', () => {
     const c = toCarry({ strategy: 'land', geo: 'BCN', stage: 'licensed', gdv: 1e7, ask: 5e6, equity: 2e6, permit: 'granted' }, 90, { sid: 's1', name: 'Ana', phone: '+34 600 123 456' })
     expect(c.sid).toBe('s1'); expect(c.name).toBe('Ana')
-  })
-})
-
-describe('landing draft', () => {
-  const now = 1_000_000
-  const good = { strategy: 'land', geo: 'CS', city: 'Marbella', stage: 'purchased', gdv: 6e6, ask: 2.5e6, equity: 0, permit: 'submitted' }
-  it('takes valid answers, including zero equity', () => {
-    const d = readDraft(JSON.stringify({ a: good, ts: now }), now)
-    expect(d).toEqual(good)
-    expect(complete(d!)).toBe(true)
-  })
-  it('drops a stage that does not belong to the project type and values that are not usable', () => {
-    const d = readDraft(JSON.stringify({ a: { ...good, strategy: 'wip', gdv: 12, ask: 'x', permit: 'maybe' }, ts: now }), now)
-    expect(d).toEqual({ strategy: 'wip', geo: 'CS', city: 'Marbella', equity: 0 })
-  })
-  it('ignores an old, empty or broken draft', () => {
-    expect(readDraft(JSON.stringify({ a: good, ts: now - 2 * 36e5 }), now)).toBeNull()
-    expect(readDraft(JSON.stringify({ a: {}, ts: now }), now)).toBeNull()
-    expect(readDraft('not json', now)).toBeNull()
-    expect(readDraft(null, now)).toBeNull()
   })
 })

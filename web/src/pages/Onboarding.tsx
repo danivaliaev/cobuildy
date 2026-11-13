@@ -18,6 +18,8 @@ export function Onboarding() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState<1 | 2>(1)
+  // The landing, the funnel or the sign-in link already say what the person is. Only someone who arrives with no hint is asked.
+  const roleKnown = hinted === 'investor' || hinted === 'developer' || carryRole() !== null
 
   // Someone who answered the ad funnel already said they develop a project and left their name: open the workspace straight away.
   const auto = useRef(hasFunnelCarry() && hinted !== 'investor' && carryRole() === 'developer' && name.trim().length > 1)
@@ -69,11 +71,11 @@ export function Onboarding() {
       <form className="card" onSubmit={submit}>
         <span className="mono">Cobuildy</span>
         <h1>Welcome</h1>
-        <p className="muted">Signed in as <b>{session?.user.email}</b>. Tell us who you are to open your workspace.</p>
-        <div className="row" role="radiogroup" aria-label="I am">
+        <p className="muted">Signed in as <b>{session?.user.email}</b>. {roleKnown ? 'Tell us your name to open your workspace.' : 'Tell us who you are to open your workspace.'}</p>
+        {!roleKnown && <div className="row" role="radiogroup" aria-label="I am">
           <button type="button" role="radio" aria-checked={role === 'developer'} className={`btn ${role === 'developer' ? 'pri' : ''}`} onClick={() => setRole('developer')}>I develop projects</button>
           <button type="button" role="radio" aria-checked={role === 'investor'} className={`btn ${role === 'investor' ? 'pri' : ''}`} onClick={() => setRole('investor')}>I invest or lend</button>
-        </div>
+        </div>}
         <label className="f"><span>Your name</span><input required maxLength={120} value={name} onChange={e => setName(e.target.value)} autoComplete="name" /></label>
         {role === 'developer' && <label className="f"><span>Company (optional)</span><input maxLength={160} value={company} onChange={e => setCompany(e.target.value)} autoComplete="organization" /></label>}
         <ErrorLine error={error} />

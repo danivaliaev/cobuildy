@@ -625,15 +625,15 @@ function xInv(t){const o={};const g=geosIn(t);if(g.length)o.geo=g;
 
 /* ---------- real data: the investor database answers through two public counting functions ---------- */
 const SB_H={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'};
-const rpc=(fn,body)=>fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:SB_H,body:JSON.stringify(body||{})}).then(r=>r.ok?r.json():null,()=>null);
+const rpc=(fn,body)=>fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:SB_H,body:JSON.stringify(body||{})}).then(r=>r.ok?r.text().then(t=>{try{return t?JSON.parse(t):null}catch(e){return null}}):null).catch(()=>null);
 const DEV={total:null,match:null};   /* null until the database has answered */
 async function refreshCount(){
   const a=ST.dev.a,r=await rpc('funnel_count',{p_geo:a.geo||null,p_ask:a.ask||null});
   if(r&&typeof r.total==='number'){DEV.total=r.total;DEV.match=r.match}
 }
 const STRAT=[{l:'Land development',v:'land'},{l:'Work in progress',v:'wip'},{l:'Refurbishment / Renovation',v:'refurb'}];
-const STAGES={land:[['identified','Land identified'],['reserved','Land reserved'],['purchased','Land purchased'],['licensed','Building licence granted']],wip:[['started','Construction started'],['partial','Construction partially completed'],['near','Near completion']],refurb:[['identified','Property identified'],['acquired','Property acquired'],['started','Renovation started'],['done','Renovation completed']]};
-const PERM=[{v:'granted',l:'Yes, all permits granted',lic:'granted',st:'granted'},{v:'submitted',l:'Application submitted',lic:'submitted',st:'submitted'},{v:'process',l:'In process',lic:'none',st:'prep'},{v:'none',l:'Not yet applied',lic:'none',st:'none'},{v:'notreq',l:'Not required',lic:'granted',st:'notreq'}];
+const STAGES={land:[['identified','Land identified',5],['reserved','Land reserved',12],['purchased','Land purchased',19],['licensed','Building licence granted',25]],wip:[['started','Construction started',18],['partial','Construction partially completed',22],['near','Near completion',25]],refurb:[['identified','Property identified',5],['acquired','Property acquired',14],['started','Renovation started',20],['done','Renovation completed',25]]};
+const PERM=[{v:'granted',l:'Yes, all permits granted',lic:'granted',st:'granted',pts:25},{v:'submitted',l:'Application submitted',lic:'submitted',st:'submitted',pts:17},{v:'process',l:'In process',lic:'none',st:'prep',pts:10},{v:'none',l:'Not yet applied',lic:'none',st:'none',pts:3},{v:'notreq',l:'Not required',lic:'granted',st:'notreq',pts:25}];
 const DGEO=[['CS','Costa del Sol'],['BCN','Barcelona'],['MAD','Madrid'],['VLC','Valencia'],['ISL','Balearic Islands'],['ISL','Canary Islands'],['LIS','Lisbon'],['OPO','Porto'],['ALG','Algarve'],['XES','Elsewhere in Spain'],['XPT','Elsewhere in Portugal']].map(([v,l])=>({l,v}));
 const SRX={identified:/identif|found|spotted|looking/i,reserved:/reserv|option|arras|deposit/i,purchased:/purchas|bought|own the land/i,licensed:/licen[cs]e|permit/i,started:/start|begun|under way|underway/i,partial:/partial|half|ongoing|in progress/i,near:/near|almost|final/i,acquired:/acquir|bought|purchas/i,done:/complet|finish|done/i};
 const PRX=[['notreq',/not required|no need|n\/a/i],['none',/not yet|no permit|none|haven'?t|no\b/i],['submitted',/submit|appli(ed|cation)/i],['process',/process|prepar|progress/i],['granted',/grant|yes|all permits/i]];
@@ -676,7 +676,7 @@ function score(p){return Math.min(99,68+(p.lic===2?10:p.lic===1?4:0)+(p.margin>=
 function stat(){
   const s=ST[aud];
   if(aud==='dev'){const N=DEV.total,asked=Object.keys(s.a).length>0,n=DEV.match;if(N==null)return {n:'…',N:0,full:false,sub:'investors in our network',a:100,b:0};
-    return {n:asked&&n!=null?n:N,N,full:false,sub:asked&&n!=null?`of ${N} investors still match`:'investors in our network',a:asked&&n!=null?n/N*100:100,b:0}}
+    return {n:asked&&n!=null?n:N,N,full:false,sub:asked&&n!=null?`of ${N} investors fit your project`:'investors in our network',a:asked&&n!=null?n/N*100:100,b:0}}
   const r=invPart(s.a);return {n:r.n,N:r.N,full:r.full,sub:r.full?'live projects match your mandate today':`of ${r.N} live projects still match`,a:r.full?r.n/r.N*100:0,b:r.full?0:r.n/r.N*100}
 }
 function curChips(){
@@ -695,12 +695,14 @@ function renderChat(){
   const box=$('c-msgs');box.scrollTop=box.scrollHeight;
   let h='';
   if(s.gated&&!s.done){h=`<span class="mono muted lbl">Create your free account to continue</span><div class="set"><button class="go" type="button" data-signup="${aud}" data-auto="google">Continue with Google →</button><button type="button" data-signup="${aud}">Use email instead</button><button type="button" data-act="reset">Change my answers</button></div>`}
-  else if(s.done){h=`<span class="mono muted lbl">Next step</span><div class="set">${aud==='dev'?'<button class="go" type="button" data-start="1">See my readiness score →</button>':'<button class="go" type="button" data-signup="inv">Get alerts for new matches →</button>'}<button type="button" data-act="reset">Change my answers</button></div>`}
+  else if(s.done){h=`<span class="mono muted lbl">Next step</span><div class="set">${aud==='dev'?'<button class="go" type="button" data-signup="dev" data-auto="google">Continue with Google →</button><button type="button" data-signup="dev">Use email instead</button>':'<button class="go" type="button" data-signup="inv">Get alerts for new matches →</button>'}<button type="button" data-act="reset">Change my answers</button></div>`}
+  else if(aud==='dev'&&s.contact){h=`<span class="step"><b>Last step</b>${s.contact==='name'?'Type your name below':'Type your phone below'}</span>`}
   else if(q){const c=curChips();
     h=`<span class="step"><b>${s.qi+1} / ${Qs.length}</b>${q.multi?'Tap one or more, then press Continue':'Tap your answer'}${s.qi===0?'<span class="arr" aria-hidden="true">↓</span>':''}</span><div class="set">`+c.map((x,i)=>{const on=q.multi&&s.tmp.includes(x.v);return `<button type="button" data-i="${i}" ${q.multi?`aria-pressed="${on}"`:''}>${esc(x.l)}</button>`}).join('')+
     (q.multi?`<button class="go" type="button" data-act="cont" ${s.tmp.length?'':'disabled'}>Continue →</button>`:'')+
     (q.ex?`<button class="ex" type="button" data-act="ex">Or write it in your own words</button>`:'')+'</div>'}
   $('c-chips').innerHTML=h;$('c-chips').hidden=!h;
+  $('c-in').placeholder=aud==='dev'&&s.contact==='name'?'Your name':aud==='dev'&&s.contact==='phone'?'Phone, e.g. +34 600 123 456':'Or type your answer here';
 }
 async function say(s,t,html,ms){s.typing=true;renderChat();await sleep(ms??520);s.typing=false;s.msgs.push({r:'a',t,html:!!html});renderChat()}
 function nextQ(s){const Qs=Q[aud];const i=Qs.findIndex(q=>s.a[q.k]===undefined);s.qi=i<0?Qs.length:i;return i}
@@ -710,9 +712,45 @@ function labelOf(k,v){
   if(k==='strategy')return (STRAT.find(x=>x.v===v)||{}).l;if(k==='fstage')return ((STAGES[ST.dev.a.strategy]||[]).find(x=>x[0]===v)||[])[1];if(k==='permit')return (PERM.find(x=>x.v===v)||{}).l;
   if(k==='gdv'||k==='equity')return v===0?'no own equity':eur(v);
   if(k==='cost'||k==='ask')return eur(v);if(k==='tk')return TKL[v];if(k==='lic')return LICL[v];return v}
+/* ---------- the visitor's session: answers, name and phone are saved the same way as in the ad funnel ---------- */
+let CONTACT=null;
+function sid(){try{const o=localStorage.getItem('cb.funnel.sid');if(o&&/^[0-9a-f-]{36}$/.test(o))return o;const n=crypto.randomUUID();localStorage.setItem('cb.funnel.sid',n);return n}catch(e){return window.__sid||(window.__sid=crypto.randomUUID())}}
+function trafficSrc(){const q=new URLSearchParams(location.search),o={};['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k=>{const v=q.get(k);if(v)o[k]=v.slice(0,120)});if(q.get('fbclid'))o.fbclid='1';
+  try{const h=document.referrer?new URL(document.referrer).hostname:'';if(h&&h!==location.hostname)o.referrer=h.slice(0,120)}catch(e){}return o}
+const devAnswers=()=>{const a=ST.dev.a;return {strategy:a.strategy,geo:a.geo,city:a.city,stage:a.fstage,gdv:a.gdv,ask:a.ask,equity:a.equity,permit:a.permit}};
+function saveStep(n){rpc('funnel_save',{p_id:sid(),p_step:n,p_answers:devAnswers(),p_source:trafficSrc()})}
+/* 0-100: project progress, permits, own equity, profit on cost; 25 each */
+function readiness(a){
+  const cost=a.ask+a.equity,eq=cost>0?a.equity/cost:0,mg=cost>0?(a.gdv-cost)/cost:0;
+  const st=((STAGES[a.strategy]||[]).find(x=>x[0]===a.fstage)||[])[2]||0,pm=(PERM.find(x=>x.v===a.permit)||{}).pts||0;
+  return st+pm+Math.round(25*Math.min(1,Math.max(0,eq)/.3))+Math.round(25*Math.min(1,Math.max(0,mg)/.2));
+}
+const verdictOf=t=>t>=75?'Your project demonstrates good financing readiness.':t>=50?'Your project shows moderate financing readiness. A few gaps are worth closing before you approach investors.':'Your project is at an early stage. Closing the main gaps will raise its chances with investors.';
+const validName=t=>{const n=String(t).replace(/\s+/g,' ').trim();return n.length>=2&&n.length<=120?n:null};
+const validPhone=t=>{const p=String(t).trim();return /^\+?[0-9 ()./-]{7,24}$/.test(p)&&p.replace(/\D/g,'').length>=7?p:null};
+async function contactStep(s,text){
+  if(s.contact==='name'){
+    const n=validName(text);
+    if(!n){await say(s,'Please type your name, at least two letters.');return}
+    s.who=n;s.contact='phone';
+    await say(s,`Thanks, ${n.split(' ')[0]}. And your phone number, with the country code? It keeps your answers from being lost while you create your account, and our team can call you if anything goes wrong.`);return;
+  }
+  const ph=validPhone(text);
+  if(!ph){await say(s,'Please type a phone number with the country code, for example +34 600 123 456.');return}
+  const a=s.a,cost=a.ask+a.equity,lic=(PERM.find(x=>x.v===a.permit)||{}).lic||'none',sc=readiness(a);
+  const m=await rpc('funnel_match',{p_geo:a.geo,p_ask:a.ask,p_license:lic,p_ltc:Math.round(a.ask/cost*1000)/1000,p_margin:Math.round((a.gdv-cost)/cost*1000)/1000});
+  CONTACT={sid:sid(),name:s.who,phone:ph,score:sc};
+  await rpc('funnel_save',{p_id:CONTACT.sid,p_step:8,p_answers:devAnswers(),p_source:trafficSrc(),p_name:s.who,p_phone:ph,p_result:{score:sc,matches:m&&typeof m.total==='number'?m:null}});
+  saveCarry();
+  const fit=m&&typeof m.total==='number'?m.high+m.medium:null;
+  s.contact=null;s.done=true;
+  await say(s,`<span>Thanks, ${esc(s.who.split(' ')[0])}. Your project scores <b>${sc}/100</b> for financing readiness. ${esc(verdictOf(sc))}</span>${fit!=null?`<ul class="sl"><li><b>${fit}</b> of ${m.total} investors fit your project.</li></ul>`:''}<span>Create your free account to unlock your investor matches. Everything you told me is saved.</span>`,true,650);
+}
 let busy=false;
 async function submit(text,direct){
-  if(busy)return;const s=ST[aud],q=Q[aud][s.qi];if(s.done||!q)return;
+  if(busy)return;const s=ST[aud],q=Q[aud][s.qi];
+  if(aud==='dev'&&s.contact&&!s.done){busy=true;s.msgs.push({r:'u',t:s.contact==='phone'?text:text});renderChat();await contactStep(s,text);busy=false;renderChat();return}
+  if(s.done||!q)return;
   if(s.gated){busy=true;s.msgs.push({r:'u',t:text});renderChat();await say(s,'To continue, create your free account with the button below. Everything you told me is saved to your project.');busy=false;renderChat();return}
   busy=true;s.msgs.push({r:'u',t:text});renderChat();
   let found={};
@@ -729,8 +767,9 @@ async function submit(text,direct){
   keys.forEach(k=>{s.a[k]=found[k];notes.push(`${Q[aud].find(x=>x.k===k).tag.toLowerCase()}: ${labelOf(k,found[k])}`)});
   s.tmp=[];
   if(aud==='dev'&&(keys.includes('geo')||keys.includes('ask')))await refreshCount();
+  if(aud==='dev')saveStep(Object.keys(s.a).filter(k=>k!=='city').length);
   const st=stat(),more=nextQ(s)>=0;
-  const counts=aud==='dev'?((keys.includes('geo')||keys.includes('ask'))&&DEV.total!=null?` ${st.n} of ${st.N} investors still match.`:''):` ${st.n} of ${st.N} live projects still match.`;
+  const counts=aud==='dev'?((keys.includes('geo')||keys.includes('ask'))&&DEV.total!=null?` ${st.n} of ${st.N} investors fit your project so far.`:''):` ${st.n} of ${st.N} live projects still match.`;
   let msg=`Got it (${notes.join('; ')}).`+counts;
   const nAns=Q[aud].filter(x=>s.a[x.k]!==undefined).length;
   if(more&&nAns>=GATE[aud]){await say(s,msg,false,350);await gate(s,nAns)}
@@ -745,15 +784,15 @@ async function gate(s,n){
   await say(s,html,true,650);
 }
 async function finish(s){
-  s.done=true;let html;
+  let html;
   if(aud==='dev'){
-    const a=s.a,cost=a.ask+a.equity,ltc=a.ask/cost,margin=(a.gdv-cost)/cost,lic=(PERM.find(x=>x.v===a.permit)||{}).lic||'none';
     await refreshCount();
-    const m=await rpc('funnel_match',{p_geo:a.geo,p_ask:a.ask,p_license:lic,p_ltc:Math.round(ltc*1000)/1000,p_margin:Math.round(margin*1000)/1000});
-    if(m&&typeof m.total==='number'){
-      html=`<span>That is all 7 answers. Here is how your project looks against ${m.total} investors in our network.</span><ul class="sl"><li><b>${m.high}</b> match with high compatibility</li><li><b>${m.medium}</b> match with medium compatibility</li><li><b>${m.low}</b> match with low compatibility</li></ul><span>Next I score your project's financing readiness.</span>`;
-    }else html='<span>That is all 7 answers. Next I score your project\'s financing readiness and show which investors fit.</span>';
+    const n=DEV.match!=null&&DEV.total!=null?`${DEV.match} of ${DEV.total} investors fit your project. `:'';
+    s.contact='name';
+    await say(s,`That is all 7 answers. ${n}Next I score your project's financing readiness. What is your name?`);
+    return;
   }else{
+    s.done=true;
     const r=invPart(s.a),say_=[];
     if(!r.n)say_.push('Nothing matches right now. I will alert you the moment a project does, and I can show what is one step away if you widen the stage or the ticket.');
     else{say_.push(`I checked ${r.N} projects against your mandate. ${plural(r.n,'project')} pass every criterion.`);
@@ -766,13 +805,14 @@ async function finish(s){
   await say(s,html,true,650);
 }
 function resetChat(m){
+  if(m==='dev')CONTACT=null;
   ST[m]={msgs:[],a:{},qi:0,done:false,gated:false,typing:false,tmp:[]};const s=ST[m];
   s.msgs.push({r:'a',t:(m==='dev'?'Hi, I am your Cobuildy agent. Answer 7 questions and I check your project against our real investor database as we go.':'Hi, I am your Cobuildy agent. I screen live projects against your mandate as we go.')+'\n\n'+Q[m][0].q});
 }
 $('c-form').addEventListener('submit',e=>{e.preventDefault();const t=$('c-in').value.trim();if(!t)return;$('c-in').value='';submit(t)});
 $('c-reset').onclick=()=>{if(busy)return;resetChat(aud);renderChat()};
 $('c-chips').addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b||b.dataset.signup!==undefined||b.dataset.start!==undefined||busy||flying)return;const s=ST[aud],q=Q[aud][s.qi];
+  const b=e.target.closest('button');if(!b||b.dataset.signup!==undefined||busy||flying)return;const s=ST[aud],q=Q[aud][s.qi];
   if(b.dataset.act==='reset'){resetChat(aud);renderChat();return}
   if(b.dataset.act==='ex'){submit(q.ex);return}
   if(b.dataset.act==='cont'){if(s.tmp.length)submit(labelOf('geo',s.tmp),[...s.tmp]);return}
@@ -884,16 +924,12 @@ function openSignup(r){
 }
 function closeSignup(){$('ov').hidden=true}
 const LOGIN='https://cobuildy.dv-ac6.workers.dev/login';
-const START='https://cobuildy.dv-ac6.workers.dev/start';
-function devCarry(){const d={...ST.dev.a},p=PERM.find(x=>x.v===d.permit);if(p)d.stage=p.st;delete d.permit;if(d.ask!=null&&d.equity!=null)d.cost=d.ask+d.equity;return d}
-function saveCarry(){try{localStorage.setItem('cb.carry.v1',JSON.stringify({role:aud,dev:devCarry(),inv:ST.inv.a,ts:Date.now()}))}catch(e){}}
-/* the app's funnel picks the answers up here and goes on from the first question that is still open */
-function saveDraft(){try{const a=ST.dev.a;localStorage.setItem('cb.funnel.draft',JSON.stringify({a:{strategy:a.strategy,geo:a.geo,city:a.city,stage:a.fstage,gdv:a.gdv,ask:a.ask,equity:a.equity,permit:a.permit},ts:Date.now()}))}catch(e){}}
+function devCarry(){const d={...ST.dev.a},p=PERM.find(x=>x.v===d.permit);if(p)d.stage=p.st;delete d.permit;if(d.ask!=null&&d.equity!=null)d.cost=d.ask+d.equity;if(CONTACT)d.score=CONTACT.score;return d}
+function saveCarry(){try{localStorage.setItem('cb.carry.v1',JSON.stringify({role:aud,dev:devCarry(),inv:ST.inv.a,ts:Date.now(),...(CONTACT?{sid:CONTACT.sid,name:CONTACT.name,phone:CONTACT.phone}:{})}))}catch(e){}}
 addEventListener('pagehide',saveCarry);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveCarry()});
 $('h-cta').addEventListener('click',()=>{const d=$('demo'),c=$('c-chips'),m=$('c-msgs');d.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'});
   [d,c,m].forEach(x=>x.classList.remove('hint'));void d.offsetWidth;setTimeout(()=>[d,c,m].forEach(x=>x.classList.add('hint')),350)});
-document.addEventListener('click',e=>{const st=e.target.closest('[data-start]');if(st){saveCarry();saveDraft();location.href=START;return}
-  const b=e.target.closest('[data-signup]');if(b){saveCarry();const r=b.dataset.signup||aud;location.href=LOGIN+'?role='+(r==='inv'?'investor':'developer')+(b.dataset.auto?'&auto='+b.dataset.auto:'');return}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-signup]');if(b){saveCarry();const r=b.dataset.signup||aud;location.href=LOGIN+'?role='+(r==='inv'?'investor':'developer')+(b.dataset.auto?'&auto='+b.dataset.auto:'');return}
   if(e.target===$('ov'))closeSignup();
   });
 $('dl-x').onclick=closeSignup;

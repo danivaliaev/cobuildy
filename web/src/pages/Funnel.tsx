@@ -6,7 +6,6 @@ import { geoCode } from '../lib/profile'
 import { loadPlaces, type Place, type Places } from '../lib/places'
 import { save, sessionId, trafficSource, validName, validPhone } from '../lib/funnelTrack'
 import {
-  DRAFT_KEY, readDraft,
   COUNTRIES, PERMITS, REGIONS, STAGES, cleanCity, STRATEGY, compatibility, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdict,
   type Answers, type Complete, type Matches, type Strategy, type Unit,
 } from '../lib/funnel'
@@ -54,17 +53,6 @@ export function Funnel() {
     void save(sid, { step: 0, source: trafficSource() })
     void loadPlaces().then(setPlaces, () => setPlaces(null))
     void supabase.rpc('funnel_stats').then(({ data }) => { const n = (data as { investors?: number } | null)?.investors; if (typeof n === 'number' && n > 0) setInvestors(n) })
-    // answers given in the landing chat: go on from the first question that is still open
-    try {
-      const d = readDraft(localStorage.getItem(DRAFT_KEY))
-      localStorage.removeItem(DRAFT_KEY)
-      if (d) {
-        const open = STEPS.findIndex(s => d[s as keyof Answers] === undefined)
-        setA(d)
-        if (complete(d)) { setI(STEPS.length - 1); setPhase('contact') } else setI(Math.max(0, open))
-        void save(sid, { step: complete(d) ? STEPS.length : Math.max(0, open), answers: d })
-      }
-    } catch { /* storage blocked: the visitor simply starts at the first question */ }
     return () => { m.remove() }
   }, [])
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }) }, [i, phase, shown, matches, suggestions.length])
