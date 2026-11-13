@@ -1,6 +1,6 @@
 import { kindType } from './investorKinds'
 import { eur, pct } from './format'
-import { ASSET, GEO, INSTRUMENT, type Investor, type Teaser } from './types'
+import { ASSET, GEO, INV_ASSET, INV_GEO, geoCovers, INSTRUMENT, type Investor, type Teaser } from './types'
 
 /** The guided investor mandate: 12 questions in 5 sections, ported from the prototype.
  *  Values live in the investor's own columns (these are the filters the matching function reads);
@@ -17,12 +17,12 @@ export interface MField { k: MKey; s: string; l: string; w: number; multi?: bool
 
 const NOPREF: Chip = { l: 'No preference', v: null }
 const NS: Chip = { l: 'Not sure yet', u: true }
-const geoChips: Chip[] = Object.entries(GEO).map(([v, l]) => ({ l, v }))
+const geoChips: Chip[] = Object.entries(INV_GEO).map(([v, l]) => ({ l, v }))
 export const SECS: Array<[string, string]> = [['profile', 'You'], ['where', 'What you invest in'], ['size', 'Size and stage'], ['risk', 'Risk and return'], ['sponsor', 'Sponsor and deal quality']]
 export const FIELDS: MField[] = [
   { k: 'type', s: 'profile', l: 'Investor type', w: 1, q: 'Do you invest as a private investor or family office, or as an institutional lender or fund?', chips: () => [{ l: 'Private investor / family office', v: 'priv' }, { l: 'Institutional lender / fund', v: 'inst' }] },
   { k: 'geo', s: 'where', l: 'Regions', w: 2, multi: true, q: 'Which regions do you invest in? Pick all that apply.', chips: () => geoChips },
-  { k: 'asset', s: 'where', l: 'Asset types', w: 2, multi: true, q: 'Which asset types?', chips: () => Object.entries(ASSET).map(([v, l]) => ({ l, v })) },
+  { k: 'asset', s: 'where', l: 'Asset types', w: 2, multi: true, q: 'Which asset types?', chips: () => Object.entries(INV_ASSET).map(([v, l]) => ({ l, v })) },
   { k: 'ins', s: 'where', l: 'Instruments', w: 2, multi: true, q: 'Which instruments do you write?', chips: () => [{ l: 'Senior loan', v: 'senior' }, { l: 'Mezzanine', v: 'mezz' }, { l: 'Equity', v: 'equity' }] },
   { k: 'tk', s: 'size', l: 'Ticket size', w: 2, q: 'What ticket size fits?', chips: m => (m.type === 'inst'
     ? [{ l: '€3–6M', v: { lo: 3e6, hi: 6e6 } }, { l: '€6–10M', v: { lo: 6e6, hi: 1e7 } }, { l: '€10M and above', v: { lo: 1e7, hi: 1e10 } }]
@@ -101,8 +101,8 @@ const list = (x: unknown, allowed: Record<string, string>): string[] | null | un
 export function coerce(k: MKey, x: unknown): unknown {
   switch (k) {
     case 'type': return x === 'priv' || x === 'inst' ? x : undefined
-    case 'geo': return list(x, GEO)
-    case 'asset': return list(x, ASSET)
+    case 'geo': return list(x, INV_GEO)
+    case 'asset': return list(x, INV_ASSET)
     case 'ins': return list(x, INSTRUMENT)
     case 'tk': {
       if (x == null) return null
@@ -141,8 +141,8 @@ export function fmt(m: Mandate, k: MKey): string {
   if (k === 'type') return m.type === 'priv' ? 'Private investor / family office' : 'Institutional lender / fund'
   const v = m.v
   switch (k) {
-    case 'geo': return v.geo ? v.geo.map(g => GEO[g]).join(', ') : 'No preference'
-    case 'asset': return v.asset ? v.asset.map(a => ASSET[a]).join(', ') : 'No preference'
+    case 'geo': return v.geo ? v.geo.map(g => INV_GEO[g] ?? g).join(', ') : 'No preference'
+    case 'asset': return v.asset ? v.asset.map(a => INV_ASSET[a] ?? a).join(', ') : 'No preference'
     case 'ins': return v.ins ? v.ins.map(i => INSTRUMENT[i]).join(', ') : 'No preference'
     case 'tk': return v.tk ? (v.tk.hi >= 1e9 ? `${eur(v.tk.lo)} and above` : `${eur(v.tk.lo)} to ${eur(v.tk.hi)}`) : 'No preference'
     case 'stage': return v.stage === 2 ? 'Permit granted only' : v.stage === 1 ? 'Permit submitted or better' : 'Any stage'
@@ -182,7 +182,7 @@ export function crit(m: Mandate, t: Teaser): Crit[] {
   }
   const debt = t.instrument.some(i => i !== 'equity')
   const ltc = t.ask_eur != null && t.cost_eur ? t.ask_eur / t.cost_eur : null
-  chk('geo', true, t.geo, () => v.geo!.includes(t.geo!), `${name(t.geo, GEO)} is in your regions`, `${name(t.geo, GEO)} is outside your regions`)
+  chk('geo', true, t.geo, () => geoCovers(v.geo!, t.geo!), `${name(t.geo, GEO)} is in your regions`, `${name(t.geo, GEO)} is outside your regions`)
   chk('asset', true, t.asset, () => v.asset!.includes(t.asset!), `${name(t.asset, ASSET)} matches your asset types`, `${name(t.asset, ASSET)} is not in your asset types`)
   chk('ins', true, t.instrument.length ? t.instrument : null, () => t.instrument.some(i => v.ins!.includes(i)), `${t.instrument.map(i => INSTRUMENT[i]).join(' / ')} is an instrument you write`, `Offers ${t.instrument.map(i => INSTRUMENT[i]?.toLowerCase()).join(' / ')}`)
   chk('tk', true, t.ask_eur, () => t.ask_eur! >= v.tk!.lo && t.ask_eur! <= v.tk!.hi, `Ask ${eur(t.ask_eur)} is in your ${fmt(m, 'tk')} range`, `Ask ${eur(t.ask_eur)} is outside ${fmt(m, 'tk')}`)

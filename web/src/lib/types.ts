@@ -47,6 +47,19 @@ export const GEO: Record<string, string> = {
   CS: 'Costa del Sol', BCN: 'Barcelona', MAD: 'Madrid', VLC: 'Valencia', ISL: 'Balearics / Canaries', LIS: 'Lisbon', OPO: 'Porto', ALG: 'Algarve',
 }
 export const ASSET: Record<string, string> = { RES: 'Residential', BTR: 'Build-to-rent', HOS: 'Hospitality' }
+// Investor mandates may be broader than what a single project uses: whole countries, Europe, other regions, more asset types.
+export const INV_GEO: Record<string, string> = {
+  ...GEO, ES: 'Spain (all)', PT: 'Portugal (all)', EU: 'Europe', XES: 'Other Spain', XX: 'Outside Iberia / Europe',
+}
+export const INV_ASSET: Record<string, string> = {
+  ...ASSET, COM: 'Commercial / office / retail', LND: 'Land', LOG: 'Logistics / storage', PBS: 'Student housing / PBSA', OTH: 'Other',
+}
+// Does an investor's region list cover a project region? Mirrors public.geo_match in the database.
+export const ES_CODES = ['CS', 'BCN', 'MAD', 'VLC', 'ISL', 'XES']
+export const PT_CODES = ['LIS', 'OPO', 'ALG']
+export function geoCovers(inv: string[], proj: string): boolean {
+  return inv.includes(proj) || (inv.includes('EU') && proj !== 'XX') || (inv.includes('ES') && ES_CODES.includes(proj)) || (inv.includes('PT') && PT_CODES.includes(proj))
+}
 export const INSTRUMENT: Record<string, string> = { senior: 'Senior loan', mezz: 'Mezzanine', equity: 'Equity' }
 export const LICENSE: Record<string, string> = { none: 'No permit yet', submitted: 'Permit submitted', granted: 'Permit granted' }
 export const STAGE_LABEL: Record<DealStage, string> = {

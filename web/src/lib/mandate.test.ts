@@ -23,7 +23,7 @@ describe('mandate', () => {
   it('five core answers switch screening on; percent and fraction inputs are both read', () => {
     const m = answer(hydrate(inv()))
     expect(clarity(m).level).toBe(1)
-    expect(coerce('ltc', 65)).toBe(0.65); expect(coerce('ltc', 0.65)).toBe(0.65); expect(coerce('geo', ['XX'])).toBeUndefined(); expect(coerce('ret', 150)).toBeUndefined()
+    expect(coerce('ltc', 65)).toBe(0.65); expect(coerce('ltc', 0.65)).toBe(0.65); expect(coerce('geo', ['ZZ'])).toBeUndefined(); expect(coerce('ret', 150)).toBeUndefined()
   })
   it('writes the filters into the investor columns', () => {
     const c = columnsFor(answer(hydrate(inv())))
@@ -51,5 +51,14 @@ describe('mandate', () => {
   it('does not exclude on data missing from the teaser', () => {
     const m = answer(hydrate(inv()))
     expect(evalTeaser(m, teaser({ license: null })).bucket).toBe('match')
+  })
+})
+
+import { geoCovers } from './types'
+describe('geoCovers', () => {
+  it('country and Europe mandates cover Iberian cities', () => {
+    expect(geoCovers(['ES'], 'BCN')).toBe(true); expect(geoCovers(['ES'], 'LIS')).toBe(false)
+    expect(geoCovers(['PT'], 'ALG')).toBe(true); expect(geoCovers(['EU'], 'MAD')).toBe(true)
+    expect(geoCovers(['EU'], 'XX')).toBe(false); expect(geoCovers(['MAD'], 'BCN')).toBe(false)
   })
 })
