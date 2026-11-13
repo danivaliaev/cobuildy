@@ -143,12 +143,16 @@ export function Funnel() {
     <div className="fn">
       <header className="fn-top"><span className="fn-logo">Cobuildy</span></header>
       <main className="fn-main">
-        {phase === 'ask' && i === 0 && (
-          <div className="fn-intro">
-            <h1>Find out if your project is ready for financing</h1>
-            <p>Answer 7 questions and get an initial assessment of your project’s funding readiness. {heading}</p>
-          </div>
-        )}
+        <div className={`fn-intro${phase === 'ask' && i === 0 ? '' : ' later'}`}>
+          <h1>Find out if your project is ready for financing</h1>
+          <p>Answer 7 questions and get an initial assessment of your project’s funding readiness. {heading}</p>
+          <ul className="fn-trust">
+            <li>Matched against real investor mandates</li>
+            <li>7 questions, about 2 minutes</li>
+            <li>Free initial assessment of your project</li>
+          </ul>
+        </div>
+        <div className="fn-col">
         <div className="fn-chat" aria-live="polite">
           {STEPS.slice(0, Math.min(i, STEPS.length - 1) + 1).map((s, k) => {
             const answered = k < i || phase !== 'ask'
@@ -254,6 +258,7 @@ export function Funnel() {
             </section>
           )}
           <div ref={endRef} />
+        </div>
         </div>
       </main>
     </div>

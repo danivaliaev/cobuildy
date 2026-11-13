@@ -195,7 +195,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 .fn{min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
 .fn-top{padding:16px 20px;text-align:center}.fn-logo{font:600 18px/1 var(--f-body);letter-spacing:-.02em;text-transform:uppercase}
 .fn-main{width:min(640px,100%);margin:0 auto;padding:8px 18px 64px;display:grid;gap:20px;align-content:start}
-.fn-intro{display:grid;gap:10px;text-align:left}@media (min-width:768px){.fn-intro{text-align:center}}.fn-intro h1{font-size:clamp(30px,6vw,42px)}.fn-intro p{margin:0;color:var(--ink-2);font-size:16px}
+.fn-intro{display:grid;gap:10px;text-align:left}.fn-intro.later,.fn-trust{display:none}.fn-col{display:grid;gap:20px;align-content:start;min-width:0}.fn-intro h1{font-size:clamp(30px,6vw,42px)}.fn-intro p{margin:0;color:var(--ink-2);font-size:16px}
 .fn-chat{display:grid;gap:14px}.fn-turn{display:grid;gap:8px}
 .fn-q{background:var(--surface);border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:14px 16px;font-size:17px;max-width:92%;display:grid;gap:4px}
 .fn-n{font:500 11px var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
@@ -258,3 +258,14 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 
 .adm-card{overflow-x:auto}
 .adm-card table{min-width:560px}
+
+@media (min-width:1024px){
+  .fn-top{padding:22px 48px;text-align:left}
+  .fn-main{width:min(1120px,100%);padding:40px 48px 80px;grid-template-columns:minmax(0,1fr) minmax(0,580px);gap:72px;align-items:start}
+  .fn-intro,.fn-intro.later{display:grid;gap:18px;position:sticky;top:40px;align-content:start;padding-top:24px}
+  .fn-intro h1{font-size:clamp(44px,4.4vw,60px);line-height:1.04}.fn-intro p{font-size:18px;max-width:44ch}
+  .fn-trust{display:grid;gap:10px;margin:8px 0 0;padding:0;list-style:none;font-size:16px;color:var(--ink)}
+  .fn-trust li{display:flex;gap:10px;align-items:center}.fn-trust li:before{content:'';width:8px;height:8px;border-radius:50%;background:var(--plan);flex:none}
+  .fn-col{background:var(--surface);border:1px solid var(--line);border-radius:28px;padding:28px;box-shadow:0 18px 50px rgba(15,61,30,.07)}
+  .fn-q{background:var(--bg,#f0efeb)}.fn-think,.fn-result{border:0;padding:0;background:none}
+}
