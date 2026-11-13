@@ -46,6 +46,25 @@ export type Complete = Required<Omit<Answers, 'city'>> & { city?: string }
 export const complete = (a: Answers): a is Complete =>
   !!(a.strategy && a.geo && a.stage && a.gdv && a.ask && a.equity != null && a.permit)
 
+/** Answers the landing chat left in this browser (cb.funnel.draft). Anything that does not fit the funnel's own choices is dropped, so a stale or edited value cannot get in. */
+export const DRAFT_KEY = 'cb.funnel.draft'
+export function readDraft(raw: string | null, now = Date.now()): Answers | null {
+  try {
+    const d = JSON.parse(raw ?? 'null') as { a?: Record<string, unknown>; ts?: number } | null
+    if (!d?.a || typeof d.ts !== 'number' || now - d.ts > 36e5) return null
+    const x = d.a, out: Answers = {}
+    const money = (v: unknown, zero = false) => (typeof v === 'number' && Number.isFinite(v) && v < 5e9 && (zero ? v >= 0 : v >= 1000) ? Math.round(v) : undefined)
+    if (STRATEGY.some(s => s.v === x.strategy)) out.strategy = x.strategy as Strategy
+    if (typeof x.geo === 'string' && /^[A-Z]{2,3}$/.test(x.geo)) out.geo = x.geo
+    if (typeof x.city === 'string' && x.city.trim()) out.city = cleanCity(x.city)
+    if (out.strategy && STAGES[out.strategy].some(s => s.v === x.stage)) out.stage = x.stage as string
+    out.gdv = money(x.gdv); out.ask = money(x.ask); out.equity = money(x.equity, true)
+    if (PERMITS.some(p => p.v === x.permit)) out.permit = x.permit as Permit
+    for (const k of Object.keys(out) as Array<keyof Answers>) if (out[k] === undefined) delete out[k]
+    return Object.keys(out).length ? out : null
+  } catch { return null }
+}
+
 /** "4.5M", "€4,500,000", "750k", "1.2 m", "2 000 000" → euros. Returns null when it is not a usable amount. */
 export type Unit = 'k' | 'm'
 /** `unit` is what a bare number means when it is small: with unit 'm', "5" is five million. A bare number of 1,000 or more is taken as euros. */

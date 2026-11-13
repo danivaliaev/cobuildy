@@ -605,17 +605,14 @@ const GEORX=[[/costa del sol|marbella|estepona|m[aá]laga|mijas|benahav|fuengiro
 const geosIn=t=>GEORX.filter(([r])=>r.test(t)).map(x=>x[1]);
 function money(t){const m=String(t).replace(/€|eur(os)?/ig,'').match(/(\d+(?:[.,]\d+)?)\s*(mm|m|million|millones|k|mil)?\b/i);if(!m)return null;let v=+m[1].replace(',','.');const u=(m[2]||'').toLowerCase();if(u==='k'||u==='mil')v*=1e3;else if(u)v*=1e6;else if(v<100)v*=1e6;return Math.round(v)}
 const MN='(€?\\s*\\d[\\d.,]*\\s*(?:mm|m|million|k)?)';
-function xDev(t){const o={};const g=geosIn(t);if(g.length)o.geo=g[0];
-  if(/villa/i.test(t))o.as='VIL';else if(/build.to.rent|btr|rental|\brent/i.test(t))o.as='BTR';else if(/hotel|hospitality/i.test(t))o.as='HOS';else if(/apartment|residential|flats?|duplex|housing|homes/i.test(t))o.as='RES';
-  if(/no permit|not (yet )?permitted|land only|before (the )?permit|no licen[cs]e/i.test(t))o.stage='none';
-  else if(/submitted|applied|pending|waiting for (the )?(town hall|licen|permit)/i.test(t))o.stage='submitted';
-  else if(/under construction|on site|construction (has )?started/i.test(t))o.stage='build';
-  else if(/permit(ted)?|licen[cs]e (granted|in hand|approved)|granted/i.test(t))o.stage='granted';
-  if(/mezz/i.test(t))o.ins='mezz';else if(/senior|bank loan|\bloan\b|\bdebt/i.test(t))o.ins='senior';else if(/equity|partner|\bjv\b/i.test(t))o.ins='equity';else if(/not sure|\bany\b|open to/i.test(t))o.ins='any';
-  let m;
-  if(m=t.match(new RegExp('(?:total )?(?:project )?cost[^\\d€]{0,25}'+MN,'i')))o.cost=money(m[1]);
-  if(m=t.match(new RegExp('(?:need|raise|raising|looking for|seeking|require|financing(?: of)?)[^\\d€]{0,25}'+MN,'i')))o.ask=money(m[1]);
-  Object.keys(o).forEach(k=>{if(o[k]==null)delete o[k]});return o}
+function xDev(t){
+  const s=ST.dev,q=Q.dev[s.qi],o={};if(!q)return o;
+  if(q.k==='strategy'){if(/land|plot/i.test(t))o.strategy='land';else if(/progress|under construction|building|on site/i.test(t))o.strategy='wip';else if(/refurb|renovat|reform/i.test(t))o.strategy='refurb'}
+  else if(q.k==='geo'){const g=geosIn(t);if(g.length){o.geo=g[0];o.city=t.trim().slice(0,80)}else if(/spain|espa/i.test(t))o.geo='XES';else if(/portugal/i.test(t))o.geo='XPT'}
+  else if(q.k==='fstage'){const hit=(STAGES[s.a.strategy]||[]).find(([v])=>SRX[v].test(t));if(hit)o.fstage=hit[0]}
+  else if(q.k==='permit'){const hit=PRX.find(([,r])=>r.test(t));if(hit)o.permit=hit[0]}
+  else if(q.money){const m=moneyF(t,q.k==='equity');if(m!==null)o[q.k]=m}
+  return o}
 function xInv(t){const o={};const g=geosIn(t);if(g.length)o.geo=g;
   if(/mezz/i.test(t))o.ins='mezz';else if(/senior|\bloans?\b|\bdebt/i.test(t))o.ins='senior';else if(/equity|\bjv\b/i.test(t))o.ins='equity';else if(/\bany\b|all instruments/i.test(t))o.ins='any';
   let m=t.match(/(\d+(?:[.,]\d+)?)\s*(?:-|–|to)\s*(\d+(?:[.,]\d+)?)\s*(m|mm|million|k)\b/i),v=null;
@@ -626,15 +623,35 @@ function xInv(t){const o={};const g=geosIn(t);if(g.length)o.geo=g;
   if(/only permit|permit(ted)? only|permit granted|granted only/i.test(t))o.lic=2;else if(/submitted/i.test(t))o.lic=1;else if(/any stage|early stage|land/i.test(t))o.lic=0;
   return o}
 
+/* ---------- real data: the investor database answers through two public counting functions ---------- */
+const SB_H={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'};
+const rpc=(fn,body)=>fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:SB_H,body:JSON.stringify(body||{})}).then(r=>r.ok?r.json():null,()=>null);
+const DEV={total:null,match:null};   /* null until the database has answered */
+async function refreshCount(){
+  const a=ST.dev.a,r=await rpc('funnel_count',{p_geo:a.geo||null,p_ask:a.ask||null});
+  if(r&&typeof r.total==='number'){DEV.total=r.total;DEV.match=r.match}
+}
+const STRAT=[{l:'Land development',v:'land'},{l:'Work in progress',v:'wip'},{l:'Refurbishment / Renovation',v:'refurb'}];
+const STAGES={land:[['identified','Land identified'],['reserved','Land reserved'],['purchased','Land purchased'],['licensed','Building licence granted']],wip:[['started','Construction started'],['partial','Construction partially completed'],['near','Near completion']],refurb:[['identified','Property identified'],['acquired','Property acquired'],['started','Renovation started'],['done','Renovation completed']]};
+const PERM=[{v:'granted',l:'Yes, all permits granted',lic:'granted',st:'granted'},{v:'submitted',l:'Application submitted',lic:'submitted',st:'submitted'},{v:'process',l:'In process',lic:'none',st:'prep'},{v:'none',l:'Not yet applied',lic:'none',st:'none'},{v:'notreq',l:'Not required',lic:'granted',st:'notreq'}];
+const DGEO=[['CS','Costa del Sol'],['BCN','Barcelona'],['MAD','Madrid'],['VLC','Valencia'],['ISL','Balearic Islands'],['ISL','Canary Islands'],['LIS','Lisbon'],['OPO','Porto'],['ALG','Algarve'],['XES','Elsewhere in Spain'],['XPT','Elsewhere in Portugal']].map(([v,l])=>({l,v}));
+const SRX={identified:/identif|found|spotted|looking/i,reserved:/reserv|option|arras|deposit/i,purchased:/purchas|bought|own the land/i,licensed:/licen[cs]e|permit/i,started:/start|begun|under way|underway/i,partial:/partial|half|ongoing|in progress/i,near:/near|almost|final/i,acquired:/acquir|bought|purchas/i,done:/complet|finish|done/i};
+const PRX=[['notreq',/not required|no need|n\/a/i],['none',/not yet|no permit|none|haven'?t|no\b/i],['submitted',/submit|appli(ed|cation)/i],['process',/process|prepar|progress/i],['granted',/grant|yes|all permits/i]];
+function moneyF(t,zero){const x0=String(t).toLowerCase().replace(/[€\s]/g,'').replace(/eur(os?)?/,'');if(zero&&/^(0|none|no|nil)$/.test(x0))return 0;
+  const m=x0.match(/^(\d+(?:[.,]\d+)?|\d{1,3}(?:[.,]\d{3})+)(k|m|mm|mln|million)?$/);if(!m)return null;
+  let n=m[1];const u=m[2];if(u)n=n.replace(',','.');else if(/^\d{1,3}([.,]\d{3})+$/.test(n))n=n.replace(/[.,]/g,'');else n=n.replace(',','.');
+  let x=parseFloat(n);if(u==='k')x*=1e3;else if(u)x*=1e6;else if(x<100)x*=1e6;else if(x<1000)x*=1e3;
+  if(!isFinite(x)||x>5e9||x<1000)return null;return Math.round(x)}
 const GEOCH=Object.keys(GEO).map(k=>({l:GEO[k],v:k}));
 const Q={
  dev:[
-  {k:'geo',tag:'Market',q:'Where is the project?',chips:GEOCH,ex:'12 villas in Marbella, permit granted, total cost €4M, I need €2.5M of senior loan',hint:'Try a market such as Costa del Sol, Barcelona, Lisbon or Porto.'},
-  {k:'as',tag:'Asset',q:'What are you building?',chips:[{l:'Residential for sale',v:'RES'},{l:'Luxury villas',v:'VIL'},{l:'Build-to-rent',v:'BTR'},{l:'Hospitality',v:'HOS'}],hint:'For example apartments, villas, build-to-rent or a hotel.'},
-  {k:'stage',tag:'Stage',q:'What stage is the project at?',chips:[{l:'Land, no permit yet',v:'none'},{l:'Permit submitted',v:'submitted'},{l:'Permit granted',v:'granted'},{l:'Under construction',v:'build'}],hint:'Say whether the permit is granted, submitted or not started.'},
-  {k:'cost',tag:'Cost',q:'What is the total project cost?',chips:[{l:'€2M',v:2e6},{l:'€4M',v:4e6},{l:'€8M',v:8e6}],money:1,hint:'Give an amount, for example €4M or 3,500,000.'},
-  {k:'ask',tag:'Raise',q:'How much capital do you need to raise?',chips:'ask',money:1,hint:'Give an amount, for example €2.5M.'},
-  {k:'ins',tag:'Capital',q:'What kind of capital do you want?',chips:[{l:'Senior loan',v:'senior'},{l:'Mezzanine',v:'mezz'},{l:'Equity partner',v:'equity'},{l:'Not sure yet',v:'any'}],hint:'Senior loan, mezzanine, equity partner, or not sure.'}],
+  {k:'strategy',tag:'Type',q:'What type of project are you developing?',chips:STRAT,hint:'Land development, work in progress, or refurbishment.'},
+  {k:'geo',tag:'Market',q:'Where is your project located?',chips:DGEO,hint:'Pick a region, or type a city, for example Marbella or Lisbon.'},
+  {k:'fstage',tag:'Stage',q:'What is the current project stage?',chips:'stage',hint:'Pick the stage that is closest to where the project is today.'},
+  {k:'gdv',tag:'GDV',q:'What is the estimated Gross Development Value (GDV)?',chips:[{l:'€3M',v:3e6},{l:'€6M',v:6e6},{l:'€10M',v:1e7}],money:1,hint:'Give an amount, for example 6M, 750k or 4,500,000.'},
+  {k:'ask',tag:'Raise',q:'How much capital do you need?',chips:'ask',money:1,hint:'Give an amount, for example 2.5M or 800k.'},
+  {k:'equity',tag:'Equity',q:'How much of your own capital goes in, including the land?',chips:[{l:'No own equity',v:0},{l:'€0.5M',v:5e5},{l:'€1M',v:1e6},{l:'€2M',v:2e6}],money:1,hint:'Give an amount, for example 1M, or 0 if you have none.'},
+  {k:'permit',tag:'Permits',q:'Do you have the necessary permits?',chips:PERM.map(x=>({l:x.l,v:x.v})),hint:'Granted, submitted, in process, not yet applied, or not required.'}],
  inv:[
   {k:'geo',tag:'Regions',q:'Which regions do you invest in? Pick all that apply, or type them.',chips:GEOCH,multi:1,ex:'Costa del Sol, Lisbon and Porto, any instrument, tickets of €1–3M, any asset, permit submitted or better',hint:'Name one or more regions, for example Costa del Sol and Lisbon.'},
   {k:'ins',tag:'Instrument',q:'Which instruments do you write?',chips:[{l:'Senior loan',v:'senior'},{l:'Mezzanine',v:'mezz'},{l:'Equity',v:'equity'},{l:'Any',v:'any'}],hint:'Senior loan, mezzanine, equity, or any.'},
@@ -644,26 +661,9 @@ const Q={
 };
 const ST={};
 ['dev','inv'].forEach(m=>ST[m]={msgs:[],a:{},qi:0,done:false,gated:false,typing:false,tmp:[]});
-const GATE={dev:4,inv:3}; /* answers after which the agent asks the visitor to create an account */
+const GATE={dev:99,inv:3}; /* answers after which the agent asks the visitor to create an account */
 
 /* matching with unknown = never excluded */
-function devPart(a){
-  const full=['geo','as','stage','cost','ask','ins'].every(k=>a[k]!==undefined);
-  const ltc=a.ask&&a.cost?a.ask/a.cost:null,asc=a.as?code(a.as):null,lic=a.stage?(a.stage==='build'?'granted':a.stage):null;
-  const res=DB.map(i=>{const f=[];
-    if(a.geo&&!i.geo.includes(a.geo))f.push('hard');
-    if(asc&&!i.as.includes(asc))f.push('hard');
-    if(a.ins&&a.ins!=='any'&&!i.ins.includes(a.ins))f.push('hard');
-    if(a.ask&&(a.ask<i.min||a.ask>i.max))f.push('hard');
-    if(lic&&LR[lic]<LR[i.lic])f.push('lic');
-    const debt=a.ins?(a.ins==='any'?!i.ins.includes('equity'):a.ins!=='equity'):true;
-    if(ltc&&debt&&ltc>i.ltc&&i.ins.some(x=>x!=='equity'))f.push('ltc');
-    return {i,f}});
-  const live=res.filter(r=>!r.f.includes('hard'));
-  const fit=live.filter(r=>!r.f.length),rest=live.filter(r=>r.f.length);
-  return {full,res,fit,later:full?rest:[],poss:full?[]:live,n:full?fit.length:live.length,N:res.length,
-    licN:res.filter(r=>r.f.length===1&&r.f[0]==='lic').length,ltcN:res.filter(r=>r.f.length===1&&r.f[0]==='ltc').length,ltc}
-}
 function invPart(a){
   const full=['geo','ins','tk','as','lic'].every(k=>a[k]!==undefined);
   const band=a.tk?a.tk.split(',').map(x=>+x*1e6):null;
@@ -675,13 +675,15 @@ function score(p){return Math.min(99,68+(p.lic===2?10:p.lic===1?4:0)+(p.margin>=
 
 function stat(){
   const s=ST[aud];
-  if(aud==='dev'){const r=devPart(s.a);return {n:r.n,N:r.N,full:r.full,sub:r.full?`investors fit today${r.later.length?', +'+r.later.length+' after you close a gap':''}`:`of ${r.N} investors still match`,a:r.fit.length/r.N*100,b:(r.later.length+r.poss.length-(r.full?0:r.fit.length))/r.N*100}}
+  if(aud==='dev'){const N=DEV.total,asked=Object.keys(s.a).length>0,n=DEV.match;if(N==null)return {n:'…',N:0,full:false,sub:'investors in our network',a:100,b:0};
+    return {n:asked&&n!=null?n:N,N,full:false,sub:asked&&n!=null?`of ${N} investors still match`:'investors in our network',a:asked&&n!=null?n/N*100:100,b:0}}
   const r=invPart(s.a);return {n:r.n,N:r.N,full:r.full,sub:r.full?'live projects match your mandate today':`of ${r.N} live projects still match`,a:r.full?r.n/r.N*100:0,b:r.full?0:r.n/r.N*100}
 }
 function curChips(){
   const s=ST[aud],q=Q[aud][s.qi];if(s.done||!q)return [];
   let c=q.chips;
-  if(c==='ask'){const cost=s.a.cost||4e6;c=[.25,.5,.65].map(p=>({l:`${eur(Math.round(cost*p/5e4)*5e4)} (${Math.round(p*100)}%)`,v:Math.round(cost*p/5e4)*5e4}))}
+  if(c==='ask'){const g=s.a.gdv||6e6;c=[.25,.4,.55].map(p=>{const v=Math.max(5e4,Math.round(g*p/5e4)*5e4);return {l:eur(v),v}})}
+  else if(c==='stage')c=(STAGES[s.a.strategy]||[]).map(([v,l])=>({l,v}));
   return c;
 }
 function renderChat(){
@@ -693,7 +695,7 @@ function renderChat(){
   const box=$('c-msgs');box.scrollTop=box.scrollHeight;
   let h='';
   if(s.gated&&!s.done){h=`<span class="mono muted lbl">Create your free account to continue</span><div class="set"><button class="go" type="button" data-signup="${aud}" data-auto="google">Continue with Google →</button><button type="button" data-signup="${aud}">Use email instead</button><button type="button" data-act="reset">Change my answers</button></div>`}
-  else if(s.done){h=`<span class="mono muted lbl">Next step</span><div class="set"><button class="go" type="button" data-signup="${aud}">${aud==='dev'?'Save this project':'Get alerts for new matches'} →</button><button type="button" data-act="reset">Change my answers</button></div>`}
+  else if(s.done){h=`<span class="mono muted lbl">Next step</span><div class="set">${aud==='dev'?'<button class="go" type="button" data-start="1">See my readiness score →</button>':'<button class="go" type="button" data-signup="inv">Get alerts for new matches →</button>'}<button type="button" data-act="reset">Change my answers</button></div>`}
   else if(q){const c=curChips();
     h=`<span class="step"><b>${s.qi+1} / ${Qs.length}</b>${q.multi?'Tap one or more, then press Continue':'Tap your answer'}${s.qi===0?'<span class="arr" aria-hidden="true">↓</span>':''}</span><div class="set">`+c.map((x,i)=>{const on=q.multi&&s.tmp.includes(x.v);return `<button type="button" data-i="${i}" ${q.multi?`aria-pressed="${on}"`:''}>${esc(x.l)}</button>`}).join('')+
     (q.multi?`<button class="go" type="button" data-act="cont" ${s.tmp.length?'':'disabled'}>Continue →</button>`:'')+
@@ -703,8 +705,10 @@ function renderChat(){
 async function say(s,t,html,ms){s.typing=true;renderChat();await sleep(ms??520);s.typing=false;s.msgs.push({r:'a',t,html:!!html});renderChat()}
 function nextQ(s){const Qs=Q[aud];const i=Qs.findIndex(q=>s.a[q.k]===undefined);s.qi=i<0?Qs.length:i;return i}
 function labelOf(k,v){
-  if(k==='geo')return Array.isArray(v)?v.map(g=>GEO[g]).join(', '):GEO[v];
+  if(k==='geo')return Array.isArray(v)?v.map(g=>GEO[g]).join(', '):(aud==='dev'&&ST.dev.a.city)||(v==='XES'?'elsewhere in Spain':v==='XPT'?'elsewhere in Portugal':GEO[v]);
   if(k==='as')return ASL[v];if(k==='stage')return STL[v];if(k==='ins')return INSL[v];
+  if(k==='strategy')return (STRAT.find(x=>x.v===v)||{}).l;if(k==='fstage')return ((STAGES[ST.dev.a.strategy]||[]).find(x=>x[0]===v)||[])[1];if(k==='permit')return (PERM.find(x=>x.v===v)||{}).l;
+  if(k==='gdv'||k==='equity')return v===0?'no own equity':eur(v);
   if(k==='cost'||k==='ask')return eur(v);if(k==='tk')return TKL[v];if(k==='lic')return LICL[v];return v}
 let busy=false;
 async function submit(text,direct){
@@ -714,17 +718,20 @@ async function submit(text,direct){
   let found={};
   if(direct!==undefined){found[q.k]=direct}
   else{found=aud==='dev'?xDev(text):xInv(text);
-    if(q.money&&found[q.k]===undefined){const m=money(text);if(m)found[q.k]=m}
+    if(q.money&&aud==='inv'&&found[q.k]===undefined){const m=money(text);if(m)found[q.k]=m}
     if(q.k==='geo'&&aud==='dev'&&found.geo===undefined){}
   }
   const keys=Object.keys(found).filter(k=>Q[aud].some(x=>x.k===k));
   if(!keys.length){await say(s,`I did not catch that. ${q.hint}`);busy=false;renderChat();return}
   const notes=[];
+  if(aud==='dev'&&found.city)s.a.city=found.city;
+  if(aud==='dev'&&q.k==='geo'&&direct==='ISL')s.a.city=text;
   keys.forEach(k=>{s.a[k]=found[k];notes.push(`${Q[aud].find(x=>x.k===k).tag.toLowerCase()}: ${labelOf(k,found[k])}`)});
   s.tmp=[];
-  if(aud==='dev'&&s.a.ask&&s.a.cost&&s.a.ask>s.a.cost){s.a.ask=s.a.cost;notes.push('the ask is capped at the total cost')}
+  if(aud==='dev'&&(keys.includes('geo')||keys.includes('ask')))await refreshCount();
   const st=stat(),more=nextQ(s)>=0;
-  let msg=`Got it (${notes.join('; ')}). `+(aud==='dev'?`${st.n} of ${st.N} investors still match.`:`${st.n} of ${st.N} live projects still match.`);
+  const counts=aud==='dev'?((keys.includes('geo')||keys.includes('ask'))&&DEV.total!=null?` ${st.n} of ${st.N} investors still match.`:''):` ${st.n} of ${st.N} live projects still match.`;
+  let msg=`Got it (${notes.join('; ')}).`+counts;
   const nAns=Q[aud].filter(x=>s.a[x.k]!==undefined).length;
   if(more&&nAns>=GATE[aud]){await say(s,msg,false,350);await gate(s,nAns)}
   else if(more){await say(s,msg+'\n\n'+Q[aud][s.qi].q)}
@@ -740,17 +747,12 @@ async function gate(s,n){
 async function finish(s){
   s.done=true;let html;
   if(aud==='dev'){
-    const r=devPart(s.a),say_=[];
-    if(!r.fit.length&&!r.later.length)say_.push('Nobody in the database matches this market, asset and ticket yet. A different capital type or a smaller ask would change that, and I can re-run it.');
-    if(r.licN>0&&s.a.stage!=='granted'&&s.a.stage!=='build')say_.push(`A granted permit would add ${plural(r.licN,'investor')}. I would plan the permit first.`);
-    if(r.ltcN>0)say_.push(`Your ask is ${Math.round(r.ltc*100)}% of cost. Lowering it to about ${Math.round((r.ltc-.1)*100)}% with more sponsor equity would add ${plural(r.ltcN,'lender')}.`);
-    if(s.a.ask>8e6)say_.push('Tickets above €8M narrow the field to larger funds. Splitting the stack into senior and equity widens it.');
-    if(s.a.ins==='any')say_.push('With the capital type open, you see every route. I would narrow it after we look at your margin.');
-    if(r.fit.length&&say_.length<3)say_.push('Next I would collect the land title, budget and permit evidence. Those answers make the project ready for a first teaser.');
-    const top=[...r.fit].sort((x,y)=>Math.abs((x.i.min+x.i.max)/2-s.a.ask)-Math.abs((y.i.min+y.i.max)/2-s.a.ask)).slice(0,3);
-    html=`<span>${r.fit.length?`Here is my first read. ${plural(r.fit.length,'investor')} in the database fit this project today.`:'Here is my first read.'}</span><ul class="sl">${say_.slice(0,3).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`+
-      (top.length?`<div class="rows">${top.map(x=>`<div class="r"><b style="font-weight:500">${x.i.t}</b><span class="pill">Fits today</span><small>${eur(x.i.min)}–${eur(x.i.max)} · ${x.i.ins.map(y=>INSL[y]).join(' / ')} · ${x.i.geo.slice(0,2).map(g=>GEO[g]).join(', ')}${x.i.geo.length>2?' +'+(x.i.geo.length-2):''}</small></div>`).join('')}</div>`:'')+
-      `<button class="btn plan sm" type="button" data-signup="dev">Save this project, continue with my agent</button>`;
+    const a=s.a,cost=a.ask+a.equity,ltc=a.ask/cost,margin=(a.gdv-cost)/cost,lic=(PERM.find(x=>x.v===a.permit)||{}).lic||'none';
+    await refreshCount();
+    const m=await rpc('funnel_match',{p_geo:a.geo,p_ask:a.ask,p_license:lic,p_ltc:Math.round(ltc*1000)/1000,p_margin:Math.round(margin*1000)/1000});
+    if(m&&typeof m.total==='number'){
+      html=`<span>That is all 7 answers. Here is how your project looks against ${m.total} investors in our network.</span><ul class="sl"><li><b>${m.high}</b> match with high compatibility</li><li><b>${m.medium}</b> match with medium compatibility</li><li><b>${m.low}</b> match with low compatibility</li></ul><span>Next I score your project's financing readiness.</span>`;
+    }else html='<span>That is all 7 answers. Next I score your project\'s financing readiness and show which investors fit.</span>';
   }else{
     const r=invPart(s.a),say_=[];
     if(!r.n)say_.push('Nothing matches right now. I will alert you the moment a project does, and I can show what is one step away if you widen the stage or the ticket.');
@@ -765,12 +767,12 @@ async function finish(s){
 }
 function resetChat(m){
   ST[m]={msgs:[],a:{},qi:0,done:false,gated:false,typing:false,tmp:[]};const s=ST[m];
-  s.msgs.push({r:'a',t:(m==='dev'?'Hi, I am your Cobuildy agent. I check your project against our investor database as we go.':'Hi, I am your Cobuildy agent. I screen live projects against your mandate as we go.')+'\n\n'+Q[m][0].q});
+  s.msgs.push({r:'a',t:(m==='dev'?'Hi, I am your Cobuildy agent. Answer 7 questions and I check your project against our real investor database as we go.':'Hi, I am your Cobuildy agent. I screen live projects against your mandate as we go.')+'\n\n'+Q[m][0].q});
 }
 $('c-form').addEventListener('submit',e=>{e.preventDefault();const t=$('c-in').value.trim();if(!t)return;$('c-in').value='';submit(t)});
 $('c-reset').onclick=()=>{if(busy)return;resetChat(aud);renderChat()};
 $('c-chips').addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b||b.dataset.signup!==undefined||busy||flying)return;const s=ST[aud],q=Q[aud][s.qi];
+  const b=e.target.closest('button');if(!b||b.dataset.signup!==undefined||b.dataset.start!==undefined||busy||flying)return;const s=ST[aud],q=Q[aud][s.qi];
   if(b.dataset.act==='reset'){resetChat(aud);renderChat();return}
   if(b.dataset.act==='ex'){submit(q.ex);return}
   if(b.dataset.act==='cont'){if(s.tmp.length)submit(labelOf('geo',s.tmp),[...s.tmp]);return}
@@ -823,7 +825,7 @@ $('c-chips').addEventListener('pointerdown',stopHint);
 /* ---------- audience switch ---------- */
 let aud='dev';
 const COPY={
- dev:{chips:[],t:'Hi! I am here to raise <em>capital</em> for your project.',l:'I work for you <b>24/7</b>, matching your project with institutional lenders and investors and handling the routine work. You pay <b>only when capital arrives</b>: 1.5% on the first €3M and 1% on everything above.',n:'Try the agent in the chat. No sign-up needed.',
+ dev:{chips:[],t:'Find out if your project is <em>ready for financing</em>',l:'I work for you <b>24/7</b>, matching your project with institutional lenders and investors and handling the routine work. You pay <b>only when capital arrives</b>: 1.5% on the first €3M and 1% on everything above.',n:'Try the agent in the chat. No sign-up needed.',
   ah:'An agent that never clocks out',ap:'While you build, it watches the market, keeps your profile ready and moves your outreach forward. It knows what each investor requires and what you still owe them.',know:['Lender and fund mandates','Ticket sizes and LTC limits','Permit requirements','Your documents and gaps','Open questions from investors','Market comparables'],
   sh:'From a first message to a term sheet',steps:[['Tell the agent','Describe the project in your own words, or upload what you have. The profile builds beside the chat and shows what is missing.','Step 1 · You'],['Approve the plan','The agent drafts the teaser, picks the investors and writes the messages. You review and confirm before anything is sent.','Step 2 · Agent drafts, you approve'],['Get introduced','Interested investors get the data room. Your team and ours handle calls, terms and closing. The agent keeps chasing the details.','Step 3 · Agent chases, people close']],
   fh:'Put an agent to work on your project today',
@@ -868,7 +870,7 @@ if(!matchMedia('(prefers-reduced-motion:reduce)').matches)logTimer=setInterval(l
 let role='dev',ctxDev='',ctxInv='';
 function ctxText(r){
   const a=ST[r].a;
-  if(r==='dev'){const x=devPart(a);return [`${a.as?ASL[a.as]:'Asset not set'} · ${a.geo?GEO[a.geo]:'market not set'}`,`${a.stage?STL[a.stage]:'Stage not set'} · ${a.ins?INSL[a.ins]:'capital type open'}`,`Cost ${a.cost?eur(a.cost):'not set'} · raise ${a.ask?eur(a.ask):'not set'}`,`${plural(x.fit.length,'investor')} fit${x.full?' today':' so far'}`]}
+  if(r==='dev'){const d=ST.dev.a,lab=k=>d[k]===undefined?null:labelOf(k,d[k]);return [`${lab('strategy')||'Project type not set'} · ${lab('geo')||'market not set'}`,`${lab('fstage')||'Stage not set'} · permits: ${lab('permit')||'not set'}`,`GDV ${lab('gdv')||'not set'} · raise ${lab('ask')||'not set'} · own capital ${lab('equity')||'not set'}`,DEV.total!=null&&DEV.match!=null?`${plural(DEV.match,'investor')} fit${d.ask?'':' so far'}`:'Investors checked against the network']}
   const x=invPart(a);return [a.geo?a.geo.map(g=>GEO[g]).join(', '):'No region yet',`${a.ins?(a.ins==='any'?'Any instrument':INSL[a.ins]):'Instrument open'} · ticket ${a.tk?TKL[a.tk]:'open'}`,`${plural(x.n,'live project')} match${x.n===1?'es':''} ${x.full?'today':'so far'}`]
 }
 function setRole(r){
@@ -882,11 +884,16 @@ function openSignup(r){
 }
 function closeSignup(){$('ov').hidden=true}
 const LOGIN='/login';
-function saveCarry(){try{localStorage.setItem('cb.carry.v1',JSON.stringify({role:aud,dev:ST.dev.a,inv:ST.inv.a,ts:Date.now()}))}catch(e){}}
+const START='/start';
+function devCarry(){const d={...ST.dev.a},p=PERM.find(x=>x.v===d.permit);if(p)d.stage=p.st;delete d.permit;if(d.ask!=null&&d.equity!=null)d.cost=d.ask+d.equity;return d}
+function saveCarry(){try{localStorage.setItem('cb.carry.v1',JSON.stringify({role:aud,dev:devCarry(),inv:ST.inv.a,ts:Date.now()}))}catch(e){}}
+/* the app's funnel picks the answers up here and goes on from the first question that is still open */
+function saveDraft(){try{const a=ST.dev.a;localStorage.setItem('cb.funnel.draft',JSON.stringify({a:{strategy:a.strategy,geo:a.geo,city:a.city,stage:a.fstage,gdv:a.gdv,ask:a.ask,equity:a.equity,permit:a.permit},ts:Date.now()}))}catch(e){}}
 addEventListener('pagehide',saveCarry);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveCarry()});
 $('h-cta').addEventListener('click',()=>{const d=$('demo'),c=$('c-chips'),m=$('c-msgs');d.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'});
   [d,c,m].forEach(x=>x.classList.remove('hint'));void d.offsetWidth;setTimeout(()=>[d,c,m].forEach(x=>x.classList.add('hint')),350)});
-document.addEventListener('click',e=>{const b=e.target.closest('[data-signup]');if(b){saveCarry();const r=b.dataset.signup||aud;location.href=LOGIN+'?role='+(r==='inv'?'investor':'developer')+(b.dataset.auto?'&auto='+b.dataset.auto:'');return}
+document.addEventListener('click',e=>{const st=e.target.closest('[data-start]');if(st){saveCarry();saveDraft();location.href=START;return}
+  const b=e.target.closest('[data-signup]');if(b){saveCarry();const r=b.dataset.signup||aud;location.href=LOGIN+'?role='+(r==='inv'?'investor':'developer')+(b.dataset.auto?'&auto='+b.dataset.auto:'');return}
   if(e.target===$('ov'))closeSignup();
   });
 $('dl-x').onclick=closeSignup;
@@ -910,4 +917,5 @@ $('su').addEventListener('submit',async e=>{
 
 /* ---------- init ---------- */
 resetChat('dev');resetChat('inv');setAud('dev');
+rpc('funnel_stats').then(r=>{if(r&&typeof r.investors==='number'&&r.investors>0){DEV.total=r.investors;DEV.match=r.investors;if(aud==='dev')renderChat()}});
 </script>
