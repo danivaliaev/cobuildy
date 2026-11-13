@@ -52,7 +52,7 @@ function SignedOut() {
   const { pathname, search, hash } = useLocation()
   const returning = /[?&#](code|access_token|error)=/.test(search + hash)
   const toLanding = pathname !== '/login' && !returning
-  useEffect(() => { if (toLanding) window.location.replace('/landing.html') }, [toLanding])
+  useEffect(() => { if (toLanding) window.location.replace('/landing.html' + search) }, [toLanding]) // eslint-disable-line react-hooks/exhaustive-deps
   return toLanding ? <div className="login"><span className="muted">Loading…</span></div> : <Login />
 }
 
