@@ -6,7 +6,7 @@ import { geoCode } from '../lib/profile'
 import { loadPlaces, type Place, type Places } from '../lib/places'
 import { save, sessionId, trafficSource, validName, validPhone } from '../lib/funnelTrack'
 import {
-  COUNTRIES, PERMITS, REGIONS, STAGES, cleanCity, STRATEGY, compatibility, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdict,
+  COUNTRIES, PERMITS, REGIONS, STAGES, cleanCity, STRATEGY, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdict,
   type Answers, type Complete, type Matches, type Strategy, type Unit,
 } from '../lib/funnel'
 
@@ -244,8 +244,6 @@ export function Funnel() {
               <div className="fn-bar" aria-hidden="true"><i style={{ width: `${result.total}%` }} /></div>
               <p>{verdict(result.total)}</p>
               {matches && <>
-                <h3>Investor Compatibility</h3>
-                <p>{compatibility(matches)}</p>
                 <h3>Potential Investor Matches</h3>
                 <ul className="fn-matches">
                   <li><b>{matches.high}</b> strong fit: your project meets their criteria today</li>

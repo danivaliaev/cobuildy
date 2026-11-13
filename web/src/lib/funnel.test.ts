@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeAnswers, ENTRY_LABEL, complete, numbers, parseMoney, score, toCarry, verdict, compatibility } from './funnel'
+import { describeAnswers, ENTRY_LABEL, complete, numbers, parseMoney, score, toCarry, verdict } from './funnel'
 import { devUpdates } from './carry'
 
 describe('parseMoney with a unit', () => {
@@ -39,9 +39,8 @@ describe('score', () => {
   it('numbers: cost is capital plus equity', () => {
     const n = numbers(base); expect(n.cost).toBe(7_000_000); expect(n.ltc).toBeCloseTo(0.714, 3)
   })
-  it('wording follows the score and the matches', () => {
+  it('wording follows the score', () => {
     expect(verdict(78)).toContain('good'); expect(verdict(60)).toContain('moderate'); expect(verdict(30)).toContain('early stage')
-    expect(compatibility({ total: 98, high: 3, medium: 0, low: 0 })).toContain('matches'); expect(compatibility({ total: 98, high: 0, medium: 0, low: 0 })).toContain('No investor')
   })
 })
 

@@ -109,11 +109,6 @@ export function verdict(total: number): string {
 }
 
 export interface Matches { total: number; high: number; medium: number; low: number }
-export function compatibility(m: Matches): string {
-  if (m.high > 0) return 'Your project matches the investment criteria of investors in our network.'
-  if (m.medium > 0 || m.low > 0) return 'Some investors in our network could be a fit. Completing your project profile shows how close.'
-  return 'No investor in our network matches yet. Completing your project profile may change that.'
-}
 
 const PERMIT_STAGE: Record<Permit, string> = { granted: 'granted', submitted: 'submitted', process: 'prep', none: 'none', notreq: 'notreq' }
 
