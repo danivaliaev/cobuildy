@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { CARRY_KEY } from '../lib/carry'
 import { eur } from '../lib/format'
 import { geoCode } from '../lib/profile'
+import { loadPlaces, type Place, type Places } from '../lib/places'
 import {
   COUNTRIES, PERMITS, REGIONS, STAGES, cleanCity, STRATEGY, compatibility, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdict,
   type Answers, type Complete, type Matches, type Strategy, type Unit,
@@ -29,6 +30,7 @@ export function Funnel() {
   const [text, setText] = useState('')
   const [bad, setBad] = useState(false)
   const [unit, setUnit] = useState<Unit>('m')
+  const [places, setPlaces] = useState<Places | null>(null)
   const [pending, setPending] = useState<string | null>(null) // a typed place we could not place in a region yet
   const [phase, setPhase] = useState<'ask' | 'think' | 'result'>('ask')
   const [shown, setShown] = useState(0)
@@ -36,15 +38,17 @@ export function Funnel() {
   const [investors, setInvestors] = useState<number | null>(null)
   const endRef = useRef<HTMLDivElement>(null)
   const step = STEPS[i]
+  const suggestions = step === 'geo' && !pending && places ? places.suggest(text) : []
 
   useEffect(() => {
     document.title = 'Is your project ready for financing? · Cobuildy'
     const m = document.createElement('meta'); m.name = 'robots'; m.content = 'noindex'; document.head.appendChild(m)
     initPixel()
+    void loadPlaces().then(setPlaces, () => setPlaces(null))
     void supabase.rpc('funnel_stats').then(({ data }) => { const n = (data as { investors?: number } | null)?.investors; if (typeof n === 'number' && n > 0) setInvestors(n) })
     return () => { m.remove() }
   }, [])
-  useEffect(() => { endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }) }, [i, phase, shown, matches])
+  useEffect(() => { endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }) }, [i, phase, shown, matches, suggestions.length])
 
   const stages = a.strategy ? STAGES[a.strategy] : []
   const label = (s: Step): string | null => {
@@ -83,10 +87,13 @@ export function Funnel() {
     void Promise.all([wait, call]).then(([, m]) => { window.clearInterval(timer); setMatches(m); setPhase('result'); track('FunnelCompleted', true, { score: sc.total }) })
   }
 
+  const pick = (p: Place) => next({ geo: p.geo, city: p.label })
   function submitCity(e: FormEvent) {
     e.preventDefault()
     const city = cleanCity(text)
     if (city.length < 2) return setBad(true)
+    const hit = places?.find(city) ?? places?.suggest(city, 1).filter(p => p.name.toLowerCase() === city.toLowerCase())[0]
+    if (hit) return pick(hit)
     const geo = geoCode(city)
     if (geo) next({ geo, city })
     else setPending(city)
@@ -131,7 +138,7 @@ export function Funnel() {
 
           {phase === 'ask' && (
             <div className="fn-input">
-              {(step === 'strategy' || (step === 'geo' && !pending) || step === 'stage' || step === 'permit') && (
+              {(step === 'strategy' || (step === 'geo' && !pending && !text.trim()) || step === 'stage' || step === 'permit') && (
                 <div className="fn-chips" role="group" aria-label={QUESTION[step]}>
                   {step === 'strategy' && STRATEGY.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ strategy: o.v as Strategy })}>{o.label}</button>)}
                   {step === 'geo' && REGIONS.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ geo: o.v, city: undefined })}>{o.label}</button>)}
@@ -145,6 +152,9 @@ export function Funnel() {
                     onChange={e => { setText(e.target.value); setBad(false) }} aria-invalid={bad} />
                   <button className="fn-go" type="submit" disabled={cleanCity(text).length < 2}>Next</button>
                   {bad && <span className="fn-bad" role="alert">Enter the name of the city or town.</span>}
+                  {suggestions.length > 0 && <div className="fn-units" role="listbox" aria-label="Suggestions">
+                    {suggestions.map(p => <button key={p.label} type="button" role="option" aria-selected={false} className="fn-chip" onClick={() => pick(p)}>{p.label}</button>)}
+                  </div>}
                 </form>
               )}
               {step === 'geo' && pending && (

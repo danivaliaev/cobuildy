@@ -78,15 +78,30 @@ export function derived(f: Fields) {
 
 // ---------- mapping to the project columns used by matching ----------
 const GEO_WORDS: Array<[RegExp, string]> = [
-  [/elsewhere in spain/i, 'XES'], [/elsewhere in portugal/i, 'XPT'],
   [/marbella|estepona|m[aá]laga|fuengirola|benahav[ií]s|mijas|sotogrande|nerja|costa del sol/i, 'CS'],
   [/barcelona|sitges|girona|catalonia|catalu/i, 'BCN'], [/madrid/i, 'MAD'], [/valencia|alicante|denia/i, 'VLC'],
   [/mallorca|ibiza|palma|menorca|tenerife|canar|balear/i, 'ISL'], [/lisbon|lisboa|cascais|sintra/i, 'LIS'],
   [/porto|oporto/i, 'OPO'], [/algarve|faro|lagos|albufeira|vilamoura/i, 'ALG'],
-  // a place the list does not know, followed by its country
-  [/,\s*spain$/i, 'XES'], [/,\s*portugal$/i, 'XPT'], [/,\s*other country$/i, 'XX'],
 ]
-export const geoCode = (t: string): string | null => GEO_WORDS.find(([re]) => re.test(t))?.[1] ?? null
+const COUNTRY: Array<[RegExp, string]> = [[/^(spain|espa[nñ]a)$/i, 'XES'], [/^portugal$/i, 'XPT'], [/^other country$/i, 'XX']]
+const STRICT = GEO_WORDS.map(([re, code]) => [new RegExp(`^(?:${re.source})$`, 'i'), code] as [RegExp, string])
+const loose = (t: string) => GEO_WORDS.find(([re]) => re.test(t))?.[1] ?? null
+
+/**
+ * Region of a free-text location. "Torremolinos, Costa del Sol" is read by its last part, so a town that only
+ * shares a word with a region ("Palma del Río, Spain", "Valencia de Alcántara, Spain") is not taken for that region.
+ */
+export const geoCode = (t: string): string | null => {
+  const parts = t.split(',').map(x => x.trim()).filter(Boolean)
+  if (parts.length > 1) {
+    const last = parts[parts.length - 1]
+    const country = COUNTRY.find(([re]) => re.test(last))?.[1]
+    if (country) return STRICT.find(([re]) => re.test(parts[0]))?.[1] ?? country
+    const byLast = loose(last)
+    if (byLast) return byLast
+  }
+  return loose(t)
+}
 const round = (n: number, d: number) => Math.round(n * 10 ** d) / 10 ** d
 
 export function assetCode(v: string): string | null {

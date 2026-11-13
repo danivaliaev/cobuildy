@@ -73,3 +73,28 @@ describe('typed place', () => {
     expect(devUpdates({ geo: 'BCN' }).find(x => x.key === 'a_loc')!.display).toBe('Barcelona')
   })
 })
+
+import { loadPlaces, labelFor } from './places'
+describe('places', () => {
+  it('knows the towns and puts each in its region', async () => {
+    const pl = await loadPlaces()
+    expect(pl.find('Torremolinos')).toMatchObject({ geo: 'CS', label: 'Torremolinos, Costa del Sol' })
+    expect(pl.find('Alcalá de Henares')?.geo).toBe('MAD'); expect(pl.find('alcala de henares')?.geo).toBe('MAD')
+    expect(pl.find('Cascais')?.geo).toBe('LIS'); expect(pl.find('Matosinhos')?.geo).toBe('OPO'); expect(pl.find('Tavira')?.geo).toBe('ALG')
+    expect(pl.find('Sevilla')).toMatchObject({ geo: 'XES', label: 'Sevilla, Spain' }); expect(pl.find('Seville')?.name).toBe('Sevilla')
+    expect(pl.find('Braga')).toMatchObject({ geo: 'XPT', label: 'Braga, Portugal' }); expect(pl.find('Nowhereville')).toBeNull()
+  })
+  it('suggests larger towns first', async () => {
+    const pl = await loadPlaces()
+    const s = pl.suggest('mar'); expect(s.length).toBeGreaterThan(1); expect(s.some(x => x.name === 'Marbella')).toBe(true)
+    expect(pl.suggest('x')).toEqual([])
+  })
+  it('the label reads back to the same region, even for towns named like another region', async () => {
+    const pl = await loadPlaces()
+    for (const name of ['Palma del Río', 'Valencia de Alcántara', 'Porto de Mós', 'Torremolinos', 'Gandía', 'Tavira', 'Sitges', 'Madrid', 'Barcelona', 'Lisbon', 'Porto']) {
+      const p = pl.find(name); if (!p) continue
+      expect(geoCode(p.label), name).toBe(p.geo)
+    }
+    expect(labelFor('Madrid', 'MAD')).toBe('Madrid')
+  })
+})
