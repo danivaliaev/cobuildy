@@ -35,7 +35,12 @@ export const PERMITS: Array<{ v: Permit; label: string; pts: number; license: 'g
   { v: 'notreq', label: 'Not required', pts: 25, license: 'granted' },
 ]
 /** Regions offered as answers to "Where is your project located?" */
-export const REGIONS = ['CS', 'BCN', 'MAD', 'VLC', 'ISL', 'LIS', 'OPO', 'ALG'].map(v => ({ v, label: GEO[v] }))
+/** The islands are one region for investors but two answers for the visitor. */
+export const REGIONS = [
+  ...['CS', 'BCN', 'MAD', 'VLC'].map(v => ({ v, label: GEO[v], city: undefined as string | undefined })),
+  { v: 'ISL', label: 'Balearic Islands', city: 'Balearic Islands' }, { v: 'ISL', label: 'Canary Islands', city: 'Canary Islands' },
+  ...['LIS', 'OPO', 'ALG'].map(v => ({ v, label: GEO[v], city: undefined as string | undefined })),
+]
 /** Asked only when the typed place is not one the platform knows. */
 export const COUNTRIES = [{ v: 'XES', label: 'Spain' }, { v: 'XPT', label: 'Portugal' }, { v: 'XX', label: 'Other country' }]
 export const cleanCity = (t: string) => t.replace(/\s+/g, ' ').trim().slice(0, 80)

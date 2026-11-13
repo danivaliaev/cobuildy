@@ -10,12 +10,13 @@ const km = ([lo1, la1], [lo2, la2]) => {
   const h = Math.sin(dLa / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin(dLo / 2) ** 2
   return 12742 * Math.asin(Math.sqrt(h))
 }
-// one-letter region codes: C Costa del Sol, B Barcelona, M Madrid, V Valencia, I Balearics/Canaries, L Lisbon, O Porto, A Algarve, E elsewhere in Spain, P elsewhere in Portugal
+// one-letter region codes: C Costa del Sol, B Barcelona, M Madrid, V Valencia, I Balearics, K Canaries, L Lisbon, O Porto, A Algarve, E elsewhere in Spain, P elsewhere in Portugal
 function region(c) {
   const [lo, la] = c.loc.coordinates
   if (c.country === 'ES') {
     if (c.adminCode === '29') return 'M'
-    if (c.adminCode === '07' || c.adminCode === '53') return 'I'
+    if (c.adminCode === '07') return 'I'
+    if (c.adminCode === '53') return 'K'
     if (c.adminCode === '60') return 'V'
     if (c.adminCode === '56' && km([lo, la], [2.17, 41.39]) <= 110) return 'B'
     if (c.adminCode === '51' && la >= 36.2 && la <= 36.95 && lo >= -5.5 && lo <= -3.6) return 'C'

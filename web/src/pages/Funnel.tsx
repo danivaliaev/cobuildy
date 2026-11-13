@@ -141,7 +141,7 @@ export function Funnel() {
               {(step === 'strategy' || (step === 'geo' && !pending && !text.trim()) || step === 'stage' || step === 'permit') && (
                 <div className="fn-chips" role="group" aria-label={QUESTION[step]}>
                   {step === 'strategy' && STRATEGY.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ strategy: o.v as Strategy })}>{o.label}</button>)}
-                  {step === 'geo' && REGIONS.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ geo: o.v, city: undefined })}>{o.label}</button>)}
+                  {step === 'geo' && REGIONS.map(o => <button key={o.label} className="fn-chip" onClick={() => next({ geo: o.v, city: o.city })}>{o.label}</button>)}
                   {step === 'stage' && stages.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ stage: o.v })}>{o.label}</button>)}
                   {step === 'permit' && PERMITS.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ permit: o.v })}>{o.label}</button>)}
                 </div>

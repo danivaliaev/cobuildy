@@ -96,5 +96,7 @@ describe('places', () => {
       expect(geoCode(p.label), name).toBe(p.geo)
     }
     expect(labelFor('Madrid', 'MAD')).toBe('Madrid')
+    expect(pl.find('Ibiza')).toMatchObject({ geo: 'ISL', label: 'Ibiza, Balearic Islands' }); expect(pl.find('Arrecife')).toMatchObject({ geo: 'ISL', label: 'Arrecife, Canary Islands' })
+    expect(geoCode('Arrecife, Canary Islands')).toBe('ISL')
   })
 })

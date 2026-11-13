@@ -3,13 +3,14 @@ import { GEO } from './types'
 /** Towns of Spain and Portugal with 1,000+ inhabitants, each in one platform region. Loaded only when a visitor types a place (lib/places.json, built by scripts/build-places.mjs). */
 export interface Place { name: string; geo: string; label: string }
 
-const CODE: Record<string, string> = { C: 'CS', B: 'BCN', M: 'MAD', V: 'VLC', I: 'ISL', L: 'LIS', O: 'OPO', A: 'ALG', E: 'XES', P: 'XPT' }
+const CODE: Record<string, string> = { C: 'CS', B: 'BCN', M: 'MAD', V: 'VLC', I: 'ISL', K: 'ISL', L: 'LIS', O: 'OPO', A: 'ALG', E: 'XES', P: 'XPT' }
+const ISLAND: Record<string, string> = { I: 'Balearic Islands', K: 'Canary Islands' }
 const ALIAS: Record<string, string> = { lisboa: 'lisbon', seville: 'sevilla', gerona: 'girona', saragossa: 'zaragoza', majorca: 'palma', oporto: 'porto', 'la coruna': 'a coruna', corunna: 'a coruna' }
 export const norm = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim()
 
 /** How the place is written in the project: the region comes last, so it can be read back. A city named like its region stays bare. */
-export function labelFor(name: string, geo: string): string {
-  const region = geo === 'XES' ? 'Spain' : geo === 'XPT' ? 'Portugal' : GEO[geo]
+export function labelFor(name: string, geo: string, island?: string): string {
+  const region = island ?? (geo === 'XES' ? 'Spain' : geo === 'XPT' ? 'Portugal' : GEO[geo])
   return norm(name) === norm(region) || (geo === 'LIS' && norm(name) === 'lisbon') ? name : `${name}, ${region}`
 }
 
@@ -20,7 +21,7 @@ export function loadPlaces(): Promise<Places> {
     const data = (m.default ?? m) as { n: string; c: string }
     const names = data.n.split('|')
     const keys = names.map(norm)
-    const make = (i: number): Place => { const geo = CODE[data.c[i]]; return { name: names[i], geo, label: labelFor(names[i], geo) } }
+    const make = (i: number): Place => { const geo = CODE[data.c[i]]; return { name: names[i], geo, label: labelFor(names[i], geo, ISLAND[data.c[i]]) } }
     const find = (text: string) => { const k = norm(text); const i = keys.indexOf(ALIAS[k] ?? k); return i < 0 ? null : make(i) }
     const suggest = (text: string, max = 6) => {
       const k = ALIAS[norm(text)] ?? norm(text)
