@@ -1,10 +1,10 @@
 import { kindLabel, countryName } from '../lib/investorKinds'
-import { useState, type FormEvent } from 'react'
+import { Fragment, useState, type FormEvent } from 'react'
 import { supabase, rpc } from '../lib/supabase'
 import { useAuth } from '../auth'
 import { eur, when } from '../lib/format'
 import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
-import { GEO, ASSET, CHANNEL, STAGE_LABEL, type InvestorReply, type Invitation, type Investor, type Project, type Role } from '../lib/types'
+import { GEO, ASSET, INV_GEO, INV_ASSET, INSTRUMENT, CHANNEL, STAGE_LABEL, type InvestorReply, type Invitation, type Investor, type Project, type Role } from '../lib/types'
 
 
 function Invitations({ reloadKey }: { reloadKey: number }) {
@@ -117,26 +117,49 @@ function Teasers() {
 
 function Investors() {
   const list = useLoad(async () => {
-    const { data, error } = await supabase.from('investors').select('*').order('created_at', { ascending: false }).limit(200)
+    const { data, error } = await supabase.from('investors').select('*').order('created_at', { ascending: false }).limit(500)
     if (error) throw error
     return data as Investor[]
   })
   const act = useAction(list.reload)
+  const [q, setQ] = useState('')
+  const [cat, setCat] = useState('')
+  const [state, setState] = useState<'active' | 'inactive' | 'all'>('active')
+  const [open, setOpen] = useState<string | null>(null)
+  const all = list.data ?? []
+  const cats = [...new Set(all.map(i => i.category).filter(Boolean))] as string[]
+  const rows = all.filter(i => (state === 'all' || (state === 'active') === (i.active !== false)) && (!cat || i.category === cat)
+    && (!q.trim() || `${i.name} ${i.code} ${i.crm_id ?? ''}`.toLowerCase().includes(q.trim().toLowerCase())))
+  const list2 = (xs: string[] | null, dict: Record<string, string>) => (xs?.length ? xs.map(x => dict[x] ?? x).join(', ') : 'any')
+  const ticket = (i: Investor) => (i.ticket_min == null && i.ticket_max == null ? 'any' : `${i.ticket_min == null ? '…' : eur(i.ticket_min)} – ${i.ticket_max == null ? '…' : eur(i.ticket_max)}`)
   return (
     <section className="card">
       <h2>Investors</h2>
+      <p className="muted">What each investor looks for. An empty criterion means no restriction, so the investor fits any project on that point. Open a row to see the original CRM text.</p>
       <ErrorLine error={act.error ?? list.error} />
-      {list.data && list.data.length === 0 ? <Empty>No investors yet. They appear when an invited investor signs in.</Empty> : (
+      <div className="row">
+        <input style={{ maxWidth: 240 }} placeholder="Search name or code" aria-label="Search investors" value={q} onChange={e => setQ(e.target.value)} />
+        <select aria-label="Category" value={cat} onChange={e => setCat(e.target.value)}><option value="">All categories</option>{cats.map(c => <option key={c}>{c}</option>)}</select>
+        <select aria-label="Status" value={state} onChange={e => setState(e.target.value as typeof state)}><option value="active">Active</option><option value="inactive">No criteria yet</option><option value="all">All</option></select>
+        <span className="sp muted">{rows.length} of {all.length}</span>
+      </div>
+      {list.data && all.length === 0 ? <Empty>No investors yet. They appear when an invited investor signs in.</Empty> : (
         <div className="scrollx"><table>
-          <thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Country</th><th>Email</th><th>Phone</th><th>Declared</th><th>KYC</th><th /></tr></thead>
-          <tbody>{list.data?.map(i => (
-            <tr key={i.id}>
-              <td>{i.code}</td><td>{i.name}</td><td>{kindLabel(i.kind)}</td><td>{countryName(i.country)}</td><td>{i.email ?? '—'}</td><td>{i.phone ?? '—'}</td>
-              <td>{i.declared_qualified_at ? <Pill tone="good">{when(i.declared_qualified_at)}</Pill> : <Pill>no</Pill>}</td>
-              <td><Pill tone={i.kyc_status === 'passed' ? 'good' : i.kyc_status === 'failed' ? 'bad' : i.kyc_status === 'pending' ? 'warn' : undefined}>{i.kyc_status}</Pill></td>
-              <td><select aria-label="Set KYC status" value={i.kyc_status} disabled={act.busy} onChange={e => void act.run(() => rpc('set_kyc', { p_investor: i.id, p_status: e.target.value }))}>
+          <thead><tr><th>Investor</th><th>Category</th><th>Instruments</th><th>Regions</th><th>Assets</th><th>Ticket</th><th>KYC</th></tr></thead>
+          <tbody>{rows.map(i => (<Fragment key={i.id}>
+            <tr onClick={() => setOpen(open === i.id ? null : i.id)} style={{ cursor: 'pointer' }}>
+              <td><b>{i.name}</b><div className="muted mono">{i.code} · {kindLabel(i.kind)}{i.user_id ? '' : ' · no login'}</div></td>
+              <td>{i.category ?? '—'}</td>
+              <td>{list2(i.instruments, INSTRUMENT)}</td><td>{list2(i.geos, INV_GEO)}</td><td>{list2(i.assets, INV_ASSET)}</td><td>{ticket(i)}</td>
+              <td onClick={e => e.stopPropagation()}><select aria-label="Set KYC status" value={i.kyc_status} disabled={act.busy} onChange={e => void act.run(() => rpc('set_kyc', { p_investor: i.id, p_status: e.target.value }))}>
                 {['none', 'pending', 'passed', 'failed'].map(s => <option key={s}>{s}</option>)}</select></td>
-            </tr>))}</tbody>
+            </tr>
+            {open === i.id && <tr><td colSpan={7}>
+              <div className="muted">{i.crm ? <>
+                <div><b>CRM:</b> {i.crm_id} · {i.crm.type ?? 'platform'} · instrument “{i.crm.instrument}” · ticket “{i.crm.ticket}”</div>
+                <div>Geographies: {i.crm.geographies}</div><div>Assets: {i.crm.assets}</div></> : <div>Created on the platform, no CRM record.</div>}
+                <div>Email {i.email ?? '—'} · phone {i.phone ?? '—'} · country {countryName(i.country)} · declared {i.declared_qualified_at ? when(i.declared_qualified_at) : 'no'}</div></div>
+            </td></tr>}</Fragment>))}</tbody>
         </table></div>
       )}
     </section>

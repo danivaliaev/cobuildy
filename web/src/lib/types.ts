@@ -29,6 +29,8 @@ export interface Investor {
   min_margin: number | null; min_presales: number | null
   declared_qualified_at: string | null; kyc_status: 'none' | 'pending' | 'passed' | 'failed'
   mandate: { type?: 'priv' | 'inst' | null; st?: Record<string, string> } | null
+  active?: boolean; category?: string | null; crm_id?: string | null
+  crm?: { type?: string | null; category?: string; instrument?: string; ticket?: string; geographies?: string; assets?: string; slug?: string } | null
 }
 export interface Match { investor_id: string; code: string; bucket: 'fit' | 'possible' | 'later' | 'out'; score: number; kind?: string | null; country?: string | null; missing?: string[] }
 export interface ProjectDeal {
