@@ -221,3 +221,40 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 .fn-units{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fn-chip.on{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}.fn-pre{font-weight:600;font-size:17px;margin-left:4px}
 
 .fn-contact{display:grid;gap:10px}.fn-contact input{min-height:50px;font-size:17px;border-radius:14px}.fn-contact .fn-cta{margin-top:4px}
+
+/* admin: sidebar, page header, KPI cards, tabs */
+.wrapfull{padding:0}
+.adm{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100vh - 62px)}
+.adm-side{background:var(--surface);border-right:1px solid var(--line);padding:18px 12px;position:sticky;top:0;align-self:start;height:calc(100vh - 62px);overflow-y:auto}
+.adm-nav{display:grid;gap:18px}.adm-group{display:grid;gap:2px}
+.adm-gtitle{font:500 11px var(--f-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);padding:0 10px 6px}
+.adm-nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;text-decoration:none;color:var(--ink-2);font-weight:500}
+.adm-nav a:hover{background:var(--soft);color:var(--ink)}.adm-nav a.on{background:var(--brand);color:var(--on-brand)}
+.adm-nav a span{flex:1}
+.adm-badge{font-style:normal;font:600 11px/1 var(--f-body);min-width:20px;height:20px;padding:0 6px;border-radius:999px;display:inline-grid;place-items:center;background:var(--warn-soft);color:var(--warn);margin-left:6px}
+.adm-nav a.on .adm-badge{background:var(--on-brand);color:var(--brand)}
+.adm-main{padding:26px clamp(16px,3vw,36px) 64px;display:grid;gap:18px;align-content:start;min-width:0;max-width:1320px;width:100%}
+.adm-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}.adm-head h1{font-size:34px}.adm-head p{margin:6px 0 0;max-width:780px}
+.adm-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:12px;min-width:0;align-content:start}
+.adm-card h2{font-size:21px}.adm-card h3{font-size:17px;margin-top:8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:4px;text-decoration:none;color:var(--ink);align-content:start}
+.kpi b{font:400 38px/1.05 var(--f-display)}.kpi b.warn{color:var(--warn)}.kpi b.good{color:var(--good)}.kpi .muted{font-size:13px}
+.kpi.link:hover{border-color:var(--ink-2)}
+.adm-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}.adm-wide{grid-column:1/-1}
+.adm-list{list-style:none;margin:0;padding:0;display:grid}.adm-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.adm-list li:last-child{border:0}
+.adm-list a{color:var(--ink);text-decoration:none;font-weight:500}.adm-list a:hover{text-decoration:underline}
+.adm-bars{display:grid;gap:8px}.adm-bar{display:grid;grid-template-columns:130px 1fr 34px;gap:10px;align-items:center;font-size:14px}.adm-bar b{text-align:right}
+.adm-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.adm-tabs a,.adm-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;cursor:pointer;color:var(--ink-2);font-weight:500;text-decoration:none;white-space:nowrap}
+.adm-tabs .on{color:var(--ink);border-bottom-color:var(--brand)}.adm-ready{display:flex;align-items:center;gap:8px;min-width:110px}.adm-ready .bar{flex:1}.adm-ready span{font-size:13px;color:var(--ink-2)}
+.adm-card table tbody tr:hover{background:var(--soft)}
+@media (max-width:860px){
+  .adm{grid-template-columns:1fr}
+  .adm-side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px 10px;overflow-x:auto}
+  .adm-nav{display:flex;gap:6px}.adm-group{display:flex;gap:4px;align-items:center}.adm-gtitle{display:none}
+  .adm-nav a{white-space:nowrap;padding:8px 12px}
+}
+
+.adm-card{overflow-x:auto}
+.adm-card table{min-width:560px}

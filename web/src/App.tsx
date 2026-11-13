@@ -20,6 +20,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   const { profile } = useAuth()
   const path = useLocation().pathname
   const wide = path.startsWith('/developer') || path.startsWith('/investor')
+  const admin = path.startsWith('/admin')
   const staff = profile?.role === 'admin' || profile?.role === 'expert'
   return (
     <>
@@ -33,7 +34,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <Bell />
         <AccountMenu />
       </header>
-      <main className={`wrap${wide ? ' wide' : ''}`}>{children}</main>
+      <main className={admin ? 'wrapfull' : `wrap${wide ? ' wide' : ''}`}>{children}</main>
     </>
   )
 }
