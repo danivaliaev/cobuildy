@@ -248,9 +248,9 @@ export function Funnel() {
                 <p>{compatibility(matches)}</p>
                 <h3>Potential Investor Matches</h3>
                 <ul className="fn-matches">
-                  <li><b>{matches.high}</b> investors potentially matching your project with high compatibility</li>
-                  <li><b>{matches.medium}</b> investors potentially matching your project with medium compatibility</li>
-                  <li><b>{matches.low}</b> investors potentially matching your project with low compatibility</li>
+                  <li><b>{matches.high}</b> strong fit: your project meets their criteria today</li>
+                  <li><b>{matches.medium}</b> possible fit: close, a few details to confirm</li>
+                  <li><b>{matches.low}</b> within reach: a bigger or smaller raise, or a gap closed, would fit</li>
                 </ul>
               </>}
               <button className="fn-cta" onClick={() => void unlock()}>Unlock Your Investor Matches</button>
