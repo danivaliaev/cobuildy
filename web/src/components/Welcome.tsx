@@ -41,9 +41,9 @@ export function Welcome({ name, fields, matches, completeness, openToTeaser, onC
       </div>
       <div className="welcome-grid">
         <button type="button" className="wstat wbtn" onClick={onInvestors}>
-          <span className="mono muted">Investors that match now</span>
-          {matches ? <b>{fit}<small> fit</small></b> : <b>…</b>}
-          <small>{matches ? `+${poss} need a little more information. See who →` : 'Matching in progress'}</small>
+          <span className="mono muted">Investors that fit your project</span>
+          {matches ? <b>{fit + poss}</b> : <b>…</b>}
+          <small>{matches ? (poss > 0 ? `${fit} confirmed today. ${poss} more once you tell the agent your asset type and capital type. See who →` : `${fit} confirmed today. See who →`) : 'Matching in progress'}</small>
         </button>
         <div className="wstat">
           <span className="mono muted">Profile completeness</span>
