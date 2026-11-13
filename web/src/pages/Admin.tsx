@@ -33,7 +33,7 @@ function Invitations({ reloadKey }: { reloadKey: number }) {
   return (
     <section className="card">
       <h2>Invitations</h2>
-      <p className="muted">Nobody can register without an approved invitation. Approving here only unlocks sign-in; the invitation email is sent separately.</p>
+      <p className="muted">Developers and investors can sign up on their own. An approved invitation is how staff roles (admin, expert) are created, and it also pre-assigns a role to an address. Approving here only unlocks it; the invitation email is sent separately.</p>
       <form className="row" onSubmit={add}>
         <div style={{ flex: 2, minWidth: 200 }}><Field label="Email"><input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></Field></div>
         <div style={{ flex: 1, minWidth: 140 }}><Field label="Role"><select value={role} onChange={e => setRole(e.target.value as Role)}><option value="developer">Developer</option><option value="investor">Investor</option><option value="expert">Expert</option></select></Field></div>

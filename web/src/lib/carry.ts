@@ -2,12 +2,13 @@ import { supabase } from './supabase'
 import { GEO } from './types'
 import { applyUpdates, emptyFields, patchFor, type Update } from './profile'
 import { eur } from './format'
+import { STAGES, STRATEGY, type Strategy } from './funnel'
 
 /** Answers a visitor gave to the demo agent on the landing page. The landing saves them in this browser; the app imports them once after sign-in. */
 export const CARRY_KEY = 'cb.carry.v1'
 const MAX_AGE = 30 * 864e5
 
-interface DevA { geo?: string; as?: string; stage?: string; cost?: number; ask?: number; ins?: string }
+interface DevA { geo?: string; as?: string; stage?: string; cost?: number; ask?: number; ins?: string; strategy?: string; fstage?: string; gdv?: number; equity?: number; score?: number }
 interface InvA { geo?: string[]; ins?: string; tk?: string; as?: string; lic?: number }
 export interface Carry { role?: 'dev' | 'inv'; dev?: DevA; inv?: InvA; ts?: number }
 
@@ -33,18 +34,31 @@ export function carryRole(): 'developer' | 'investor' | null {
 
 const ASSET_TEXT: Record<string, string> = { RES: 'Residential for sale', VIL: 'Luxury villas (residential)', BTR: 'Build-to-rent', HOS: 'Hospitality' }
 const STAGE_TEXT: Record<string, string> = {
-  none: 'No licence yet, not submitted', submitted: 'Licence submitted, waiting', granted: 'Licence granted', build: 'Licence granted, under construction',
+  none: 'No licence yet, not submitted', prep: 'In preparation, not yet submitted', notreq: 'Not required', submitted: 'Licence submitted, waiting', granted: 'Licence granted', build: 'Licence granted, under construction',
 }
 const INS_TEXT: Record<string, string> = { senior: 'Senior loan', mezz: 'Mezzanine', equity: 'Equity partner' }
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v > 0 && v < 1e10 ? Math.round(v) : null)
+
+/** How far the project is says how much control the developer has over the property. */
+function landControl(strategy?: string, stage?: string): { status: 'filled' | 'partial'; display: string } | null {
+  const st = STAGES[strategy as Strategy]?.find(x => x.v === stage)
+  if (!st) return null
+  if (stage === 'identified') return { status: 'partial', display: 'Identified, not yet secured' }
+  if (stage === 'reserved') return { status: 'filled', display: 'Reserved (option)' }
+  return { status: 'filled', display: 'Owned' }
+}
+const strategyLabel = (v?: string) => STRATEGY.find(x => x.v === v)?.label
 
 /** Landing answers as profile updates. Unknown or invalid values are skipped. */
 export function devUpdates(a: DevA): Update[] {
   const u: Update[] = []
   if (a.as && ASSET_TEXT[a.as]) u.push({ key: 'a_type', status: 'filled', display: ASSET_TEXT[a.as] })
   if (a.geo && GEO[a.geo]) u.push({ key: 'a_loc', status: 'filled', display: GEO[a.geo] })
-  if (a.stage && STAGE_TEXT[a.stage]) u.push({ key: 'p_status', status: a.stage === 'granted' || a.stage === 'build' ? 'filled' : 'partial', display: STAGE_TEXT[a.stage] })
+  if (a.stage && STAGE_TEXT[a.stage]) u.push({ key: 'p_status', status: a.stage === 'granted' || a.stage === 'build' || a.stage === 'notreq' ? 'filled' : 'partial', display: STAGE_TEXT[a.stage] })
   const cost = num(a.cost); if (cost) u.push({ key: 'f_cost', status: 'filled', display: eur(cost), amount: cost })
+  const gdv = num(a.gdv); if (gdv) u.push({ key: 'f_gdv', status: 'filled', display: eur(gdv), amount: gdv })
+  if (typeof a.equity === 'number' && a.equity >= 0 && a.equity < 1e10) u.push({ key: 'k_equity', status: 'filled', display: a.equity === 0 ? 'No own equity' : eur(a.equity), amount: Math.round(a.equity) })
+  const own = landControl(a.strategy, a.fstage); if (own) u.push({ key: 'l_own', ...own })
   const ask = num(a.ask); if (ask) u.push({ key: 'k_ask', status: 'filled', display: eur(ask), amount: ask })
   if (a.ins === 'any') u.push({ key: 'k_instr', status: 'partial', display: 'Open to any capital type' })
   else if (a.ins && INS_TEXT[a.ins]) u.push({ key: 'k_instr', status: 'filled', display: INS_TEXT[a.ins] })
@@ -58,7 +72,7 @@ async function importDeveloper(userId: string, a: DevA) {
   if (existing && existing.length) return // never touch an account that already has projects
   const { data: co } = await supabase.from('companies').select('id').eq('owner_id', userId).maybeSingle()
   const { next } = applyUpdates(emptyFields(), updates, 'site')
-  const title = [a.as ? ASSET_TEXT[a.as] : 'My project', a.geo ? GEO[a.geo] : ''].filter(Boolean).join(' · ').slice(0, 120)
+  const title = [a.as ? ASSET_TEXT[a.as] : strategyLabel(a.strategy) ?? 'My project', a.geo ? GEO[a.geo] : ''].filter(Boolean).join(' · ').slice(0, 120)
   const { data: p, error } = await supabase.from('projects').insert({ title, owner_id: userId, company_id: co?.id ?? null, status: 'draft' }).select('id,profile').single()
   if (error || !p) return
   await supabase.from('projects').update(patchFor({ profile: (p.profile as Record<string, unknown> | null) ?? null }, next)).eq('id', p.id)

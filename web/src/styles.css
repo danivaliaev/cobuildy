@@ -190,3 +190,30 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 .submit{display:grid;gap:8px}.submit.ready{padding:12px;border-radius:14px;background:var(--good-soft)}.ready-t{color:var(--good)}
 .frow b u{text-decoration:none;margin-left:8px;font:500 10.5px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--plan);border:1px solid var(--plan);border-radius:999px;padding:1px 7px;vertical-align:2px}
 .path .note{color:var(--ink-2)}.stg.now .stg-n{background:var(--plan)}
+
+/* public funnel (/start): nothing but the conversation */
+.fn{min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
+.fn-top{padding:16px 20px;text-align:center}.fn-logo{font:600 18px/1 var(--f-body);letter-spacing:-.02em;text-transform:uppercase}
+.fn-main{width:min(640px,100%);margin:0 auto;padding:8px 18px 64px;display:grid;gap:20px;align-content:start}
+.fn-intro{display:grid;gap:10px;text-align:center}.fn-intro h1{font-size:clamp(30px,6vw,42px)}.fn-intro p{margin:0;color:var(--ink-2);font-size:16px}
+.fn-chat{display:grid;gap:14px}.fn-turn{display:grid;gap:8px}
+.fn-q{background:var(--surface);border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:14px 16px;font-size:17px;max-width:92%;display:grid;gap:4px}
+.fn-n{font:500 11px var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
+.fn-a{justify-self:end;background:var(--brand);color:var(--on-brand);border-radius:18px 18px 6px 18px;padding:10px 16px;max-width:85%}
+.fn-input{display:grid;gap:12px}.fn-chips{display:flex;flex-wrap:wrap;gap:8px}
+.fn-chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:11px 18px;font-size:16px;cursor:pointer;min-height:44px;text-align:left}
+.fn-chip:hover,.fn-chip:focus-visible{border-color:var(--plan);outline:none;box-shadow:0 0 0 2px color-mix(in srgb,var(--plan) 25%,transparent)}
+.fn-money{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.fn-money input{min-height:48px;font-size:18px;border-radius:14px}
+.fn-go,.fn-cta{border:0;background:var(--brand);color:var(--on-brand);border-radius:999px;font-weight:600;cursor:pointer}
+.fn-go{height:48px;padding:0 22px}.fn-go:disabled{opacity:.4;cursor:default}
+.fn-money .fn-bad,.fn-money .fn-link{grid-column:1/-1}.fn-bad{color:var(--bad);font-size:14px}
+.fn-link{background:none;border:0;padding:4px 0;color:var(--ink-2);cursor:pointer;text-align:left;font-size:14px;text-decoration:underline;justify-self:start}
+.fn-think,.fn-result{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;display:grid;gap:12px}
+.fn-think ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}.fn-think li{color:var(--ink-2);opacity:.45;transition:opacity .3s}.fn-think li.on{opacity:1;color:var(--ink)}
+.fn-think li span{display:inline-block;width:22px;color:var(--good);font-weight:700}
+.fn-result h2{font-size:28px}.fn-result h3{font-size:19px;margin-top:6px}.fn-result p{margin:0}
+.fn-score{display:flex;align-items:baseline;gap:4px;flex-wrap:wrap}.fn-big{font:400 64px/1 var(--f-display)}.fn-of{font-size:22px;color:var(--ink-2)}.fn-lbl{margin-left:10px;color:var(--ink-2);font:500 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase}
+.fn-bar{height:10px;border-radius:6px;background:var(--line);overflow:hidden}.fn-bar i{display:block;height:100%;background:var(--plan);transition:width .8s ease}
+.fn-matches{margin:0;padding-left:20px;display:grid;gap:6px}
+.fn-cta{height:54px;font-size:17px;margin-top:8px}.fn-fine{color:var(--ink-2);font-size:13px;text-align:center}
+@media (prefers-reduced-motion:reduce){.fn-bar i,.fn-think li{transition:none}}

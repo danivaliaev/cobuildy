@@ -78,6 +78,7 @@ export function derived(f: Fields) {
 
 // ---------- mapping to the project columns used by matching ----------
 const GEO_WORDS: Array<[RegExp, string]> = [
+  [/elsewhere in spain/i, 'XES'], [/elsewhere in portugal/i, 'XPT'],
   [/marbella|estepona|m[aá]laga|fuengirola|benahav[ií]s|mijas|sotogrande|nerja|costa del sol/i, 'CS'],
   [/barcelona|sitges|girona|catalonia|catalu/i, 'BCN'], [/madrid/i, 'MAD'], [/valencia|alicante|denia/i, 'VLC'],
   [/mallorca|ibiza|palma|menorca|tenerife|canar|balear/i, 'ISL'], [/lisbon|lisboa|cascais|sintra/i, 'LIS'],
@@ -100,6 +101,7 @@ export function instrumentCodes(v: string): string[] {
   return out
 }
 export function licenseCode(v: string): 'none' | 'submitted' | 'granted' | null {
+  if (/not required/i.test(v)) return 'granted'
   if (/not (yet )?(submitted|applied)|no licen[cs]e|none/i.test(v)) return 'none'
   if (/grant|approved|obtained/i.test(v)) return 'granted'
   if (/submit|filed|applied|waiting|pending/i.test(v)) return 'submitted'

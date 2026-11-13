@@ -52,18 +52,19 @@ export interface DealMessage { id: string; deal_id: string; side: 'investor' | '
 
 export const GEO: Record<string, string> = {
   CS: 'Costa del Sol', BCN: 'Barcelona', MAD: 'Madrid', VLC: 'Valencia', ISL: 'Balearics / Canaries', LIS: 'Lisbon', OPO: 'Porto', ALG: 'Algarve',
+  XES: 'Elsewhere in Spain', XPT: 'Elsewhere in Portugal',
 }
 export const ASSET: Record<string, string> = { RES: 'Residential', BTR: 'Build-to-rent', HOS: 'Hospitality' }
 // Investor mandates may be broader than what a single project uses: whole countries, Europe, other regions, more asset types.
 export const INV_GEO: Record<string, string> = {
-  ...GEO, ES: 'Spain (all)', PT: 'Portugal (all)', EU: 'Europe', XES: 'Other Spain', XX: 'Outside Iberia / Europe',
+  ...GEO, ES: 'Spain (all)', PT: 'Portugal (all)', EU: 'Europe', XX: 'Outside Europe',
 }
 export const INV_ASSET: Record<string, string> = {
   ...ASSET, COM: 'Commercial / office / retail', LND: 'Land', LOG: 'Logistics / storage', PBS: 'Student housing / PBSA', OTH: 'Other',
 }
 // Does an investor's region list cover a project region? Mirrors public.geo_match in the database.
 export const ES_CODES = ['CS', 'BCN', 'MAD', 'VLC', 'ISL', 'XES']
-export const PT_CODES = ['LIS', 'OPO', 'ALG']
+export const PT_CODES = ['LIS', 'OPO', 'ALG', 'XPT']
 export function geoCovers(inv: string[], proj: string): boolean {
   return inv.includes(proj) || (inv.includes('EU') && proj !== 'XX') || (inv.includes('ES') && ES_CODES.includes(proj)) || (inv.includes('PT') && PT_CODES.includes(proj))
 }
