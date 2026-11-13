@@ -36,7 +36,6 @@ export function ProjectPage() {
   const tab: Tab = (['profile', 'investors', 'room'] as const).find(t => t === sp.get('tab')) ?? 'profile'
   const { profile } = useAuth()
   const [welcome, setWelcome] = useState(() => sp.has('welcome'))
-  const [welcomeScore] = useState(() => Math.max(0, Math.min(100, parseInt(sp.get('welcome') ?? '0', 10) || 0)))
   useEffect(() => { if (sp.has('welcome')) { clearWelcome(); setSp(t => { const n = new URLSearchParams(t); n.delete('welcome'); return n }, { replace: true }) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const setTab = (t: Tab) => setSp(t === 'profile' ? {} : { tab: t }, { replace: true })
   // Investor matches are recalculated shortly after the profile changes, so the numbers on this page follow the answers.
@@ -101,7 +100,7 @@ export function ProjectPage() {
         <Pill tone={p.status === 'draft' ? undefined : 'good'}>{p.status.replace('_', ' ')}</Pill></div>
       <h1>{p.code} · {p.title}</h1>
       {welcome && p.status === 'draft' && (
-        <Welcome name={(profile?.full_name ?? '').split(' ')[0]} score={welcomeScore} fields={fields} matches={matches.data}
+        <Welcome name={(profile?.full_name ?? '').split(' ')[0]} fields={fields} matches={matches.data}
           completeness={calc(fields).score} openToTeaser={calc(fields).blockers.length}
           onContinue={() => { setWelcome(false); ask(nextField(fields) ?? '') }} onInvestors={() => { setWelcome(false); setTab('investors') }} onClose={() => setWelcome(false)} />
       )}

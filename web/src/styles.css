@@ -271,11 +271,12 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 }
 
 /* First screen after signing in from the ad funnel */
-.welcome{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px 22px;display:grid;gap:14px;margin:8px 0 16px}
+.welcome-veil{background:rgba(10,20,10,.55);z-index:60;overflow:auto;align-items:center}
+.welcome{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;display:grid;gap:14px;width:min(720px,100%);max-height:calc(100vh - 32px);overflow:auto;box-shadow:0 24px 80px rgba(0,0,0,.28)}
 .welcome-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.welcome-head h2{font-size:clamp(22px,3.2vw,30px);margin:4px 0 0}
-.welcome-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.welcome-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .wstat{background:var(--bg,#f0efeb);border-radius:14px;padding:14px 16px;display:grid;gap:2px;text-align:left;border:0;font:inherit;color:inherit}
 .wstat b{font:400 38px/1.1 var(--f-display)}.wstat b small{font-size:16px;color:var(--ink-2)}.wstat>small{color:var(--ink-2);font-size:13px;line-height:1.35}
 .wbtn{cursor:pointer}.wbtn:hover,.wbtn:focus-visible{outline:2px solid var(--plan);outline-offset:0}
 .welcome-carried{margin:0;font-size:15px;line-height:1.45}
-@media (max-width:720px){.welcome-grid{grid-template-columns:1fr}}
+@media (max-width:720px){.welcome-grid{grid-template-columns:1fr}.welcome{padding:20px 18px}}
