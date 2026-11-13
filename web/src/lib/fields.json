@@ -67,12 +67,6 @@
           "value": "Refurbishment / Renovation",
           "partial": false,
           "unknown": false
-        },
-        {
-          "label": "Acquisition / Buy-to-let",
-          "value": "Acquisition / Buy-to-let",
-          "partial": false,
-          "unknown": false
         }
       ],
       "task": "Confirm the project type"
@@ -1089,11 +1083,6 @@
       "Property acquired",
       "Renovation started",
       "Renovation completed"
-    ],
-    "acq": [
-      "Property identified",
-      "Offer accepted or reserved",
-      "Property acquired"
     ]
   }
 }

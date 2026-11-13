@@ -2,10 +2,10 @@ import { GEO } from './types'
 
 /** The seven questions of the public funnel (/start) and the maths behind its result. No network, so it can be tested. */
 
-export type Strategy = 'land' | 'wip' | 'refurb' | 'acq'
+export type Strategy = 'land' | 'wip' | 'refurb'
 export const STRATEGY: Array<{ v: Strategy; label: string }> = [
   { v: 'land', label: 'Land development' }, { v: 'wip', label: 'Work in progress' },
-  { v: 'refurb', label: 'Refurbishment / Renovation' }, { v: 'acq', label: 'Acquisition / Buy-to-let' },
+  { v: 'refurb', label: 'Refurbishment / Renovation' },
 ]
 /** `pts` is how far along the project is, out of 25. */
 export const STAGES: Record<Strategy, Array<{ v: string; label: string; pts: number }>> = {
@@ -20,10 +20,6 @@ export const STAGES: Record<Strategy, Array<{ v: string; label: string; pts: num
   refurb: [
     { v: 'identified', label: 'Property identified', pts: 5 }, { v: 'acquired', label: 'Property acquired', pts: 14 },
     { v: 'started', label: 'Renovation started', pts: 20 }, { v: 'done', label: 'Renovation completed', pts: 25 },
-  ],
-  acq: [
-    { v: 'identified', label: 'Property identified', pts: 5 }, { v: 'reserved', label: 'Offer accepted or reserved', pts: 15 },
-    { v: 'acquired', label: 'Property acquired', pts: 25 },
   ],
 }
 export type Permit = 'granted' | 'submitted' | 'process' | 'none' | 'notreq'

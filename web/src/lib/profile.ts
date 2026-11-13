@@ -126,12 +126,11 @@ export function assetCode(v: string): string | null {
   if (/residential|apartment|villa|house|flat/i.test(v)) return 'RES'
   return null
 }
-/** What the developer is doing with the project: land development, work in progress, refurbishment, acquisition. */
-export function strategyCode(v: string): 'land' | 'wip' | 'refurb' | 'acq' | null {
+/** What the developer is doing with the project: land development, work in progress, refurbishment. */
+export function strategyCode(v: string): 'land' | 'wip' | 'refurb' | null {
   if (/land/i.test(v)) return 'land'
   if (/progress|construction|under way|underway/i.test(v)) return 'wip'
   if (/refurb|renovat/i.test(v)) return 'refurb'
-  if (/acqui|buy|purchase/i.test(v)) return 'acq'
   return null
 }
 export function instrumentCodes(v: string): string[] {
