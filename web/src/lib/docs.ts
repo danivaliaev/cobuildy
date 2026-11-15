@@ -29,3 +29,6 @@ export async function downloadDoc(path: string, fileName: string | null, logId?:
   a.href = data.signedUrl; a.rel = 'noopener'
   document.body.appendChild(a); a.click(); a.remove()
 }
+
+/** Ids of data room files are UUIDs; other sources (the budget table) use a short word. */
+export const isDocId = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)

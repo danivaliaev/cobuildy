@@ -4,7 +4,9 @@ import type { Project } from './types'
 
 /** The guided project profile: 32 fields in 8 sections, ported from the prototype. Single source: fields.json. */
 export type Status = 'empty' | 'filled' | 'partial' | 'unknown'
-export interface FieldState { st: Status; v: string; n: number | null; src: '' | 'chat' | 'edit' | 'form' | 'site' | 'system' }
+/** Where a value came from when it was read out of an uploaded document: the file and the place in it. */
+export interface Source { doc: string; name: string; ref: string }
+export interface FieldState { st: Status; v: string; n: number | null; src: '' | 'chat' | 'edit' | 'form' | 'site' | 'system' | 'doc'; from?: Source }
 export type Fields = Record<string, FieldState>
 export interface Chip { label: string; value: string; amount?: number; partial: boolean; unknown: boolean; note?: string; task?: string }
 export interface FieldDef {
@@ -181,9 +183,9 @@ export function columnsFor(f: Fields) {
 }
 
 /** Everything one save writes: the profile, the matching columns and the readiness numbers. */
-export function patchFor(project: Pick<Project, 'profile'>, f: Fields) {
+export function patchFor(project: Pick<Project, 'profile'>, f: Fields, econ?: unknown) {
   const c = calc(f)
-  const profile = { ...((project.profile as Record<string, unknown> | null) ?? {}), fields: f }
+  const profile = { ...((project.profile as Record<string, unknown> | null) ?? {}), fields: f, ...(econ ? { econ } : {}) }
   return { profile, ...columnsFor(f), stage: c.stage, readiness: c.score }
 }
 
@@ -213,7 +215,7 @@ export function hydrate(p: Project): Fields {
 }
 
 /** Applies one agent or chip answer to a copy of the fields. */
-export interface Update { key: string; status: 'filled' | 'partial' | 'unknown'; display?: string; amount?: number | null }
+export interface Update { key: string; status: 'filled' | 'partial' | 'unknown'; display?: string; amount?: number | null; from?: Source }
 export function applyUpdates(f: Fields, updates: Update[], src: FieldState['src'] = 'chat'): { next: Fields; keys: string[] } {
   const next = { ...f }
   const keys: string[] = []
@@ -225,7 +227,7 @@ export function applyUpdates(f: Fields, updates: Update[], src: FieldState['src'
       const amount = u.amount != null && Number.isFinite(u.amount) ? u.amount : null
       const v = (u.display ?? '').slice(0, 80) || (amount != null ? (d.kind === 'money' ? eur(amount) : String(amount)) : '')
       if (!v) continue
-      next[u.key] = { st: u.status, v, n: d.kind === 'text' && d.key !== 'e_presales' ? null : amount, src }
+      next[u.key] = { st: u.status, v, n: d.kind === 'text' && d.key !== 'e_presales' ? null : amount, src, ...(u.from ? { from: u.from } : {}) }
     }
     keys.push(u.key)
   }

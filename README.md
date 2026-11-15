@@ -46,8 +46,12 @@ Hosting: Cloudflare Workers (static assets, see web/wrangler.jsonc) or Vercel, r
 
 ## AI agent (project chat)
 
-The project page is a guided profile: a chat, the profile it fills (31 fields in 8 sections) and a readiness panel. The field model (questions, answer options, gates, weights) lives in `web/src/lib/fields.json`. After changing it run `node scripts/sync-agent-fields.mjs` and redeploy the function.
+The project page is a guided profile: a chat, the profile it fills (35 fields in 8 sections) and a readiness panel. The field model (questions, answer options, gates, weights) lives in `web/src/lib/fields.json`. After changing it run `node scripts/sync-agent-fields.mjs` and redeploy the function.
 
 Answers are saved straight away (`profile` jsonb plus the matching columns, `stage` and `readiness`) and every answer can be undone. Suggested answers are saved without calling the model. Free text goes to `supabase/functions/agent-chat`, which runs with the caller's JWT, asks the Anthropic API which fields the text answers and returns validated updates; it never writes to the database. Usage is logged in `agent_calls` (`AGENT_DAILY_LIMIT`, default 300).
 
 Secrets (Supabase → Edge Functions → Secrets): `ANTHROPIC_API_KEY` (required), `AGENT_MODEL` (optional, default `claude-sonnet-5-5`).
+
+## Reading documents
+
+A developer drops any project file (PDF, Word, Excel, JPG, PNG) on the project page, in the agent chat (Attach) or on a slot of the data room. `useIngest` uploads it to the `data-room` bucket and calls the `ingest-doc` edge function, which reads the file with the caller's own JWT and returns facts (each with the file place and a quote), the document type and, for a cost budget, the lines filed under categories. Nothing is written by the function. The result is stored in `doc_reads` (owner and staff only, never visible to an investor who is shown the file) and offered in `ReviewDialog`; accepted values keep their source in `FieldState.from`, the budget goes to `profile.econ.budget` (`web/src/lib/budget.ts`, categories per project type in `budget.json`). A recognised document type takes the matching slot of the checklist. After changing `fields.json` or `budget.json` run `node scripts/sync-agent-fields.mjs` and redeploy both `agent-chat` and `ingest-doc`. The reader has its own daily limit (`INGEST_DAILY_LIMIT`, default 40 files per user) counted in `agent_calls.kind = 'ingest'`.

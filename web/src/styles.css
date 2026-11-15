@@ -280,3 +280,19 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 .wbtn{cursor:pointer}.wbtn:hover,.wbtn:focus-visible{outline:2px solid var(--plan);outline-offset:0}
 .welcome-carried{margin:0;font-size:15px;line-height:1.45}
 @media (max-width:720px){.welcome-grid{grid-template-columns:1fr}.welcome{padding:20px 18px}}
+
+/* ---------- documents: drop card, review dialog, budget table ---------- */
+.drop{border-style:dashed;border-width:2px}.drop.over,.docrow.over,.dropzone.over{border-color:var(--plan);background:var(--plan-soft)}
+.docrow.over,.dropzone.over{border-radius:12px}
+.jobs{display:grid;gap:4px;font-size:13px}.job{display:flex;gap:10px;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:4px}.job:first-child{border-top:0;padding-top:0}.jn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.small{font-size:12.5px}
+.slotgroup{display:grid;gap:0}.slothead{font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-top:10px}
+.modal .card.wide{width:min(1000px,100%);max-height:92vh;overflow:auto;align-content:start}
+.rv-doc{display:grid;gap:4px;border-top:1px solid var(--line);padding-top:10px}.rv-doc:first-of-type{border-top:0}
+.rv-warn{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:7px 10px;font-size:13px}
+table.rv td{vertical-align:top}table.rv tr.off td{opacity:.62}table.rv input,table.rv select{min-height:32px;padding:4px 8px;font-size:13px}
+table.rv input.amt{text-align:right;min-width:110px}.rv-q{font-style:italic;margin-top:2px}
+.rv-budget{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+table.bt tfoot td{border-top:1px solid var(--line);padding-top:10px}
+table.bt{min-width:780px}table.rv select{min-width:170px}table.rv input[aria-label="Line name"]{min-width:190px}
+.review:focus{outline:none}

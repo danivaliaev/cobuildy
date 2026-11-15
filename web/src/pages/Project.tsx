@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { supabase, rpc } from '../lib/supabase'
 import { Empty, ErrorLine, Field, Pill, useAction, useLoad } from '../components/ui'
@@ -9,7 +9,14 @@ import { Welcome } from '../components/Welcome'
 import { clearWelcome } from '../lib/carry'
 import { useAuth } from '../auth'
 import { DataRoom } from '../components/DataRoom'
-import { FIELDS, blank, calc, columnsFor, nextField, hydrate, keyChanges, patchFor, type FieldState, type Fields } from '../lib/profile'
+import { DropCard } from '../components/DropCard'
+import { ReviewDialog } from '../components/ReviewDialog'
+import { BudgetCard } from '../components/BudgetCard'
+import { useIngest, type Job, type Target } from '../components/useIngest'
+import { downloadDoc } from '../lib/docs'
+import { budgetUpdates, hydrateEcon, type BudgetLine, type Econ } from '../lib/budget'
+import type { Applied, DocRead, ReadItem } from '../lib/ingest'
+import { FIELDS, applyUpdates, blank, calc, columnsFor, isDone, nextField, hydrate, keyChanges, patchFor, strategyCode, type FieldState, type Fields } from '../lib/profile'
 import { kindLabel, countryName } from '../lib/investorKinds'
 import { CHANNEL, STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
@@ -27,6 +34,15 @@ export function ProjectPage() {
     if (error) throw error
     return data as ProjectDoc[]
   }, [id])
+  const reads = useLoad(async () => {
+    const { data, error } = await supabase.from('doc_reads').select('*').eq('project_id', id)
+    if (error) throw error
+    return data as DocRead[]
+  }, [id])
+  const canEdit = proj.data ? !['discarded', 'closed_won', 'closed_lost'].includes(proj.data.status) : false
+  const ingest = useIngest(id, async () => { await Promise.all([docs.reload(), reads.reload()]) }, canEdit)
+  const [econ, setEcon] = useState<Econ | null>(null)
+  const [reviewOpen, setReviewOpen] = useState(false)
   const [fields, setFields] = useState<Fields | null>(null)
   const [dbStage, setDbStage] = useState(0)
   const [flash, setFlash] = useState<string[]>([])
@@ -46,7 +62,7 @@ export function ProjectPage() {
   const matches = useLoad(() => rpc<Match[]>('match_project_info', { p_project: id }), [id, mk])
 
   // The profile is loaded once; after that this page is the source of truth and every change is saved straight away.
-  useEffect(() => { if (proj.data && !fields) { setFields(hydrate(proj.data)); setDbStage(proj.data.stage) } }, [proj.data, fields])
+  useEffect(() => { if (proj.data && !fields) { setFields(hydrate(proj.data)); setEcon(hydrateEcon(proj.data.profile)); setDbStage(proj.data.stage) } }, [proj.data, fields])
 
   // Keep the saved stage in step with the answers. The rules for a stage can change after a profile was saved,
   // and the teaser can only be submitted once the saved stage says it is ready.
@@ -65,26 +81,34 @@ export function ProjectPage() {
   const [hintSeen, setHintSeen] = useState(() => { try { return localStorage.getItem('cb_start_hint') === '1' } catch { return false } })
   const dismissHint = () => { setHintSeen(true); try { localStorage.setItem('cb_start_hint', '1') } catch { /* private mode */ } }
   const delAct = useAction()
-  const commit = useCallback(async (next: Fields) => {
+  const commit = useCallback(async (next: Fields, nextEcon?: Econ) => {
     if (!proj.data) return
     const prev = fields
+    const prevEcon = econ
     // Once the teaser is approved, a change to the key figures needs an explicit yes: investors and Cobuildy are told.
     if (prev && (proj.data.status === 'approved' || proj.data.status === 'live')) {
       const lines = keyChanges(prev, next)
       if (lines.length && !(await new Promise<boolean>(res => setConfirm({ lines, done: res })))) throw new Error('Change not saved.')
     }
     setFields(next)
-    const patch = patchFor(proj.data, next)
+    if (nextEcon) setEcon(nextEcon)
+    const patch = patchFor(proj.data, next, nextEcon ?? econ ?? undefined)
     const { error } = await supabase.from('projects').update(patch).eq('id', id)
-    if (error) { setFields(prev); throw new Error(error.message) }
+    if (error) { setFields(prev); setEcon(prevEcon); throw new Error(error.message) }
     setDbStage(patch.stage)
     const changed = FIELDS.map(d => d.key).filter(k => prev?.[k]?.v !== next[k]?.v || prev?.[k]?.st !== next[k]?.st)
     setFlash(changed)
     setTimeout(() => setFlash([]), 2400)
-  }, [proj.data, fields, id])
+  }, [proj.data, fields, econ, id])
+
+  // Files the agent has read and the developer has not reviewed yet.
+  const readyItems = useMemo<ReadItem[]>(() => (reads.data ?? []).filter(r => r.status === 'ready' && r.result).map(r => {
+    const d = (docs.data ?? []).find(x => x.id === r.doc_id)
+    return { docId: r.doc_id, docName: d?.file_name ?? d?.title ?? 'document', path: d?.storage_path ?? null, ex: r.result! }
+  }), [reads.data, docs.data])
 
   if (proj.loading) return <span className="muted">Loading…</span>
-  if (!proj.data || !fields) return <><ErrorLine error={proj.error} /><Link to="/developer">← Projects</Link></>
+  if (!proj.data || !fields || !econ) return <><ErrorLine error={proj.error} /><Link to="/developer">← Projects</Link></>
   const p = proj.data
   const hasAnswers = Object.values(fields).some(f => f.st !== 'empty')
   const startHere = p.status === 'draft' && !hasAnswers
@@ -92,6 +116,37 @@ export function ProjectPage() {
   const ask = (key: string) => { setAskReq({ key, n: Date.now() }); document.getElementById('agent-chat')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }
   const fitCount = (matches.data ?? []).filter(m => m.bucket === 'fit').length
   const edit = (key: string, next: FieldState) => commit({ ...fields, [key]: { ...blank(), ...next } })
+
+  const strategy = isDone(fields.a_strategy ?? blank()) ? strategyCode(fields.a_strategy.v) : null
+  const stamp = () => new Date().toISOString()
+  const addFiles = async (files: File[], target?: Target): Promise<Job[]> => {
+    const jobs = await ingest.add(files, target)
+    if (jobs.some(j => j.phase === 'done')) setReviewOpen(true)
+    return jobs
+  }
+  const retryRead = async (docId: string) => { const jobs = await ingest.retry(docId); if (jobs.some(j => j.phase === 'done')) setReviewOpen(true) }
+  const saveReview = async (applied: Applied, docIds: string[]) => {
+    await commit(applied.next, applied.budget ? { ...econ, budget: applied.budget } : undefined)
+    const { error } = await supabase.from('doc_reads').update({ status: 'applied', updated_at: stamp() }).in('doc_id', docIds)
+    if (error) throw new Error(error.message)
+    await reads.reload()
+    setReviewOpen(false)
+  }
+  const ignoreRead = async (docId: string) => {
+    const { error } = await supabase.from('doc_reads').update({ status: 'dismissed', updated_at: stamp() }).eq('doc_id', docId)
+    if (error) throw new Error(error.message)
+    await reads.reload()
+  }
+  const openDoc = (docId: string) => { const d = docs.data?.find(x => x.id === docId); if (d?.storage_path) void downloadDoc(d.storage_path, d.file_name).catch(() => undefined) }
+  const budgetFrom = { doc: 'budget', name: 'Development budget', ref: 'sum of lines' }
+  // The total cost on the profile follows the budget while it came from the budget; a figure the developer typed is never overwritten silently.
+  const commitBudget = async (lines: BudgetLine[]) => {
+    const cur = fields.f_cost
+    const follows = !cur || cur.st === 'empty' || cur.from?.ref === 'budget lines' || cur.from?.ref === 'sum of lines'
+    const next = lines.length && follows ? applyUpdates(fields, budgetUpdates(lines, strategy, budgetFrom), 'doc').next : fields
+    await commit(next, { ...econ, budget: lines })
+  }
+  const useBudgetTotal = async () => { await commit(applyUpdates(fields, budgetUpdates(econ.budget, strategy, budgetFrom), 'doc').next) }
 
   return (
     <>
@@ -112,6 +167,7 @@ export function ProjectPage() {
           <div className="row"><button className="btn pri" type="button" disabled={delAct.busy} onClick={() => void delAct.run(async () => { await rpc('discard_project', { p_project: p.id }); nav('/developer') })}>Yes, delete it</button>
             <button className="btn" type="button" disabled={delAct.busy} onClick={() => setDel(false)}>Keep it</button></div>
         </div></div>)}
+      {reviewOpen && readyItems.length > 0 && <ReviewDialog items={readyItems} fields={fields} strategy={strategy} existingLines={econ.budget.length} onSave={saveReview} onIgnore={ignoreRead} onClose={() => setReviewOpen(false)} />}
       {confirm && (
         <div className="modal" role="dialog" aria-modal="true" aria-label="Confirm change"><div className="card">
           <h2>Change the teaser figures?</h2>
@@ -130,7 +186,7 @@ export function ProjectPage() {
               <span>Tap an answer, or type in your own words. I fill in your project as we talk.</span>
               <button className="btn pri" type="button" onClick={dismissHint}>Got it</button>
             </div>)}
-          <ProfileChat projectId={p.id} fields={fields} commit={commit} editable={editable} askReq={askReq} onCurrent={setAsking} />
+          <ProfileChat projectId={p.id} fields={fields} commit={commit} editable={editable} askReq={askReq} onCurrent={setAsking} onAttach={files => ingest.add(files)} onReview={() => setReviewOpen(true)} />
         </div>
         <div className="pmain">
           <div className="tabs" role="tablist">
@@ -138,13 +194,17 @@ export function ProjectPage() {
             <button type="button" role="tab" className="tab" aria-selected={tab === 'investors'} onClick={() => setTab('investors')}>Investors{fitCount > 0 && <em>{fitCount}</em>}</button>
             <button type="button" role="tab" className="tab" aria-selected={tab === 'room'} onClick={() => setTab('room')}>Data room{(docs.data?.length ?? 0) > 0 && <em>{docs.data?.length}</em>}</button>
           </div>
-          {tab === 'profile' && <ProfileView fields={fields} flash={flash} editable={editable} onAsk={ask} onEdit={edit} />}
+          {tab === 'profile' && <>
+            <DropCard ingest={ingest} onFiles={files => void addFiles(files)} readyCount={readyItems.length} onReview={() => setReviewOpen(true)} editable={editable} />
+            <ProfileView fields={fields} flash={flash} editable={editable} onAsk={ask} onEdit={edit} onOpenDoc={openDoc} />
+            <BudgetCard strategy={strategy} lines={econ.budget} fields={fields} editable={editable} onChange={commitBudget} onUseTotal={useBudgetTotal} onOpenDoc={openDoc} />
+          </>}
           {tab === 'investors' && <>
             <MatchBar matches={matches.data} />
             <Wave onFill={k => { setTab('profile'); ask(k) }} project={p} matches={matches} canSend={p.status === 'approved' || p.status === 'live'} onSent={async () => { await proj.reload(); setWave(w => w + 1) }} />
             {(p.status === 'live' || p.status === 'approved') && <Deals key={wave} project={p} docs={docs.data ?? []} />}
           </>}
-          {tab === 'room' && <DataRoom projectId={p.id} docs={docs.data ?? []} reload={docs.reload} editable={editable} error={docs.error} />}
+          {tab === 'room' && <DataRoom projectId={p.id} docs={docs.data ?? []} reload={docs.reload} editable={editable} error={docs.error} ingest={ingest} reads={reads.data ?? []} onAdd={(f, t) => void addFiles(f, t)} onReview={() => setReviewOpen(true)} onRetry={d => void retryRead(d)} />}
         </div>
         <ReadinessPanel asking={asking} fields={fields} status={p.status} dbStage={dbStage} onAsk={a => { setTab('profile'); ask(a) }} busy={submit.busy} error={submit.error}
           onSubmit={() => void submit.run(() => rpc('submit_teaser', { p_project: p.id }))} />

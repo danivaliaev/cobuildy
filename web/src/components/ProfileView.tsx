@@ -3,8 +3,9 @@ import { eur } from '../lib/format'
 import { ErrorLine } from './ui'
 import { FIELDS, GATE_NAMES, SECTIONS, derived, firstInt, isDone, parseMoney, type FieldDef, type FieldState, type Fields } from '../lib/profile'
 import { errText } from '../lib/supabase'
+import { isDocId } from '../lib/docs'
 
-const SRC: Record<string, string> = { chat: 'You · chat', edit: 'You · edited', form: 'From your earlier entry', site: 'From the website' }
+const SRC: Record<string, string> = { chat: 'You · chat', edit: 'You · edited', form: 'From your earlier entry', site: 'From the website', doc: 'From a document' }
 
 function Kpis({ f }: { f: Fields }) {
   const d = derived(f)
@@ -20,8 +21,8 @@ function Kpis({ f }: { f: Fields }) {
   )
 }
 
-function Row({ d, s, flash, editable, onAsk, onEdit }: {
-  d: FieldDef; s: FieldState; flash: boolean; editable: boolean; onAsk: () => void; onEdit: (next: FieldState) => Promise<void>
+function Row({ d, s, flash, editable, onAsk, onEdit, onOpenDoc }: {
+  d: FieldDef; s: FieldState; flash: boolean; editable: boolean; onAsk: () => void; onEdit: (next: FieldState) => Promise<void>; onOpenDoc?: (docId: string) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [val, setVal] = useState('')
@@ -49,7 +50,9 @@ function Row({ d, s, flash, editable, onAsk, onEdit }: {
             <button className="btn sm pri" type="button" onClick={() => void save()}>Save</button>
             <button className="btn sm" type="button" onClick={() => setEditing(false)}>Cancel</button>
           </span>
-        ) : isDone(s) ? <>{s.v}<span className="psrc">{SRC[s.src] ?? ''}</span></> : <span className="muted">{s.st === 'unknown' ? 'Not available yet' : 'Not asked yet'}</span>}
+        ) : isDone(s) ? <>{s.v}<span className="psrc">{s.from
+          ? <>From {onOpenDoc && isDocId(s.from.doc) ? <button type="button" className="linkbtn" onClick={() => onOpenDoc(s.from!.doc)}>{s.from.name}</button> : s.from.name}{s.from.ref ? ` · ${s.from.ref}` : ''}</>
+          : SRC[s.src] ?? ''}</span></> : <span className="muted">{s.st === 'unknown' ? 'Not available yet' : 'Not asked yet'}</span>}
         {err && <ErrorLine error={err} />}
       </span>
       {editable && !editing && (
@@ -62,8 +65,8 @@ function Row({ d, s, flash, editable, onAsk, onEdit }: {
   )
 }
 
-export function ProfileView({ fields, flash, editable, onAsk, onEdit }: {
-  fields: Fields; flash: string[]; editable: boolean; onAsk: (key: string) => void; onEdit: (key: string, next: FieldState) => Promise<void>
+export function ProfileView({ fields, flash, editable, onAsk, onEdit, onOpenDoc }: {
+  fields: Fields; flash: string[]; editable: boolean; onAsk: (key: string) => void; onEdit: (key: string, next: FieldState) => Promise<void>; onOpenDoc?: (docId: string) => void
 }) {
   return (
     <section className="card profilecard" aria-label="Project profile">
@@ -75,7 +78,7 @@ export function ProfileView({ fields, flash, editable, onAsk, onEdit }: {
         return (
           <section className="psec" key={sec.id} id={`s-${sec.id}`}>
             <div className="psec-h"><h3>{sec.title}</h3><span className="bar sm"><i style={{ width: `${(done / fs.length) * 100}%` }} /></span><span className="mono">{done}/{fs.length}</span></div>
-            {fs.map(d => <Row key={d.key} d={d} s={fields[d.key]} flash={flash.includes(d.key)} editable={editable} onAsk={() => onAsk(d.key)} onEdit={n => onEdit(d.key, n)} />)}
+            {fs.map(d => <Row key={d.key} d={d} s={fields[d.key]} flash={flash.includes(d.key)} editable={editable} onAsk={() => onAsk(d.key)} onEdit={n => onEdit(d.key, n)} onOpenDoc={onOpenDoc} />)}
           </section>
         )
       })}

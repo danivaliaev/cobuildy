@@ -1,0 +1,46 @@
+{
+  "land": {
+    "base": "build",
+    "cats": [
+      { "id": "land", "label": "Land, taxes and deal costs", "hint": "Purchase price, transfer tax (ITP / IMT), notary, registry, legal, agent", "inCost": true },
+      { "id": "permits", "label": "Licences and planning fees", "hint": "Building licence fee, ICIO, planning and municipal charges", "inCost": true },
+      { "id": "design", "label": "Design, project management and fees", "hint": "Architect, engineers, technical supervision, project and asset management", "inCost": true },
+      { "id": "build", "label": "Construction", "hint": "Contractor price, hard costs, utility connections", "inCost": true },
+      { "id": "contingency", "label": "Contingency", "hint": "Reserve for cost overruns", "inCost": true },
+      { "id": "insurance", "label": "Insurance and guarantees", "hint": "Decennial insurance, all-risk, guarantees to buyers", "inCost": true },
+      { "id": "vat", "label": "VAT", "hint": "VAT that is not recovered, counted as a cost", "inCost": true },
+      { "id": "finance", "label": "Finance fees and interest", "hint": "Arrangement fees, interest, loan guarantees", "inCost": true },
+      { "id": "sales", "label": "Sales and marketing", "hint": "Agents, commissions, marketing, show unit", "inCost": false },
+      { "id": "other", "label": "Other costs", "hint": "Anything that fits none of the above", "inCost": true }
+    ]
+  },
+  "wip": {
+    "base": "build",
+    "cats": [
+      { "id": "land", "label": "Land (already acquired)", "hint": "Purchase price, transfer tax, notary, registry, legal", "inCost": true },
+      { "id": "permits", "label": "Licences and planning fees", "hint": "Building licence fee, ICIO, planning and municipal charges", "inCost": true },
+      { "id": "design", "label": "Design, project management and fees", "hint": "Architect, engineers, technical supervision, project management", "inCost": true },
+      { "id": "build", "label": "Construction", "hint": "Contractor price, hard costs, utility connections", "inCost": true },
+      { "id": "contingency", "label": "Contingency", "hint": "Reserve for cost overruns", "inCost": true },
+      { "id": "insurance", "label": "Insurance and guarantees", "hint": "Decennial insurance, all-risk, guarantees to buyers", "inCost": true },
+      { "id": "vat", "label": "VAT", "hint": "VAT that is not recovered, counted as a cost", "inCost": true },
+      { "id": "finance", "label": "Finance fees and interest", "hint": "Arrangement fees, interest, loan guarantees", "inCost": true },
+      { "id": "sales", "label": "Sales and marketing", "hint": "Agents, commissions, marketing, show unit", "inCost": false },
+      { "id": "other", "label": "Other costs", "hint": "Anything that fits none of the above", "inCost": true }
+    ]
+  },
+  "refurb": {
+    "base": "works",
+    "cats": [
+      { "id": "acq", "label": "Acquisition price", "hint": "Price paid or agreed for the property", "inCost": true },
+      { "id": "acqtax", "label": "Purchase taxes and fees", "hint": "ITP / IMT, notary, registry, legal, agent", "inCost": true },
+      { "id": "works", "label": "Renovation works", "hint": "Contractor price, materials, fit-out", "inCost": true },
+      { "id": "design", "label": "Design, permits and fees", "hint": "Architect, engineers, licences, project management", "inCost": true },
+      { "id": "contingency", "label": "Contingency", "hint": "Reserve for cost overruns", "inCost": true },
+      { "id": "holding", "label": "Holding costs", "hint": "Property tax, community fees, insurance, utilities during the works", "inCost": true },
+      { "id": "finance", "label": "Finance fees and interest", "hint": "Arrangement fees, interest, loan guarantees", "inCost": true },
+      { "id": "sales", "label": "Sales and letting costs", "hint": "Agents, commissions, marketing", "inCost": false },
+      { "id": "other", "label": "Other costs", "hint": "Anything that fits none of the above", "inCost": true }
+    ]
+  }
+}

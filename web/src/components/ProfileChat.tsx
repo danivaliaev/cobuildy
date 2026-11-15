@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { supabase, errText } from '../lib/supabase'
 import { ErrorLine } from './ui'
+import { ACCEPT } from '../lib/docs'
+import type { Job } from './useIngest'
 import { eur } from '../lib/format'
 import { FK, MILESTONES, SECTIONS, applyUpdates, calc, chipsFor, firstInt, nextField, parseMoney, type Chip, type FieldState, type Fields, type Update } from '../lib/profile'
 
 interface Saved { key: string; st: FieldState['st'] }
-interface Msg { r: 'a' | 'u'; t: string; saved?: Saved[]; undo?: Record<string, FieldState>; undone?: boolean }
+interface Msg { r: 'a' | 'u'; t: string; saved?: Saved[]; undo?: Record<string, FieldState>; undone?: boolean; review?: boolean }
 
 const UNKNOWN_REPLY = 'No problem, I marked it as a gap. Missing data is not counted against you, it just stays on the list.'
 const INTRO = 'Hi, I am the Cobuildy agent. I will ask about your project one question at a time. Pick a suggested answer, write in your own words, or tell me several facts at once. Everything is saved as we go and you can undo any answer.'
@@ -29,8 +31,9 @@ function localAnswer(text: string, cur: string | null): { updates: Update[]; rep
   return { updates: [], reply: 'The agent is offline right now, so I could not read that. Pick one of the suggested answers, or try again in a minute.' }
 }
 
-export function ProfileChat({ projectId, fields, commit, editable, askReq, onCurrent }: {
+export function ProfileChat({ projectId, fields, commit, editable, askReq, onCurrent, onAttach, onReview }: {
   onCurrent?: (key: string | null) => void; projectId: string; fields: Fields; commit: (next: Fields) => Promise<void>; editable: boolean; askReq: { key: string; n: number } | null
+  onAttach?: (files: File[]) => Promise<Job[]>; onReview?: () => void
 }) {
   const [msgs, setMsgs] = useState<Msg[]>([])
   const [cur, setCur] = useState<string | null>(null)
@@ -39,6 +42,7 @@ export function ProfileChat({ projectId, fields, commit, editable, askReq, onCur
   const [typing, setTyping] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const end = useRef<HTMLDivElement>(null)
+  const attach = useRef<HTMLInputElement>(null)
   const started = useRef(false)
   const lastAsk = useRef(0)
   const live = useRef(fields)
@@ -137,6 +141,25 @@ export function ProfileChat({ projectId, fields, commit, editable, askReq, onCur
     await ask(Object.keys(m.undo)[0])
   })
 
+  /** Files attached in the chat are uploaded and read like any others; the agent then says what it found and offers the review. */
+  const attachFiles = (list: FileList | null) => {
+    const files = list ? Array.from(list) : []
+    if (!files.length || !onAttach) return
+    void run(async () => {
+      push({ r: 'u', t: `Attached: ${files.map(f => f.name).join(', ')}` })
+      setTyping(true)
+      let jobs: Job[]
+      try { jobs = await onAttach(files) } finally { setTyping(false) }
+      const ok = jobs.filter(j => j.phase === 'done')
+      const bad = jobs.filter(j => j.phase === 'failed')
+      const parts: string[] = []
+      for (const j of ok) parts.push(`I read ${j.name}: ${j.facts ?? 0} ${j.facts === 1 ? 'fact' : 'facts'}${j.lines ? ` and ${j.lines} budget lines` : ''}.`)
+      for (const j of bad) parts.push(`I could not read ${j.name}: ${j.error ?? 'unknown error'}`)
+      if (ok.length) parts.push('Check what I found before anything is saved.')
+      await say(parts.join('\n') || 'I could not read those files.', { review: ok.length > 0 }, 200)
+    })
+  }
+
   const chips: Chip[] = cur && editable ? [...chipsFor(FK[cur], live.current), UNKNOWN_CHIP] : []
   const label = (k: string) => `${SECTIONS.find(s => s.id === FK[k].section)?.title} › ${FK[k].label}`
   const mark = (s: FieldState['st']) => (s === 'unknown' ? '!' : s === 'partial' ? '~' : '✓')
@@ -148,6 +171,7 @@ export function ProfileChat({ projectId, fields, commit, editable, askReq, onCur
         {msgs.map((m, i) => (
           <div key={i} className={`bub ${m.r === 'u' ? 'user' : 'assistant'}`}>
             <div>{m.t}</div>
+            {m.review && onReview && <div className="savedrow"><button type="button" className="btn sm pri" onClick={onReview}>Review what I found</button></div>}
             {m.saved && m.saved.length > 0 && (
               <div className="savedrow">
                 {m.saved.map(s => <span key={s.key} className="savedchip"><b>{mark(s.st)}</b>{label(s.key)}</span>)}
@@ -163,6 +187,9 @@ export function ProfileChat({ projectId, fields, commit, editable, askReq, onCur
       <ErrorLine error={error} />
       {editable ? (
         <form className="row" onSubmit={send}>
+          {onAttach && <>
+            <input ref={attach} type="file" multiple accept={ACCEPT} hidden aria-hidden="true" tabIndex={-1} onChange={e => { attachFiles(e.target.files); e.target.value = '' }} />
+            <button className="btn" type="button" disabled={busy} title="Attach budget, nota simple, licence or other files" aria-label="Attach documents" onClick={() => attach.current?.click()}>Attach</button></>}
           <input className="sp" value={text} maxLength={1500} disabled={busy} onChange={e => setText(e.target.value)} placeholder="Type an answer, or tell me about the project in your own words" aria-label="Message to the agent" />
           <button className="btn pri" type="submit" disabled={busy || !text.trim()}>Send</button>
         </form>
