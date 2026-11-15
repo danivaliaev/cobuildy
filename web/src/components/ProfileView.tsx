@@ -50,8 +50,8 @@ function Row({ d, s, flash, editable, onAsk, onEdit, onOpenDoc }: {
             <button className="btn sm pri" type="button" onClick={() => void save()}>Save</button>
             <button className="btn sm" type="button" onClick={() => setEditing(false)}>Cancel</button>
           </span>
-        ) : isDone(s) ? <>{s.v}<span className="psrc">{s.from
-          ? <>From {onOpenDoc && isDocId(s.from.doc) ? <button type="button" className="linkbtn" onClick={() => onOpenDoc(s.from!.doc)}>{s.from.name}</button> : s.from.name}{s.from.ref ? ` · ${s.from.ref}` : ''}</>
+        ) : isDone(s) ? <>{s.v}<span className={`psrc${s.from ? ' fromdoc' : ''}`}>{s.from
+          ? <><span>From</span>{onOpenDoc && isDocId(s.from.doc) ? <button type="button" className="linkbtn" onClick={() => onOpenDoc(s.from!.doc)} title={s.from.name}>{s.from.name}</button> : <span>{s.from.name}</span>}{s.from.ref && <span>· {s.from.ref}</span>}</>
           : SRC[s.src] ?? ''}</span></> : <span className="muted">{s.st === 'unknown' ? 'Not available yet' : 'Not asked yet'}</span>}
         {err && <ErrorLine error={err} />}
       </span>

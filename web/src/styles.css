@@ -40,17 +40,17 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{font:500 11px var(--
 .chipsrow{display:flex;flex-wrap:wrap;gap:6px}.chipbtn{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;text-align:left}
 .chipbtn:hover{border-color:var(--plan)}.chipbtn.un{border-style:dashed;background:transparent;color:var(--ink-2)}
 .savedrow{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.savedchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 9px;font-size:12px;color:var(--ink-2)}.savedchip b{color:var(--good);margin-right:4px}
-.linkbtn{border:0;background:none;color:var(--plan);cursor:pointer;font-size:12.5px;padding:2px 4px;text-decoration:underline}
+.linkbtn{border:0;background:none;color:var(--plan);cursor:pointer;font-family:inherit;font-size:12.5px;padding:2px 4px;text-decoration:underline}
 .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .kpi{background:var(--surface);padding:10px 12px;min-width:0}.kpi .v{font:400 24px/1.1 var(--f-display);white-space:nowrap}.kpi .v.na{color:var(--ink-2)}.kpi .l{font:500 10px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin-top:3px}.kpi .s{font-size:12px;color:var(--ink-2)}
 .psec{border:1px solid var(--line);border-radius:14px;overflow:hidden;scroll-margin-top:10px}
 .psec-h{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--soft);border-bottom:1px solid var(--line)}.psec-h h3{font:400 21px var(--f-display);margin:0}.psec-h .bar{flex:0 0 70px}
 .bar.sm{height:5px}
-.prow{display:grid;grid-template-columns:20px minmax(110px,.8fr) minmax(0,1.7fr) auto;gap:4px 12px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:start}.prow:last-child{border-bottom:0}
+.prow{display:grid;grid-template-columns:20px minmax(110px,.8fr) minmax(0,1.7fr) 168px;gap:4px 12px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:start}.prow:last-child{border-bottom:0}
 .pic{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;margin-top:1px;border:1.5px solid var(--line);color:var(--ink-2)}
 .pic.f{background:var(--good);border-color:var(--good);color:var(--bg)}.pic.p{border-color:var(--warn);color:var(--warn)}.pic.u{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
 .plab{color:var(--ink-2)}.pval{min-width:0;overflow-wrap:anywhere}.psrc{display:block;font:400 11px var(--f-mono);color:var(--ink-2);margin-top:2px}.pgap{display:block;font-size:12.5px;color:var(--warn);margin-top:2px}
-.pact{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pact{display:flex;gap:6px;flex-wrap:nowrap;justify-content:flex-end}
 .prow.flash{animation:pfl 2.4s ease-out}@keyframes pfl{0%{background:var(--plan-soft)}100%{background:transparent}}
 .ladder{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.ladder div{font:500 10px var(--f-mono);letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2)}.ladder i{display:block;height:6px;border-radius:3px;background:var(--line);margin-bottom:5px}.ladder .on i{background:var(--good)}.ladder .now i{background:var(--plan)}.ladder .on{color:var(--ink)}
 .blk{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px}
@@ -302,3 +302,10 @@ table.bt{min-width:780px}table.rv select{min-width:170px}table.rv input[aria-lab
 .composer-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
 .attachbtn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink-2);font-size:13px;font-weight:500;cursor:pointer}
 .attachbtn:hover:not(:disabled){border-color:var(--ink-2);color:var(--ink);background:var(--soft)}.attachbtn:disabled{opacity:.45;cursor:default}
+
+.psrc .linkbtn{font:inherit;text-align:left;padding:0;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+.psrc.fromdoc{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 4px;min-width:0}
+.psrc.fromdoc .linkbtn{max-width:26ch}
+@media (max-width:640px){.prow{grid-template-columns:20px 1fr}}
+
+.pact .chipbtn,.pact .btn{white-space:nowrap;flex:none}
