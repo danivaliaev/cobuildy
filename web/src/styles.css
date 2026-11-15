@@ -296,3 +296,9 @@ table.rv input.amt{text-align:right;min-width:110px}.rv-q{font-style:italic;marg
 table.bt tfoot td{border-top:1px solid var(--line);padding-top:10px}
 table.bt{min-width:780px}table.rv select{min-width:170px}table.rv input[aria-label="Line name"]{min-width:190px}
 .review:focus{outline:none}
+
+.composer{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;min-width:0}
+.composer textarea{box-sizing:border-box;width:100%;min-width:0;resize:none;min-height:64px;max-height:160px;line-height:1.4;font:inherit;padding:10px 12px}
+.composer-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.attachbtn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--ink-2);font-size:13px;font-weight:500;cursor:pointer}
+.attachbtn:hover:not(:disabled){border-color:var(--ink-2);color:var(--ink);background:var(--soft)}.attachbtn:disabled{opacity:.45;cursor:default}

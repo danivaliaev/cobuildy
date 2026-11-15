@@ -186,12 +186,20 @@ export function ProfileChat({ projectId, fields, commit, editable, askReq, onCur
       {!busy && chips.length > 0 && <div className="chipsrow">{chips.map(c => <button key={c.label} type="button" className={`chipbtn ${c.unknown ? 'un' : ''}`} onClick={() => void pick(c)}>{c.label}</button>)}</div>}
       <ErrorLine error={error} />
       {editable ? (
-        <form className="row" onSubmit={send}>
-          {onAttach && <>
-            <input ref={attach} type="file" multiple accept={ACCEPT} hidden aria-hidden="true" tabIndex={-1} onChange={e => { attachFiles(e.target.files); e.target.value = '' }} />
-            <button className="btn" type="button" disabled={busy} title="Attach budget, nota simple, licence or other files" aria-label="Attach documents" onClick={() => attach.current?.click()}>Attach</button></>}
-          <input className="sp" value={text} maxLength={1500} disabled={busy} onChange={e => setText(e.target.value)} placeholder="Type an answer, or tell me about the project in your own words" aria-label="Message to the agent" />
-          <button className="btn pri" type="submit" disabled={busy || !text.trim()}>Send</button>
+        <form className="composer" onSubmit={send}>
+          <textarea value={text} maxLength={1500} rows={2} disabled={busy} onChange={e => setText(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (text.trim() && !busy) e.currentTarget.form?.requestSubmit() } }}
+            placeholder="Type an answer, or tell me about the project in your own words" aria-label="Message to the agent" />
+          <div className="composer-bar">
+            {onAttach && <>
+              <input ref={attach} type="file" multiple accept={ACCEPT} hidden aria-hidden="true" tabIndex={-1} onChange={e => { attachFiles(e.target.files); e.target.value = '' }} />
+              <button className="attachbtn" type="button" disabled={busy} title="Attach budget, nota simple, licence or other files" aria-label="Attach documents" onClick={() => attach.current?.click()}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5" /></svg>
+                Attach files
+              </button></>}
+            {!onAttach && <span />}
+            <button className="btn pri" type="submit" disabled={busy || !text.trim()}>Send</button>
+          </div>
         </form>
       ) : <span className="muted">This project is no longer a draft, so the profile is locked.</span>}
     </section>
