@@ -3,7 +3,7 @@
 // the app shows the result for review, saves what the developer accepts and keeps the file and place each value came from.
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs'
+import * as XLSX from 'npm:xlsx@0.18.5'
 import { unzipSync } from 'npm:fflate@0.8.2'
 import fieldModel from './fields.json' with { type: 'json' }
 import budgetModel from './budget.json' with { type: 'json' }
@@ -131,7 +131,7 @@ Deno.serve(async (req: Request) => {
     console.error('convert', String(e).slice(0, 300))
     return json({ error: 'The file could not be read. It may be damaged or protected by a password.' }, 422)
   }
-  content.push({ type: 'text', text: 'Read this document and record what it says by calling record_extraction.' })
+  content.push({ type: 'text', text: 'Read this document and record what it says by calling the record_extraction tool. Respond only with that tool call.' })
 
   const fields = (project.profile as { fields?: Record<string, { st: string; v: string }> } | null)?.fields ?? {}
   const strategy = strategyOf(fields.a_strategy?.st && fields.a_strategy.st !== 'empty' ? fields.a_strategy.v : '')
@@ -144,7 +144,7 @@ Deno.serve(async (req: Request) => {
     res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, max_tokens: 8000, system, tools: [TOOL], tool_choice: { type: 'tool', name: 'record_extraction' }, messages: [{ role: 'user', content }] }),
+      body: JSON.stringify({ model: MODEL, max_tokens: 8000, system, tools: [TOOL], tool_choice: { type: 'auto' }, messages: [{ role: 'user', content }] }),
       signal: AbortSignal.timeout(130_000),
     })
   } catch {
@@ -158,6 +158,10 @@ Deno.serve(async (req: Request) => {
   }
   const out = await res.json()
   const use = (out.content as Array<{ type: string; input?: unknown }>).find(b => b.type === 'tool_use')
+  if (!use) {
+    console.error('no tool_use', JSON.stringify(out.content).slice(0, 300))
+    return json({ error: 'The reader could not make sense of this file. Try again, or upload a clearer version.' }, 502)
+  }
   const result = cleanExtraction(use?.input ?? {}, { isKey: k => Boolean(FK[k]), kind: k => FK[k]?.kind ?? 'text', isCat: c => cats.some(x => x.id === c) })
   result.warnings = [...warnings, ...result.warnings]
 
