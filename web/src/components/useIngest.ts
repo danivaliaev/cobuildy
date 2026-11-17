@@ -1,3 +1,4 @@
+import { getLang } from '../i18n'
 import { useRef, useState } from 'react'
 import { supabase, errText } from '../lib/supabase'
 import { checkFile, mimeOf } from '../lib/docs'
@@ -52,7 +53,7 @@ export function useIngest(projectId: string, refresh: () => Promise<void>, edita
     set(jobId, { phase: 'reading' })
     const now = () => new Date().toISOString()
     await supabase.from('doc_reads').upsert({ doc_id: docId, project_id: projectId, status: 'reading', doc_type: null, result: null, error: null, updated_at: now() })
-    const { data, error } = await supabase.functions.invoke('ingest-doc', { body: { project_id: projectId, doc_id: docId } })
+    const { data, error } = await supabase.functions.invoke('ingest-doc', { body: { project_id: projectId, doc_id: docId, lang: getLang() } })
     if (error || !data || data.error) {
       const msg = error ? await fnError(error) : String(data?.error ?? 'The document could not be read.')
       await supabase.from('doc_reads').upsert({ doc_id: docId, project_id: projectId, status: 'failed', error: msg.slice(0, 300), updated_at: now() })

@@ -2,8 +2,10 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { supabase, errText } from '../lib/supabase'
 import { ErrorLine } from '../components/ui'
 import { hasFunnelCarry } from '../lib/carry'
+import { useT } from '../i18n'
 
 export function Login() {
+  const t = useT()
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -40,20 +42,20 @@ export function Login() {
     <div className="login">
       <div className="card" style={{ display: 'grid', gap: 14 }}>
         <span className="mono">Cobuildy</span>
-        <h1>{fromFunnel ? 'Your assessment is ready' : 'Sign in or create an account'}</h1>
-        {fromFunnel && !sent && <p className="muted" style={{ margin: 0 }}>Create your free account to unlock your investor matches. Your answers are saved and will be waiting for you.</p>}
+        <h1>{fromFunnel ? t('Your assessment is ready', 'Tu evaluación está lista') : t('Sign in or create an account', 'Accede o crea una cuenta')}</h1>
+        {fromFunnel && !sent && <p className="muted" style={{ margin: 0 }}>{t('Create your free account to unlock your investor matches. Your answers are saved and will be waiting for you.', 'Crea tu cuenta gratuita para desbloquear tus coincidencias con inversores. Tus respuestas están guardadas y te estarán esperando.')}</p>}
         {sent ? (
-          <p>We sent a sign-in link to <b>{email}</b>. Open it on this device.</p>
+          <p>{t('We sent a sign-in link to', 'Hemos enviado un enlace de acceso a')} <b>{email}</b>. {t('Open it on this device.', 'Ábrelo en este dispositivo.')}</p>
         ) : (
           <>
-            <button className="btn pri" type="button" disabled={busy} onClick={() => void google()}>Continue with Google</button>
-            <span className="muted" style={{ textAlign: 'center' }}>or use an email link</span>
+            <button className="btn pri" type="button" disabled={busy} onClick={() => void google()}>{t('Continue with Google', 'Continuar con Google')}</button>
+            <span className="muted" style={{ textAlign: 'center' }}>{t('or use an email link', 'o usa un enlace por correo')}</span>
             <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
-              <label className="f"><span>Email</span><input type="email" required value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" /></label>
-              <button className="btn" disabled={busy || !email} type="submit">{busy ? 'Sending…' : 'Send sign-in link'}</button>
+              <label className="f"><span>{t('Email', 'Correo electrónico')}</span><input type="email" required value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" /></label>
+              <button className="btn" disabled={busy || !email} type="submit">{busy ? t('Sending…', 'Enviando…') : t('Send sign-in link', 'Enviar enlace de acceso')}</button>
             </form>
             <ErrorLine error={error} />
-            <p className="muted">{fromFunnel ? 'It takes one click. No password to remember.' : 'New here? The same buttons create your account. You choose your role on the next screen.'}</p>
+            <p className="muted">{fromFunnel ? t('It takes one click. No password to remember.', 'Solo un clic. Sin contraseña que recordar.') : t('New here? The same buttons create your account. You choose your role on the next screen.', '¿Eres nuevo? Los mismos botones crean tu cuenta. Elegirás tu rol en la siguiente pantalla.')}</p>
           </>
         )}
       </div>

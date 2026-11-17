@@ -89,7 +89,7 @@ Deno.serve(async (req: Request) => {
   const { data: u, error: ue } = await sb.auth.getUser()
   if (ue || !u.user) return json({ error: 'Please sign in again.' }, 401)
 
-  let body: { project_id?: string; doc_id?: string }
+  let body: { project_id?: string; doc_id?: string; lang?: string }
   try { body = await req.json() } catch { return json({ error: 'Invalid request.' }, 400) }
   if (!body.project_id || !body.doc_id) return json({ error: 'Invalid request.' }, 400)
 
@@ -137,7 +137,7 @@ Deno.serve(async (req: Request) => {
   const strategy = strategyOf(fields.a_strategy?.st && fields.a_strategy.st !== 'empty' ? fields.a_strategy.v : '')
   const cats = (BUDGET[strategy] ?? BUDGET.land).cats
   const current = Object.fromEntries(Object.entries(fields).filter(([k, f]) => FK[k] && (f.st === 'filled' || f.st === 'partial') && f.v).map(([k, f]) => [k, f.v]))
-  const system = systemPrompt({ fields: FIELDS, cats, strategy, current })
+  const system = systemPrompt({ fields: FIELDS, cats, strategy, current }) + (body.lang === 'es' ? '\n\nWrite the one-sentence "summary" in Spanish. Keep every "display" value and budget label exactly as specified above.' : '')
 
   let res: Response
   try {

@@ -25,3 +25,15 @@ describe('funnel text', () => {
   })
   it('writes Spanish money with a decimal comma', () => { expect(eurFor(4_500_000, 'es')).toBe('4,5 M€'); expect(eurFor(750_000, 'es')).toBe('750 k€'); expect(eurFor(4_000_000, 'en')).toBe('€4M') })
 })
+
+import { showValue } from '../lib/profile'
+import { instrumentCodes } from '../lib/profile'
+describe('spanish helpers', () => {
+  it('instrumentCodes understands Spanish and open answers', () => {
+    expect(instrumentCodes('Préstamo sénior')).toEqual(['senior'])
+    expect(instrumentCodes('Open to any capital type')).toEqual([])
+  })
+  it('showValue is a no-op in English', () => {
+    expect(showValue('€5.4M')).toBe('€5.4M')
+  })
+})

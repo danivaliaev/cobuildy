@@ -1,22 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { ErrorLine, Pill } from './ui'
-import { FIELDS, SECTIONS, blank, calc, meets, type FieldDef, type Fields } from '../lib/profile'
+import { FIELDS, SECTIONS, blank, calc, meets, showValue, type FieldDef, type Fields } from '../lib/profile'
+import { tr, useT } from '../i18n'
 
 /** The three stages of a project. A stage opens once every field of its gate is fully met. */
-const STAGES = [
-  { n: 1, name: 'Teaser', what: 'Opens investor matching. Cobuildy reviews it before any investor sees it.' },
-  { n: 2, name: 'Outreach', what: 'What lenders and investors want to see before they take a call.' },
-  { n: 3, name: 'Data room', what: 'The detail and documents for due diligence.' },
+const STAGES = () => [
+  { n: 1, name: tr('Teaser', 'Teaser'), what: tr('Opens investor matching. Cobuildy reviews it before any investor sees it.', 'Abre el emparejamiento con inversores. Cobuildy lo revisa antes de que lo vea ningún inversor.') },
+  { n: 2, name: tr('Outreach', 'Contacto'), what: tr('What lenders and investors want to see before they take a call.', 'Lo que quieren ver prestamistas e inversores antes de ponerse al teléfono.') },
+  { n: 3, name: tr('Data room', 'Data room'), what: tr('The detail and documents for due diligence.', 'El detalle y los documentos para la due diligence.') },
 ]
 
-const MARK: Record<string, { sym: string; label: string }> = {
-  filled: { sym: '✓', label: 'Done' }, partial: { sym: '◐', label: 'Needs more detail' },
-  unknown: { sym: '?', label: 'Not available yet' }, empty: { sym: '', label: 'To do' },
-}
+const MARK = (): Record<string, { sym: string; label: string }> => ({
+  filled: { sym: '✓', label: tr('Done', 'Hecho') }, partial: { sym: '◐', label: tr('Needs more detail', 'Necesita más detalle') },
+  unknown: { sym: '?', label: tr('Not available yet', 'Aún no disponible') }, empty: { sym: '', label: tr('To do', 'Pendiente') },
+})
 
 export function ReadinessPanel({ asking, fields, status, dbStage, onAsk, onSubmit, busy, error }: {
   asking: string | null; fields: Fields; status: string; dbStage: number; onAsk: (key: string) => void; onSubmit: () => void; busy: boolean; error: string | null
 }) {
+  const t = useT()
   const c = calc(fields)
   const draft = status === 'draft'
   const editable = status !== 'discarded' && status !== 'closed_won' && status !== 'closed_lost'
@@ -33,8 +35,8 @@ export function ReadinessPanel({ asking, fields, status, dbStage, onAsk, onSubmi
   const [note, setNote] = useState('')
   useEffect(() => {
     if (prev.current !== null && c.filled > prev.current) {
-      const s = STAGES[cur - 1]
-      setNote(c.stage >= cur ? `${s.name} complete.` : `Saved. ${done(cur)} of ${stageFields(cur).length} done for your ${s.name.toLowerCase()}.`)
+      const s = STAGES()[cur - 1]
+      setNote(c.stage >= cur ? tr(`${s.name} complete.`, `${s.name} completo.`) : tr(`Saved. ${done(cur)} of ${stageFields(cur).length} done for your ${s.name.toLowerCase()}.`, `Guardado. ${done(cur)} de ${stageFields(cur).length} hechos para tu ${s.name.toLowerCase()}.`))
       const t = setTimeout(() => setNote(''), 4000)
       prev.current = c.filled
       return () => clearTimeout(t)
@@ -44,22 +46,22 @@ export function ReadinessPanel({ asking, fields, status, dbStage, onAsk, onSubmi
 
 
   return (
-    <aside className="card readycard path" aria-label="Your path">
-      <div className="row"><h2>Your path</h2><span className="sp" /><span className="mono">{c.score}%</span></div>
+    <aside className="card readycard path" aria-label={t('Your path', 'Tu camino')}>
+      <div className="row"><h2>{t('Your path', 'Tu camino')}</h2><span className="sp" /><span className="mono">{c.score}%</span></div>
       <div className="bar"><i style={{ width: `${c.score}%` }} /></div>
       {draft ? (
         <div className={`blk submit${c.stage >= 1 ? ' ready' : ''}`}>
-          {c.stage >= 1 && <b className="ready-t">Teaser ready. You can submit it now.</b>}
-          <button className="btn pri" disabled={busy || c.stage < 1 || dbStage < 1} onClick={onSubmit}>Submit teaser for review</button>
+          {c.stage >= 1 && <b className="ready-t">{t('Teaser ready. You can submit it now.', 'Teaser listo. Ya puedes enviarlo.')}</b>}
+          <button className="btn pri" disabled={busy || c.stage < 1 || dbStage < 1} onClick={onSubmit}>{t('Submit teaser for review', 'Enviar el teaser a revisión')}</button>
           {c.stage < 1
             ? null
-            : dbStage < 1 ? <span className="muted">Saving…</span> : <span className="muted">Cobuildy reviews the teaser before any investor sees it.</span>}
+            : dbStage < 1 ? <span className="muted">{t('Saving…', 'Guardando…')}</span> : <span className="muted">{t('Cobuildy reviews the teaser before any investor sees it.', 'Cobuildy revisa el teaser antes de que lo vea ningún inversor.')}</span>}
           <ErrorLine error={error} />
         </div>
       ) : <div className="blk"><Pill tone="good">{status.replace('_', ' ')}</Pill></div>}
       <div className="note" role="status" aria-live="polite">{note || null}</div>
 
-      {STAGES.map(s => {
+      {STAGES().map(s => {
         const fs = stageFields(s.n), n = done(s.n)
         const state = c.stage >= s.n ? 'done' : s.n === cur ? 'now' : 'next'
         const isOpen = shown === s.n
@@ -67,7 +69,7 @@ export function ReadinessPanel({ asking, fields, status, dbStage, onAsk, onSubmi
           <section key={s.n} className={`stg ${state}`}>
             <button type="button" className="stg-h" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? 0 : s.n)}>
               <span className="stg-n" aria-hidden="true">{state === 'done' ? '✓' : s.n}</span>
-              <span className="stg-t"><b>{s.name}</b><em>{state === 'done' ? 'Done' : state === 'now' ? 'In progress' : 'Up next'}</em></span>
+              <span className="stg-t"><b>{s.name}</b><em>{state === 'done' ? t('Done', 'Hecho') : state === 'now' ? t('In progress', 'En curso') : t('Up next', 'A continuación')}</em></span>
               <span className="stg-c">{n}/{fs.length}</span>
             </button>
             <div className="bar sm"><i style={{ width: `${(n / fs.length) * 100}%` }} /></div>
@@ -76,14 +78,14 @@ export function ReadinessPanel({ asking, fields, status, dbStage, onAsk, onSubmi
                 <p className="muted">{s.what}</p>
                 <ul className="frows">
                   {fs.map(d => {
-                    const k = st(d), m = MARK[k]
+                    const k = st(d), m = MARK()[k]
                     return (
                       <li key={d.key}>
                         <button type="button" className={`frow ${k}`} onClick={() => onAsk(d.key)} aria-label={`${d.label}: ${m.label}`}>
                           <i aria-hidden="true">{m.sym}</i>
-                          <span><b>{d.label}{d.key === asking && editable && <u>Asking now</u>}</b>{(k === 'filled' || k === 'partial') && fields[d.key]?.v
-                            ? <em>{fields[d.key].v}</em>
-                            : d.doc ? <em>Needs: {d.doc}</em> : null}</span>
+                          <span><b>{d.label}{d.key === asking && editable && <u>{t('Asking now', 'Preguntando ahora')}</u>}</b>{(k === 'filled' || k === 'partial') && fields[d.key]?.v
+                            ? <em>{showValue(fields[d.key].v)}</em>
+                            : d.doc ? <em>{t('Needs', 'Necesita')}: {d.doc}</em> : null}</span>
                         </button>
                       </li>)
                   })}

@@ -1,5 +1,6 @@
 import { budgetUpdates, isCat, newLineId, type BudgetLine, type StrategyCode } from './budget'
 import { FK, applyUpdates, isDone, type Fields, type Source, type Update } from './profile'
+import { pick } from '../i18n'
 
 /** What the document reader sends back for one file. Nothing in it is saved until the developer reviews it. */
 export interface ExFact { key: string; status: 'filled' | 'partial' | 'unknown'; display: string; amount: number | null; ref: string; quote: string; confidence: 'high' | 'medium' | 'low' }
@@ -11,11 +12,15 @@ export interface Extraction {
 export type ReadStatus = 'reading' | 'ready' | 'applied' | 'dismissed' | 'failed'
 export interface DocRead { doc_id: string; project_id: string; status: ReadStatus; doc_type: string | null; result: Extraction | null; error: string | null; updated_at: string }
 
-export const DOC_LABEL: Record<string, string> = {
+export const DOC_LABEL = pick<Record<string, string>>({
   budget: 'Cost budget', financial_model: 'Financial model', nota_simple: 'Nota simple / land registry extract', planning_certificate: 'Planning certificate',
   building_licence: 'Building licence', basic_project: 'Basic project', build_contract: 'Build contract', track_record: 'Track record', company_docs: 'Company documents',
   equity_proof: 'Proof of equity', comparables: 'Comparable sales', appraisal: 'Valuation', contractor_quote: 'Contractor quote', other: 'Other document',
-}
+}, {
+  budget: 'Presupuesto de costes', financial_model: 'Modelo financiero', nota_simple: 'Nota simple / extracto del Registro', planning_certificate: 'Certificado urbanístico',
+  building_licence: 'Licencia de obra', basic_project: 'Proyecto básico', build_contract: 'Contrato de obra', track_record: 'Trayectoria', company_docs: 'Documentos de la empresa',
+  equity_proof: 'Justificante de capital', comparables: 'Ventas comparables', appraisal: 'Tasación', contractor_quote: 'Oferta del constructor', other: 'Otro documento',
+})
 
 /** A read that started and never finished (the page was closed, the request died) is shown as failed after this long. */
 export const STALE_MS = 4 * 60 * 1000

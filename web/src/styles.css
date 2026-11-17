@@ -321,3 +321,5 @@ table.bt{min-width:780px}table.rv select{min-width:170px}table.rv input[aria-lab
 
 .fn-top{position:relative}.fn-lang{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;gap:10px;font:500 12px var(--f-mono);letter-spacing:.06em}
 .fn-lang a{color:var(--ink-2);text-decoration:none;padding:6px 2px}.fn-lang a:hover{color:var(--ink);text-decoration:underline}.fn-lang b{color:var(--ink);padding:6px 2px;border-bottom:2px solid var(--plan)}
+
+.langrow{display:flex;align-items:center;gap:6px;cursor:default}.langrow span{flex:1}.langrow button{font:500 12px var(--f-mono);border:1px solid var(--line);background:none;color:var(--ink-2);padding:3px 8px;border-radius:999px;cursor:pointer}.langrow button.on{background:var(--plan);color:#fff;border-color:var(--plan)}

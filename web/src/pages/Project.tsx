@@ -18,11 +18,13 @@ import { budgetUpdates, hydrateEcon, type BudgetLine, type Econ } from '../lib/b
 import type { Applied, DocRead, ReadItem } from '../lib/ingest'
 import { FIELDS, applyUpdates, blank, calc, columnsFor, isDone, nextField, hydrate, keyChanges, patchFor, strategyCode, type FieldState, type Fields } from '../lib/profile'
 import { kindLabel, countryName } from '../lib/investorKinds'
+import { useT, tr } from '../i18n'
 import { CHANNEL, STAGE_LABEL, type DealMessage, type Match, type Project, type ProjectDeal, type ProjectDoc } from '../lib/types'
 
 type Tab = 'profile' | 'investors' | 'room'
 
 export function ProjectPage() {
+  const t0 = useT()
   const { id = '' } = useParams()
   const proj = useLoad(async () => {
     const { data, error } = await supabase.from('projects').select('*').eq('id', id).single()
@@ -88,7 +90,7 @@ export function ProjectPage() {
     // Once the teaser is approved, a change to the key figures needs an explicit yes: investors and Cobuildy are told.
     if (prev && (proj.data.status === 'approved' || proj.data.status === 'live')) {
       const lines = keyChanges(prev, next)
-      if (lines.length && !(await new Promise<boolean>(res => setConfirm({ lines, done: res })))) throw new Error('Change not saved.')
+      if (lines.length && !(await new Promise<boolean>(res => setConfirm({ lines, done: res })))) throw new Error(tr('Change not saved.', 'Cambio no guardado.'))
     }
     setFields(next)
     if (nextEcon) setEcon(nextEcon)
@@ -107,8 +109,8 @@ export function ProjectPage() {
     return { docId: r.doc_id, docName: d?.file_name ?? d?.title ?? 'document', path: d?.storage_path ?? null, ex: r.result! }
   }), [reads.data, docs.data])
 
-  if (proj.loading) return <span className="muted">Loading…</span>
-  if (!proj.data || !fields || !econ) return <><ErrorLine error={proj.error} /><Link to="/developer">← Projects</Link></>
+  if (proj.loading) return <span className="muted">{t0('Loading…', 'Cargando…')}</span>
+  if (!proj.data || !fields || !econ) return <><ErrorLine error={proj.error} /><Link to="/developer">{t0('← Projects', '← Proyectos')}</Link></>
   const p = proj.data
   const hasAnswers = Object.values(fields).some(f => f.st !== 'empty')
   const startHere = p.status === 'draft' && !hasAnswers
@@ -138,7 +140,7 @@ export function ProjectPage() {
     await reads.reload()
   }
   const openDoc = (docId: string) => { const d = docs.data?.find(x => x.id === docId); if (d?.storage_path) void downloadDoc(d.storage_path, d.file_name).catch(() => undefined) }
-  const budgetFrom = { doc: 'budget', name: 'Development budget', ref: 'sum of lines' }
+  const budgetFrom = { doc: 'budget', name: 'Development budget', ref: 'sum of lines' } // stored markers, not shown text
   // The total cost on the profile follows the budget while it came from the budget; a figure the developer typed is never overwritten silently.
   const commitBudget = async (lines: BudgetLine[]) => {
     const cur = fields.f_cost
@@ -150,9 +152,9 @@ export function ProjectPage() {
 
   return (
     <>
-      <div className="row"><Link to="/developer">← Projects</Link><span className="sp" />
-        {p.status === 'draft' && <button className="linkbtn" type="button" onClick={() => setDel(true)}>Delete project</button>}
-        <Pill tone={p.status === 'draft' ? undefined : 'good'}>{p.status.replace('_', ' ')}</Pill></div>
+      <div className="row"><Link to="/developer">{t0('← Projects', '← Proyectos')}</Link><span className="sp" />
+        {p.status === 'draft' && <button className="linkbtn" type="button" onClick={() => setDel(true)}>{t0('Delete project', 'Eliminar proyecto')}</button>}
+        <Pill tone={p.status === 'draft' ? undefined : 'good'}>{statusText(p.status)}</Pill></div>
       <h1>{p.code} · {p.title}</h1>
       {welcome && p.status === 'draft' && (
         <Welcome name={(profile?.full_name ?? '').split(' ')[0]} fields={fields} matches={matches.data}
@@ -160,21 +162,21 @@ export function ProjectPage() {
           onContinue={() => { setWelcome(false); ask(nextField(fields) ?? '') }} onInvestors={() => { setWelcome(false); setTab('investors') }} onClose={() => setWelcome(false)} />
       )}
       {del && (
-        <div className="modal" role="dialog" aria-modal="true" aria-label="Delete project"><div className="card">
-          <h2>Delete this project?</h2>
-          <p className="muted">{hasAnswers ? 'It will be removed from your list together with everything you told the agent about it.' : 'It is empty, so nothing is lost. It will be removed from your list.'} No investor has seen it.</p>
+        <div className="modal" role="dialog" aria-modal="true" aria-label={t0('Delete project', 'Eliminar proyecto')}><div className="card">
+          <h2>{t0('Delete this project?', '¿Eliminar este proyecto?')}</h2>
+          <p className="muted">{hasAnswers ? t0('It will be removed from your list together with everything you told the agent about it.', 'Se quitará de tu lista junto con todo lo que le contaste al agente sobre él.') : t0('It is empty, so nothing is lost. It will be removed from your list.', 'Está vacío, así que no se pierde nada. Se quitará de tu lista.')} {t0('No investor has seen it.', 'Ningún inversor lo ha visto.')}</p>
           <ErrorLine error={delAct.error} />
-          <div className="row"><button className="btn pri" type="button" disabled={delAct.busy} onClick={() => void delAct.run(async () => { await rpc('discard_project', { p_project: p.id }); nav('/developer') })}>Yes, delete it</button>
-            <button className="btn" type="button" disabled={delAct.busy} onClick={() => setDel(false)}>Keep it</button></div>
+          <div className="row"><button className="btn pri" type="button" disabled={delAct.busy} onClick={() => void delAct.run(async () => { await rpc('discard_project', { p_project: p.id }); nav('/developer') })}>{t0('Yes, delete it', 'Sí, eliminarlo')}</button>
+            <button className="btn" type="button" disabled={delAct.busy} onClick={() => setDel(false)}>{t0('Keep it', 'Conservarlo')}</button></div>
         </div></div>)}
       {reviewOpen && readyItems.length > 0 && <ReviewDialog items={readyItems} fields={fields} strategy={strategy} existingLines={econ.budget.length} onSave={saveReview} onIgnore={ignoreRead} onClose={() => setReviewOpen(false)} />}
       {confirm && (
-        <div className="modal" role="dialog" aria-modal="true" aria-label="Confirm change"><div className="card">
-          <h2>Change the teaser figures?</h2>
-          <p className="muted">Investors who already have this teaser will see the new values and get a notification. Cobuildy is notified too.</p>
+        <div className="modal" role="dialog" aria-modal="true" aria-label={t0('Confirm change', 'Confirmar el cambio')}><div className="card">
+          <h2>{t0('Change the teaser figures?', '¿Cambiar las cifras del teaser?')}</h2>
+          <p className="muted">{t0('Investors who already have this teaser will see the new values and get a notification. Cobuildy is notified too.', 'Los inversores que ya tienen este teaser verán los nuevos valores y recibirán una notificación. Cobuildy también será avisado.')}</p>
           <ul className="chg">{confirm.lines.map(l => <li key={l}>{l}</li>)}</ul>
-          <div className="row"><button className="btn pri" type="button" onClick={() => { confirm.done(true); setConfirm(null) }}>Save changes</button>
-            <button className="btn" type="button" onClick={() => { confirm.done(false); setConfirm(null) }}>Cancel</button></div>
+          <div className="row"><button className="btn pri" type="button" onClick={() => { confirm.done(true); setConfirm(null) }}>{t0('Save changes', 'Guardar cambios')}</button>
+            <button className="btn" type="button" onClick={() => { confirm.done(false); setConfirm(null) }}>{t0('Cancel', 'Cancelar')}</button></div>
         </div></div>)}
 
       <div className="pgrid">
@@ -182,17 +184,17 @@ export function ProjectPage() {
         <div id="agent-chat" className={`pcol${startHere ? ' start-here' : ''}${startHere && !hintSeen ? ' spot' : ''}`}>
           {startHere && !hintSeen && (
             <div className="spot-tip" role="note">
-              <b>Start here</b>
-              <span>Tap an answer, or type in your own words. I fill in your project as we talk.</span>
-              <button className="btn pri" type="button" onClick={dismissHint}>Got it</button>
+              <b>{t0('Start here', 'Empieza aquí')}</b>
+              <span>{t0('Tap an answer, or type in your own words. I fill in your project as we talk.', 'Toca una respuesta o escribe con tus palabras. Voy rellenando tu proyecto mientras hablamos.')}</span>
+              <button className="btn pri" type="button" onClick={dismissHint}>{t0('Got it', 'Entendido')}</button>
             </div>)}
           <ProfileChat projectId={p.id} fields={fields} commit={commit} editable={editable} askReq={askReq} onCurrent={setAsking} onAttach={files => ingest.add(files)} onReview={() => setReviewOpen(true)} />
         </div>
         <div className="pmain">
           <div className="tabs" role="tablist">
-            <button type="button" role="tab" className="tab" aria-selected={tab === 'profile'} onClick={() => setTab('profile')}>Project profile</button>
-            <button type="button" role="tab" className="tab" aria-selected={tab === 'investors'} onClick={() => setTab('investors')}>Investors{fitCount > 0 && <em>{fitCount}</em>}</button>
-            <button type="button" role="tab" className="tab" aria-selected={tab === 'room'} onClick={() => setTab('room')}>Data room{(docs.data?.length ?? 0) > 0 && <em>{docs.data?.length}</em>}</button>
+            <button type="button" role="tab" className="tab" aria-selected={tab === 'profile'} onClick={() => setTab('profile')}>{t0('Project profile', 'Perfil del proyecto')}</button>
+            <button type="button" role="tab" className="tab" aria-selected={tab === 'investors'} onClick={() => setTab('investors')}>{t0('Investors', 'Inversores')}{fitCount > 0 && <em>{fitCount}</em>}</button>
+            <button type="button" role="tab" className="tab" aria-selected={tab === 'room'} onClick={() => setTab('room')}>{t0('Data room', 'Data room')}{(docs.data?.length ?? 0) > 0 && <em>{docs.data?.length}</em>}</button>
           </div>
           {tab === 'profile' && <>
             <DropCard ingest={ingest} onFiles={files => void addFiles(files)} readyCount={readyItems.length} onReview={() => setReviewOpen(true)} editable={editable} />
@@ -213,32 +215,36 @@ export function ProjectPage() {
   )
 }
 
-const BUCKETS: Array<{ k: Match['bucket']; label: string }> = [
-  { k: 'fit', label: 'Fit' }, { k: 'possible', label: 'Needs info' }, { k: 'later', label: 'After actions' }, { k: 'out', label: 'Out' },
+const BUCKETS = (): Array<{ k: Match['bucket']; label: string }> => [
+  { k: 'fit', label: tr('Fit', 'Encajan') }, { k: 'possible', label: tr('Needs info', 'Necesitan información') }, { k: 'later', label: tr('After actions', 'Tras acciones') }, { k: 'out', label: tr('Out', 'Descartados') },
 ]
+const STATUS_ES: Record<string, string> = { draft: 'borrador', teaser_review: 'teaser en revisión', approved: 'aprobado', live: 'activo', closed_won: 'cerrado con éxito', closed_lost: 'cerrado sin éxito', discarded: 'descartado' }
+const statusText = (s: string) => (tr('en', 'es') === 'es' ? STATUS_ES[s] ?? s : s.replace('_', ' '))
 
 /** Where the investor network stands for this project, recalculated as the profile changes. */
 function MatchBar({ matches }: { matches: Match[] | null }) {
+  const t0 = useT()
   if (!matches) return null
   const n = (k: Match['bucket']) => matches.filter(m => m.bucket === k).length
   const total = matches.length || 1
   return (
-    <div className="mbar" aria-label="Investor matches">
-      <div className="muted">How the investors on file match this project, out of {matches.length}</div>
-      <div className="mbar-t">{BUCKETS.map(b => <i key={b.k} className={`b-${b.k}`} style={{ width: `${(n(b.k) / total) * 100}%` }} />)}</div>
-      <div className="mbar-l">{BUCKETS.map(b => <span key={b.k}><i className={`b-${b.k}`} />{b.label} {n(b.k)}</span>)}<span className="muted">Missing data never rules an investor out</span></div>
+    <div className="mbar" aria-label={t0('Investor matches', 'Coincidencias con inversores')}>
+      <div className="muted">{t0('How the investors on file match this project, out of', 'Cómo encajan con este proyecto los inversores registrados, de')} {matches.length}</div>
+      <div className="mbar-t">{BUCKETS().map(b => <i key={b.k} className={`b-${b.k}`} style={{ width: `${(n(b.k) / total) * 100}%` }} />)}</div>
+      <div className="mbar-l">{BUCKETS().map(b => <span key={b.k}><i className={`b-${b.k}`} />{b.label} {n(b.k)}</span>)}<span className="muted">{t0('Missing data never rules an investor out', 'Los datos que faltan nunca descartan a un inversor')}</span></div>
     </div>
   )
 }
 
 /** What stops an investor from being a sure fit: a fact of the project that their criteria need and the profile does not have yet. */
-const MISSING: Record<string, { text: string; key: string }> = {
-  geo: { text: 'Region not set', key: 'a_loc' }, asset: { text: 'Asset type not set', key: 'a_type' }, instrument: { text: 'Instrument not set', key: 'k_instr' },
-  ticket: { text: 'Capital sought not set', key: 'k_ask' }, license: { text: 'Licence status not set', key: 'p_status' },
-}
-const BUCKET_LABEL: Record<Match['bucket'], string> = { fit: 'fit', possible: 'needs info', later: 'later', out: 'out' }
+const MISSING = (): Record<string, { text: string; key: string }> => ({
+  geo: { text: tr('Region not set', 'Zona sin indicar'), key: 'a_loc' }, asset: { text: tr('Asset type not set', 'Tipo de activo sin indicar'), key: 'a_type' }, instrument: { text: tr('Instrument not set', 'Instrumento sin indicar'), key: 'k_instr' },
+  ticket: { text: tr('Capital sought not set', 'Capital buscado sin indicar'), key: 'k_ask' }, license: { text: tr('Licence status not set', 'Estado de la licencia sin indicar'), key: 'p_status' },
+})
+const BUCKET_LABEL = (): Record<Match['bucket'], string> => ({ fit: tr('fit', 'encaja'), possible: tr('needs info', 'necesita información'), later: tr('later', 'más adelante'), out: tr('out', 'descartado') })
 
 function Wave({ project, matches, canSend, onSent, onFill }: { onFill: (key: string) => void; project: Project; matches: { data: Match[] | null; error: string | null; reload: () => void | Promise<void> }; canSend: boolean; onSent: () => Promise<void> }) {
+  const t0 = useT()
   const m = matches
   const contacted = useLoad(async () => (canSend ? await rpc<ProjectDeal[]>('project_deals', { p_project: project.id }) : []), [project.id, canSend])
   const done = new Set((contacted.data ?? []).map(d => d.investor_code))
@@ -252,37 +258,38 @@ function Wave({ project, matches, canSend, onSent, onFill }: { onFill: (key: str
   const shown = (m.data ?? []).filter(x => x.bucket !== 'out').sort((a, b) => b.score - a.score)
   const send = () => void act.run(async () => {
     const n = await rpc<number>('launch_wave', { p_project: project.id, p_wave: 1, p_investors: chosen })
-    setNotice(n > 0 ? `Teaser sent to ${n} investor${n === 1 ? '' : 's'}. Replies appear under Deals below.` : 'Nothing new was sent: these investors already have the teaser.')
+    setNotice(n > 0 ? t0(`Teaser sent to ${n} investor${n === 1 ? '' : 's'}. Replies appear under Deals below.`, `Teaser enviado a ${n} ${n === 1 ? 'inversor' : 'inversores'}. Las respuestas aparecen abajo, en Operaciones.`) : t0('Nothing new was sent: these investors already have the teaser.', 'No se ha enviado nada nuevo: estos inversores ya tienen el teaser.'))
   })
   return (
     <section className="card">
-      <h2>Send your teaser</h2>
-      <p className="muted">These are the investors whose criteria fit this project. Tick who should receive the teaser and press the button at the bottom. Investors who already have it are marked <b>Sent</b>, and their replies appear under <b>Deals</b> below.</p>
-      <p className="muted small">Fit: all hard criteria confirmed. Needs info: a fact is missing in your profile, so it cannot be checked yet. Score is the share of this investor's criteria your project meets; a missing fact counts as half. Investors stay anonymous to you until they express interest.</p>
-      {!canSend && <p className="muted">This is a preview that follows your answers. You can send the teaser once Cobuildy has approved it.</p>}
+      <h2>{t0('Send your teaser', 'Envía tu teaser')}</h2>
+      <p className="muted">{t0('These are the investors whose criteria fit this project. Tick who should receive the teaser and press the button at the bottom. Investors who already have it are marked', 'Estos son los inversores cuyos criterios encajan con este proyecto. Marca quién debe recibir el teaser y pulsa el botón de abajo. Los que ya lo tienen aparecen como')} <b>{t0('Sent', 'Enviado')}</b>{t0(', and their replies appear under ', ', y sus respuestas aparecen abajo, en ')}<b>{t0('Deals', 'Operaciones')}</b>{t0(' below.', '.')}</p>
+      <p className="muted small">{t0("Fit: all hard criteria confirmed. Needs info: a fact is missing in your profile, so it cannot be checked yet. Score is the share of this investor's criteria your project meets; a missing fact counts as half. Investors stay anonymous to you until they express interest.", 'Encajan: todos los criterios firmes confirmados. Necesitan información: falta un dato en tu perfil, así que aún no se puede comprobar. La puntuación es la parte de los criterios de este inversor que cumple tu proyecto; un dato que falta cuenta como la mitad. Los inversores permanecen anónimos para ti hasta que muestran interés.')}</p>
+      {!canSend && <p className="muted">{t0('This is a preview that follows your answers. You can send the teaser once Cobuildy has approved it.', 'Esto es una vista previa que sigue tus respuestas. Podrás enviar el teaser cuando Cobuildy lo haya aprobado.')}</p>}
       <ErrorLine error={act.error ?? m.error} />
-      {m.data && shown.length === 0 ? <Empty>No investor fits yet. Answer more questions or widen the ask.</Empty> : (
+      {m.data && shown.length === 0 ? <Empty>{t0('No investor fits yet. Answer more questions or widen the ask.', 'Todavía no encaja ningún inversor. Responde más preguntas o amplía la petición.')}</Empty> : (
         <div className="scrollx"><table>
-          <thead><tr>{canSend && <th />}<th>Type</th><th>Country</th><th>Match</th><th>Score</th><th>To make it a fit</th>{canSend && <th>Teaser</th>}</tr></thead>
+          <thead><tr>{canSend && <th />}<th>{t0('Type', 'Tipo')}</th><th>{t0('Country', 'País')}</th><th>{t0('Match', 'Encaje')}</th><th>{t0('Score', 'Puntuación')}</th><th>{t0('To make it a fit', 'Para que encaje')}</th>{canSend && <th>Teaser</th>}</tr></thead>
           <tbody>{shown.map(x => {
             const sent = done.has(x.code)
             const can = canSend && !sent && (x.bucket === 'fit' || x.bucket === 'possible')
             return <tr key={x.investor_id}>
-              {canSend && <td><input type="checkbox" aria-label={`Select ${x.code}`} disabled={!can} checked={chosen.includes(x.investor_id)} onChange={e => setSel(e.target.checked ? [...chosen, x.investor_id] : chosen.filter(i => i !== x.investor_id))} /></td>}
-              <td>{kindLabel(x.kind)}</td><td>{countryName(x.country)}</td><td><Pill tone={tone(x.bucket)}>{BUCKET_LABEL[x.bucket]}</Pill></td><td>{x.score}</td>
-              <td>{x.bucket === 'possible' && (x.missing ?? []).length > 0 ? <span className="why">{(x.missing ?? []).filter(k => MISSING[k]).map(k => <span key={k}>{MISSING[k].text} · <button className="linkbtn" type="button" onClick={() => onFill(MISSING[k].key)}>Fill in</button></span>)}</span> : <span className="muted">—</span>}</td>
-              {canSend && <td>{sent ? <Pill tone="good">Sent</Pill> : <span className="muted">—</span>}</td>}</tr>
+              {canSend && <td><input type="checkbox" aria-label={t0(`Select ${x.code}`, `Seleccionar ${x.code}`)} disabled={!can} checked={chosen.includes(x.investor_id)} onChange={e => setSel(e.target.checked ? [...chosen, x.investor_id] : chosen.filter(i => i !== x.investor_id))} /></td>}
+              <td>{kindLabel(x.kind)}</td><td>{countryName(x.country)}</td><td><Pill tone={tone(x.bucket)}>{BUCKET_LABEL()[x.bucket]}</Pill></td><td>{x.score}</td>
+              <td>{x.bucket === 'possible' && (x.missing ?? []).length > 0 ? <span className="why">{(x.missing ?? []).filter(k => MISSING()[k]).map(k => <span key={k}>{MISSING()[k].text} · <button className="linkbtn" type="button" onClick={() => onFill(MISSING()[k].key)}>{t0('Fill in', 'Rellenar')}</button></span>)}</span> : <span className="muted">—</span>}</td>
+              {canSend && <td>{sent ? <Pill tone="good">{t0('Sent', 'Enviado')}</Pill> : <span className="muted">—</span>}</td>}</tr>
           })}</tbody>
         </table></div>
       )}
       {notice && <div className="ok" role="status">{notice}</div>}
       {canSend && <div className="row"><button className="btn plan" disabled={act.busy || chosen.length === 0} onClick={send}>
-        {act.busy ? 'Sending…' : chosen.length === 0 ? (done.size > 0 ? 'Teaser sent' : 'No investor selected') : `Send teaser to ${chosen.length} investor${chosen.length === 1 ? '' : 's'}`}</button></div>}
+        {act.busy ? t0('Sending…', 'Enviando…') : chosen.length === 0 ? (done.size > 0 ? t0('Teaser sent', 'Teaser enviado') : t0('No investor selected', 'Ningún inversor seleccionado')) : t0(`Send teaser to ${chosen.length} investor${chosen.length === 1 ? '' : 's'}`, `Enviar el teaser a ${chosen.length} ${chosen.length === 1 ? 'inversor' : 'inversores'}`)}</button></div>}
     </section>
   )
 }
 
 function Deals({ project, docs: all }: { project: Project; docs: ProjectDoc[] }) {
+  const t0 = useT()
   const docs = all.filter(x => x.storage_path)
   const deals = useLoad(() => rpc<ProjectDeal[]>('project_deals', { p_project: project.id }), [project.id])
   const msgs = useLoad(async () => {
@@ -300,37 +307,37 @@ function Deals({ project, docs: all }: { project: Project; docs: ProjectDoc[] })
 
   return (
     <section className="card">
-      <h2>Deals</h2>
+      <h2>{t0('Deals', 'Operaciones')}</h2>
       <ErrorLine error={act.error ?? deals.error ?? msgs.error} />
-      {deals.data && deals.data.length === 0 ? <Empty>No investors contacted yet.</Empty> : deals.data?.map(d => {
+      {deals.data && deals.data.length === 0 ? <Empty>{t0('No investors contacted yet.', 'Aún no se ha contactado con ningún inversor.')}</Empty> : deals.data?.map(d => {
         const ms = (msgs.data ?? []).filter(x => x.deal_id === d.deal_id)
         const open = ms.filter(x => x.kind === 'question')
         return (
           <div className="card soft" key={d.deal_id}>
             <div className="row"><b>{d.investor_name ?? d.investor_code}</b><span className="muted">{kindLabel(d.investor_kind)}</span><span className="sp" />
               <Pill tone={d.stage === 'passed' ? 'bad' : d.stage === 'call' ? 'good' : 'plan'}>{STAGE_LABEL[d.stage]}</Pill></div>
-            {d.reason && <div className="muted">Reason: {d.reason}</div>}
-            {d.recorded_channel && <div className="muted">Reply recorded by the Cobuildy team ({CHANNEL[d.recorded_channel] ?? d.recorded_channel})</div>}
-            {ms.map(x => <div key={x.id} className={`q ${x.kind === 'answer' ? 'a' : ''}`}><span className="mono">{x.kind}</span><div>{x.body}</div></div>)}
+            {d.reason && <div className="muted">{t0('Reason', 'Motivo')}: {d.reason}</div>}
+            {d.recorded_channel && <div className="muted">{t0('Reply recorded by the Cobuildy team', 'Respuesta registrada por el equipo de Cobuildy')} ({CHANNEL[d.recorded_channel] ?? d.recorded_channel})</div>}
+            {ms.map(x => <div key={x.id} className={`q ${x.kind === 'answer' ? 'a' : ''}`}><span className="mono">{x.kind === 'question' ? t0('question', 'pregunta') : x.kind === 'answer' ? t0('answer', 'respuesta') : t0('note', 'nota')}</span><div>{x.body}</div></div>)}
             <div className="row">
               {d.stage === 'interested' && <>
-                <button className="btn sm pri" disabled={act.busy} onClick={() => go(d.deal_id, 'accept')}>Accept</button>
-                <button className="btn sm" disabled={act.busy} onClick={() => go(d.deal_id, 'decline', { reason: 'Not a fit right now' })}>Decline</button></>}
+                <button className="btn sm pri" disabled={act.busy} onClick={() => go(d.deal_id, 'accept')}>{t0('Accept', 'Aceptar')}</button>
+                <button className="btn sm" disabled={act.busy} onClick={() => go(d.deal_id, 'decline', { reason: 'Not a fit right now' })}>{t0('Decline', 'Rechazar')}</button></>}
               {d.stage === 'nda_sent' && (d.nda_dev_signed
-                ? <span className="ok">You signed the NDA. Waiting for {d.investor_name ?? 'the investor'} to sign.</span>
-                : <button className="btn sm pri" disabled={act.busy} onClick={() => go(d.deal_id, 'sign_nda')}>Sign NDA</button>)}
-              {d.stage === 'nda_sent' && <span className="muted">NDA: you {d.nda_dev_signed ? '✓' : 'not yet'} · investor {d.nda_inv_signed ? '✓' : 'not yet'}</span>}
+                ? <span className="ok">{t0('You signed the NDA. Waiting for', 'Has firmado el NDA. Esperando a que firme')} {d.investor_name ?? t0('the investor', 'el inversor')}{t0(' to sign.', '.')}</span>
+                : <button className="btn sm pri" disabled={act.busy} onClick={() => go(d.deal_id, 'sign_nda')}>{t0('Sign NDA', 'Firmar NDA')}</button>)}
+              {d.stage === 'nda_sent' && <span className="muted">NDA: {t0('you', 'tú')} {d.nda_dev_signed ? '✓' : t0('not yet', 'aún no')} · {t0('investor', 'inversor')} {d.nda_inv_signed ? '✓' : t0('not yet', 'aún no')}</span>}
             </div>
-            {d.stage === 'room' && (docs.length === 0 ? <span className="muted">Upload documents in the Data room tab, then choose what to share.</span> : <>
+            {d.stage === 'room' && (docs.length === 0 ? <span className="muted">{t0('Upload documents in the Data room tab, then choose what to share.', 'Sube documentos en la pestaña Data room y elige después qué compartir.')}</span> : <>
               <div className="chks">{docs.map(x => <label className="chk" key={x.id}><input type="checkbox" checked={(picked[d.deal_id] ?? []).includes(x.id)} onChange={e => { const cur = picked[d.deal_id] ?? []; setPicked({ ...picked, [d.deal_id]: e.target.checked ? [...cur, x.id] : cur.filter(i => i !== x.id) }) }} />{x.title}</label>)}</div>
-              <div><button className="btn sm pri" disabled={act.busy || !(picked[d.deal_id] ?? []).length} onClick={() => go(d.deal_id, 'share_docs', { docs: picked[d.deal_id] })}>Share selected documents</button></div></>)}
+              <div><button className="btn sm pri" disabled={act.busy || !(picked[d.deal_id] ?? []).length} onClick={() => go(d.deal_id, 'share_docs', { docs: picked[d.deal_id] })}>{t0('Share selected documents', 'Compartir los documentos seleccionados')}</button></div></>)}
             {d.stage === 'qa' && <>
-              <Field label={`Answers, one per line (${open.length} question${open.length === 1 ? '' : 's'})`}><textarea rows={3} value={answers[d.deal_id] ?? ''} onChange={e => setAnswers({ ...answers, [d.deal_id]: e.target.value })} /></Field>
-              <div><button className="btn sm pri" disabled={act.busy || !(answers[d.deal_id] ?? '').trim()} onClick={() => go(d.deal_id, 'answer', { answers: (answers[d.deal_id] ?? '').split('\n').map(s => s.trim()).filter(Boolean) })}>Send answers</button></div></>}
+              <Field label={t0(`Answers, one per line (${open.length} question${open.length === 1 ? '' : 's'})`, `Respuestas, una por línea (${open.length} ${open.length === 1 ? 'pregunta' : 'preguntas'})`)}><textarea rows={3} value={answers[d.deal_id] ?? ''} onChange={e => setAnswers({ ...answers, [d.deal_id]: e.target.value })} /></Field>
+              <div><button className="btn sm pri" disabled={act.busy || !(answers[d.deal_id] ?? '').trim()} onClick={() => go(d.deal_id, 'answer', { answers: (answers[d.deal_id] ?? '').split('\n').map(s => s.trim()).filter(Boolean) })}>{t0('Send answers', 'Enviar respuestas')}</button></div></>}
             {d.stage === 'ts' && <div className="row">
-              <input style={{ maxWidth: 280 }} placeholder="Call slot, e.g. Tue 14:00 CET" value={slot[d.deal_id] ?? ''} onChange={e => setSlot({ ...slot, [d.deal_id]: e.target.value })} />
-              <button className="btn sm pri" disabled={act.busy || !(slot[d.deal_id] ?? '').trim()} onClick={() => go(d.deal_id, 'confirm_call', { slot: slot[d.deal_id] })}>Confirm call</button></div>}
-            {d.stage === 'call' && <span className="ok">Call: {d.call_slot}</span>}
+              <input style={{ maxWidth: 280 }} placeholder={t0('Call slot, e.g. Tue 14:00 CET', 'Franja de la llamada, p. ej. mar 14:00 CET')} value={slot[d.deal_id] ?? ''} onChange={e => setSlot({ ...slot, [d.deal_id]: e.target.value })} />
+              <button className="btn sm pri" disabled={act.busy || !(slot[d.deal_id] ?? '').trim()} onClick={() => go(d.deal_id, 'confirm_call', { slot: slot[d.deal_id] })}>{t0('Confirm call', 'Confirmar llamada')}</button></div>}
+            {d.stage === 'call' && <span className="ok">{t0('Call', 'Llamada')}: {d.call_slot}</span>}
           </div>
         )
       })}

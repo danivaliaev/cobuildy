@@ -59,3 +59,16 @@ export function otherLangHref(to: Lang, pathname = window.location.pathname, sea
 
 /** `{n}` placeholders in a string. */
 export const fill = (s: string, v: Record<string, string | number>): string => s.replace(/\{(\w+)\}/g, (_, k: string) => String(v[k] ?? ''))
+
+/** Picks the English or Spanish text next to each other in the code: `t('Save', 'Guardar')`. Re-renders when the language changes. */
+export function useT(): (en: string, es: string) => string {
+  const l = useLang()
+  return (en, es) => (l === 'es' ? es : en)
+}
+/** For code outside components (it does not re-render by itself). */
+export const tr = (en: string, es: string): string => (current === 'es' ? es : en)
+
+/** A label map that answers in the current language. The keys and codes stay English; only the text changes. The app is remounted when the language changes, so plain lookups are enough. */
+export function pick<T extends Record<string, string>>(en: T, es: Partial<Record<keyof T, string>>): T {
+  return new Proxy(en, { get: (t, k: string) => (current === 'es' && es[k as keyof T] !== undefined ? es[k as keyof T] : t[k as keyof T]) as string })
+}

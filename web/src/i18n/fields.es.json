@@ -1,0 +1,942 @@
+{
+"sections": {
+"asset": "Inmueble",
+"land": "Suelo",
+"dev": "Promotor",
+"fin": "Finanzas",
+"perm": "Licencias",
+"build": "Construcción",
+"cap": "Estructura de capital",
+"exit": "Estrategia de salida"
+},
+"gates": [
+"",
+"Teaser",
+"Contacto",
+"Data room"
+],
+"stageOptions": {
+"land": [
+"Suelo identificado",
+"Suelo reservado",
+"Suelo comprado",
+"Licencia de obra concedida"
+],
+"wip": [
+"Obra iniciada",
+"Obra parcialmente completada",
+"Obra casi terminada"
+],
+"refurb": [
+"Inmueble identificado",
+"Inmueble adquirido",
+"Reforma iniciada",
+"Reforma terminada"
+]
+},
+"fields": {
+"a_strategy": {
+"label": "Tipo de proyecto",
+"question": "¿Qué tipo de proyecto es?",
+"why": "Los prestamistas valoran un proyecto por lo que haces con él y por lo avanzado que está.",
+"task": "Confirma el tipo de proyecto",
+"doc": null,
+"chips": [
+[
+"Desarrollo de suelo",
+"Desarrollo de suelo",
+null,
+null
+],
+[
+"Obra en curso",
+"Obra en curso",
+null,
+null
+],
+[
+"Rehabilitación / Reforma",
+"Rehabilitación / Reforma",
+null,
+null
+]
+]
+},
+"a_stage": {
+"label": "Fase actual",
+"question": "¿Qué grado de avance tiene el proyecto?",
+"why": "Los inversores financian un proyecto de forma distinta según lo avanzado que esté.",
+"task": "Confirma la fase actual",
+"doc": null,
+"chips": [
+[
+"Suelo identificado",
+"Suelo identificado",
+null,
+null
+],
+[
+"Suelo reservado",
+"Suelo reservado",
+null,
+null
+],
+[
+"Suelo comprado",
+"Suelo comprado",
+null,
+null
+],
+[
+"Licencia de obra concedida",
+"Licencia de obra concedida",
+null,
+null
+],
+[
+"Obra iniciada",
+"Obra iniciada",
+null,
+null
+],
+[
+"Obra parcialmente completada",
+"Obra parcialmente completada",
+null,
+null
+],
+[
+"Obra casi terminada",
+"Obra casi terminada",
+null,
+null
+],
+[
+"Inmueble identificado",
+"Inmueble identificado",
+null,
+null
+],
+[
+"Inmueble adquirido",
+"Inmueble adquirido",
+null,
+null
+],
+[
+"Reforma iniciada",
+"Reforma iniciada",
+null,
+null
+],
+[
+"Reforma terminada",
+"Reforma terminada",
+null,
+null
+],
+[
+"Oferta aceptada o reservado",
+"Oferta aceptada o reservado",
+null,
+null
+]
+]
+},
+"a_type": {
+"label": "Tipo de activo",
+"question": "¿Qué tipo de producto vas a construir?",
+"why": "Determina qué prestamistas e inversores son relevantes.",
+"task": "Confirma el tipo de activo",
+"doc": null,
+"chips": [
+[
+"Residencial para venta",
+"Residencial para venta",
+null,
+null
+],
+[
+"Build-to-rent",
+"Build-to-rent",
+null,
+null
+],
+[
+"Hotelero",
+"Hotelero",
+null,
+null
+],
+[
+"Uso mixto",
+"Uso mixto",
+null,
+null
+]
+]
+},
+"a_loc": {
+"label": "Ubicación",
+"question": "¿En qué ciudad, pueblo o localidad está el proyecto?",
+"why": "La profundidad del mercado local decide quién prestará.",
+"task": "Indica la localidad",
+"doc": null,
+"chips": [
+[
+"Marbella, Costa del Sol",
+"Marbella, Costa del Sol",
+null,
+null
+],
+[
+"Lisboa",
+"Lisboa",
+null,
+null
+]
+]
+},
+"a_units": {
+"label": "Número de viviendas",
+"question": "¿Cuántas viviendas vas a construir?",
+"why": "El coste y los ingresos por vivienda se comprueban con esta cifra.",
+"task": "Confirma el número de viviendas según el proyecto",
+"doc": null,
+"chips": [
+[
+"12 apartamentos",
+"12 apartamentos",
+null,
+null
+],
+[
+"8 villas",
+"8 villas",
+null,
+null
+]
+]
+},
+"a_area": {
+"label": "Superficie vendible",
+"question": "¿Cuál es la superficie total vendible?",
+"why": "El coste y los ingresos por m² se comprueban con esta cifra.",
+"task": "Confirma la superficie vendible según el proyecto",
+"doc": null,
+"chips": [
+[
+"~1.250 m²",
+"~1.250 m²",
+null,
+null
+],
+[
+"~1.600 m²",
+"~1.600 m²",
+null,
+null
+]
+]
+},
+"a_mix": {
+"label": "Distribución de tipologías",
+"question": "¿Cuál es la distribución de tipologías?",
+"why": "Los inversores contrastan el producto con la demanda local.",
+"task": "Documenta la distribución por tipo y tamaño",
+"doc": null,
+"chips": [
+[
+"Apartamentos de 2–3 dormitorios",
+"Apartamentos de 2–3 dormitorios",
+null,
+null
+],
+[
+"Áticos + 2 dormitorios",
+"Áticos + 2 dormitorios",
+null,
+null
+]
+]
+},
+"a_price": {
+"label": "Precio objetivo por m²",
+"question": "¿Cuál es el precio objetivo por m²?",
+"why": "Los inversores contrastan tus precios con los comparables locales.",
+"task": "Valora cada tipología con 5–10 comparables locales",
+"doc": null,
+"chips": [
+[
+"~5.200 €/m²",
+"~5.200 €/m²",
+null,
+null
+],
+[
+"~6.400 €/m²",
+"~6.400 €/m²",
+null,
+null
+]
+]
+},
+"l_own": {
+"label": "Control del suelo",
+"question": "¿Controlas hoy el suelo?",
+"why": "Los prestamistas financian suelo que ya es tuyo o que puedes asegurar al cierre.",
+"task": "Confirma el control del suelo con escritura o con una opción firmada",
+"doc": null,
+"chips": [
+[
+"En propiedad, escritura a nombre de mi grupo",
+"En propiedad, escritura a nombre de mi grupo",
+null,
+null
+],
+[
+"Compra acordada (opción / arras)",
+"Compra acordada (opción / arras)",
+null,
+"Completa la compra o amplía la opción"
+],
+[
+"Aún negociando",
+"Aún negociando",
+null,
+"Firma una opción o un contrato de compra vinculante"
+]
+]
+},
+"l_price": {
+"label": "Coste del suelo",
+"question": "¿Cuánto cuesta el suelo?",
+"why": "El suelo suele ser la primera cifra que un prestamista compara con la tasación.",
+"task": "Confirma el precio del suelo con la escritura o la opción",
+"doc": null,
+"chips": [
+[
+"1,2 M€",
+"1,2 M€",
+null,
+null
+]
+]
+},
+"l_title": {
+"label": "Titularidad y cargas",
+"question": "¿El suelo está libre de cargas, como una hipoteca?",
+"why": "El abogado del prestamista lo revisa lo primero. Una hipoteca o un gravamen cambia quién cobra primero.",
+"task": "Pide una nota simple y revisa las cargas",
+"doc": "Nota simple del Registro de la Propiedad y referencia catastral",
+"chips": [
+[
+"Sí, libre de cargas",
+"Nota simple reciente, sin cargas",
+"Una nota simple limpia elimina lo primero que revisa el abogado del prestamista.",
+null
+],
+[
+"Sí, pero hay hipoteca",
+"La nota simple muestra una hipoteca existente",
+"Una hipoteca existente es manejable si se cancela con la nueva financiación. La he añadido a tu plan.",
+"Acuerda cómo se cancela o refinancia la hipoteca al cierre"
+]
+]
+},
+"l_zone": {
+"label": "Situación urbanística",
+"question": "¿Cuál es la situación urbanística de la parcela?",
+"why": "Decide si una licencia es realista y cuánto tardará.",
+"task": "Solicita el certificado urbanístico",
+"doc": "Certificado urbanístico",
+"chips": [
+[
+"Suelo urbano, uso residencial confirmado",
+"Suelo urbano, uso residencial confirmado",
+null,
+null
+],
+[
+"Necesita un cambio urbanístico",
+"Necesita un cambio urbanístico",
+"Un cambio urbanístico es un trámite largo. La mayoría de los prestamistas esperarán a que se resuelva antes de comprometerse.",
+"Inicia el cambio urbanístico en el ayuntamiento"
+]
+]
+},
+"d_entity": {
+"label": "Sociedad del proyecto",
+"question": "¿Qué sociedad será titular del proyecto?",
+"why": "La mayoría de los prestamistas financian una SPV dedicada con sus propias cuentas.",
+"task": "Constituye la SPV del proyecto y comparte el cuadro de socios",
+"doc": "Escritura de la SPV y cuadro de socios",
+"chips": [
+[
+"SPV dedicada (S.L.)",
+"SPV dedicada (S.L.)",
+null,
+null
+],
+[
+"Sociedad existente",
+"Sociedad existente",
+null,
+"Constituye una SPV dedicada para este proyecto"
+]
+]
+},
+"d_track": {
+"label": "Trayectoria",
+"question": "¿Cuántos proyectos has entregado?",
+"why": "Los promotores primerizos suelen necesitar un equipo más sólido o más capital propio.",
+"task": "Redacta una trayectoria de una página: dirección, coste y resultado de cada proyecto",
+"doc": "Ficha de trayectoria",
+"chips": [
+[
+"6 proyectos entregados",
+"6 proyectos entregados",
+"Una trayectoria de entregas es una de las piezas más sólidas del expediente de un prestamista.",
+null
+],
+[
+"2 proyectos entregados",
+"2 proyectos entregados",
+null,
+null
+],
+[
+"Es mi primer proyecto",
+"Primer proyecto",
+"Los primeros proyectos son financiables, pero los prestamistas pedirán un equipo más sólido o más capital propio.",
+"Incorpora un socio o un constructor con experiencia al equipo promotor"
+]
+]
+},
+"d_team": {
+"label": "Equipo principal",
+"question": "¿Quién forma tu equipo principal?",
+"why": "Quienes revisan el data room quieren nombres, funciones y titulaciones.",
+"task": "Lista al equipo con sus funciones y titulaciones",
+"doc": null,
+"chips": [
+[
+"Arquitecto, director de proyecto y constructor identificados",
+"Arquitecto, director de proyecto y constructor identificados",
+null,
+null
+],
+[
+"Solo el arquitecto",
+"Solo el arquitecto",
+null,
+"Identifica al director de proyecto y al constructor"
+]
+]
+},
+"f_cost": {
+"label": "Coste total del proyecto",
+"question": "¿Cuál es el coste total del proyecto, todo incluido: suelo, obra, honorarios, impuestos y financiación?",
+"why": "Todos los ratios que mira un prestamista parten de aquí.",
+"task": "Estima el coste total",
+"doc": null,
+"chips": [
+[
+"5,4 M€",
+"5,4 M€",
+null,
+null
+],
+[
+"4,8 M€",
+"4,8 M€",
+null,
+null
+],
+[
+"6,2 M€",
+"6,2 M€",
+null,
+null
+]
+]
+},
+"f_gdv": {
+"label": "Valor de venta esperado (GDV)",
+"question": "¿Por cuánto esperas vender todas las viviendas, en total?",
+"why": "El margen y la relación préstamo-valor se miden respecto a esta cifra.",
+"task": "Estima el valor total de venta con comparables",
+"doc": null,
+"chips": [
+[
+"6,5 M€",
+"6,5 M€",
+null,
+null
+],
+[
+"7,2 M€",
+"7,2 M€",
+null,
+null
+],
+[
+"5,9 M€",
+"5,9 M€",
+null,
+null
+]
+]
+},
+"f_budget": {
+"label": "Presupuesto de costes por partidas",
+"question": "¿Tienes un presupuesto de costes desglosado por partidas?",
+"why": "Los prestamistas revisan el presupuesto y la partida de imprevistos antes que nada.",
+"task": "Elabora un presupuesto por partidas con imprevistos",
+"doc": "Presupuesto de costes con imprevistos",
+"chips": [
+[
+"Sí, con un 5 %+ de imprevistos",
+"Presupuesto por partidas con un 5 %+ de imprevistos",
+null,
+null
+],
+[
+"Sí, sin imprevistos",
+"Presupuesto por partidas, sin imprevistos",
+"Faltar los imprevistos es un hallazgo habitual. Se arregla en pocos días, así que lo he añadido como tarea rápida.",
+"Añade un 5 % de imprevistos como mínimo y recalcula el presupuesto"
+],
+[
+"Solo una cifra total",
+"Solo el total",
+null,
+"Elabora un presupuesto por partidas"
+]
+]
+},
+"f_model": {
+"label": "Modelo financiero",
+"question": "¿Tienes un modelo financiero?",
+"why": "Muestra cómo se comporta la operación si cambian los precios o los costes.",
+"task": "Elabora un modelo financiero con sensibilidades de precio y coste",
+"doc": "Modelo financiero",
+"chips": [
+[
+"Sí, con sensibilidades",
+"Modelo con sensibilidades",
+null,
+null
+],
+[
+"Solo una hoja de cálculo básica",
+"Hoja de cálculo básica",
+null,
+"Añade sensibilidades de precio y coste al modelo"
+]
+]
+},
+"p_design": {
+"label": "Fase del diseño",
+"question": "¿En qué fase está el diseño?",
+"why": "El proyecto básico es la base de la licencia y del presupuesto.",
+"task": "Completa el proyecto básico",
+"doc": "Proyecto básico",
+"chips": [
+[
+"Proyecto básico terminado",
+"Proyecto básico terminado",
+null,
+null
+],
+[
+"Solo anteproyecto",
+"Solo anteproyecto",
+null,
+"Completa el proyecto básico"
+],
+[
+"No iniciado",
+"No iniciado",
+null,
+"Encarga y completa el proyecto básico"
+]
+]
+},
+"p_status": {
+"label": "Licencia de obra",
+"question": "¿En qué estado está la licencia de obra?",
+"why": "Sin licencia, la mayoría de los prestamistas sénior no emitirán condiciones.",
+"task": "Presenta la solicitud de licencia y haz su seguimiento",
+"doc": "Licencia de obra",
+"chips": [
+[
+"Concedida",
+"Concedida",
+"Una licencia concedida es el factor que más reduce el riesgo para un prestamista sénior.",
+null
+],
+[
+"Solicitada, a la espera",
+"Solicitada, a la espera del ayuntamiento",
+"El plazo depende del ayuntamiento. La he puesto en la hoja de ruta con 60 días. Puedes ir preparando el dossier para prestamistas en paralelo.",
+"Haz seguimiento de la licencia y responde a los requerimientos del ayuntamiento"
+],
+[
+"Aún no solicitada",
+"No solicitada",
+"Es la partida más larga de la mayoría de las hojas de ruta, así que la pondré la primera.",
+"Presenta la solicitud de licencia y haz su seguimiento"
+]
+]
+},
+"p_other": {
+"label": "Suministros, tasas y otras aprobaciones",
+"question": "¿Están confirmadas el resto de aprobaciones, como los suministros y el ICIO?",
+"why": "Quienes revisan el data room comprueban que nada más puede frenar la obra.",
+"task": "Confirma suministros, ICIO y calendario de tasas",
+"doc": null,
+"chips": [
+[
+"Sí, todo confirmado",
+"Suministros, ICIO y aprobaciones confirmados",
+null,
+null
+],
+[
+"En parte",
+"Confirmado en parte",
+null,
+"Confirma los suministros y las tasas pendientes"
+]
+]
+},
+"c_contractor": {
+"label": "Constructor",
+"question": "¿Has elegido constructor?",
+"why": "Los inversores valoran el riesgo de obra según quién construye.",
+"task": "Pide ofertas a 3 constructores y elige uno",
+"doc": null,
+"chips": [
+[
+"Elegido y firmado",
+"Elegido y firmado",
+null,
+null
+],
+[
+"En licitación",
+"En licitación",
+null,
+"Cierra la licitación y elige constructor"
+],
+[
+"Aún no elegido",
+"No elegido",
+null,
+"Pide ofertas a 3 constructores y elige uno"
+]
+]
+},
+"c_sched": {
+"label": "Plazo de obra",
+"question": "¿Cuántos meses durará la obra?",
+"why": "Los costes financieros y el momento de la salida dependen de ello.",
+"task": "Acuerda un plazo de obra con el constructor",
+"doc": null,
+"chips": [
+[
+"18 meses",
+"18 meses",
+null,
+null
+],
+[
+"22 meses",
+"22 meses",
+null,
+null
+],
+[
+"26 meses",
+"26 meses",
+null,
+null
+]
+]
+},
+"c_contract": {
+"label": "Contrato de obra",
+"question": "¿Qué tipo de contrato de obra tienes o prevés?",
+"why": "Un precio cerrado traslada al constructor el riesgo de sobrecostes.",
+"task": "Firma un contrato de obra a precio cerrado",
+"doc": "Contrato de obra",
+"chips": [
+[
+"Precio cerrado",
+"Precio cerrado",
+null,
+null
+],
+[
+"Coste más honorarios",
+"Coste más honorarios",
+null,
+"Negocia un precio cerrado o un precio máximo garantizado"
+],
+[
+"Sin firmar",
+"Sin firmar",
+null,
+"Firma un contrato de obra a precio cerrado"
+]
+]
+},
+"c_ins": {
+"label": "Seguro decenal",
+"question": "¿Tienes contratado el seguro decenal?",
+"why": "Obligatorio en España para vivienda nueva. Los prestamistas piden justificante.",
+"task": "Contrata el seguro decenal",
+"doc": null,
+"chips": [
+[
+"Sí, contratado",
+"Seguro decenal contratado",
+null,
+null
+],
+[
+"Aún no",
+"No contratado",
+null,
+"Contrata el seguro decenal"
+]
+]
+},
+"k_ask": {
+"label": "Capital que buscas",
+"question": "¿Cuánto capital necesitas?",
+"why": "Es el punto de partida de cada coincidencia.",
+"task": "Confirma el importe necesario",
+"doc": null,
+"chips": [
+[
+"3 M€",
+"3 M€",
+null,
+null
+]
+]
+},
+"k_instr": {
+"label": "Instrumento preferido",
+"question": "¿Qué tipo de capital prefieres?",
+"why": "Los inversores de deuda y de capital son personas distintas.",
+"task": "Elige el instrumento preferido",
+"doc": null,
+"chips": [
+[
+"Préstamo sénior",
+"Préstamo sénior",
+null,
+null
+],
+[
+"Sénior + mezzanine",
+"Sénior + mezzanine",
+null,
+null
+],
+[
+"Socio de capital",
+"Socio de capital",
+null,
+null
+],
+[
+"No lo sé, aconséjame",
+"Abierto a consejo",
+"Bien. Compararé opciones cuando estén el coste, el capital propio y la salida.",
+null
+]
+]
+},
+"k_equity": {
+"label": "Tu capital en la operación",
+"question": "¿Cuánto capital propio aportas, incluido el suelo?",
+"why": "Los prestamistas quieren que el promotor ponga dinero relevante antes que ellos.",
+"task": "Documenta tu capital: valoración del suelo y justificante de efectivo",
+"doc": "Justificante de capital (valor del suelo + extracto bancario)",
+"chips": [
+[
+"2,4 M€: suelo + 1,2 M€ en efectivo",
+"2,4 M€ (suelo + 1,2 M€ en efectivo)",
+null,
+null
+],
+[
+"1,2 M€: solo el suelo",
+"1,2 M€ (solo el suelo)",
+null,
+null
+],
+[
+"0,6 M€",
+"0,6 M€",
+null,
+null
+]
+]
+},
+"k_repay": {
+"label": "Devolución",
+"question": "¿Cómo se devolverá el préstamo?",
+"why": "Muestra al prestamista de dónde vuelve el dinero.",
+"task": "Define la cascada de devolución",
+"doc": null,
+"chips": [
+[
+"Venta de viviendas",
+"Ingresos de la venta de viviendas",
+null,
+null
+],
+[
+"Refinanciación al terminar la obra",
+"Refinanciación al terminar la obra",
+null,
+null
+],
+[
+"Sin definir",
+"Sin definir",
+null,
+"Define la cascada de devolución"
+]
+]
+},
+"k_security": {
+"label": "Garantías ofrecidas",
+"question": "¿Qué garantías puedes ofrecer?",
+"why": "Define a qué puede recurrir el prestamista.",
+"task": "Define el paquete de garantías",
+"doc": null,
+"chips": [
+[
+"Primera hipoteca sobre el suelo",
+"Primera hipoteca sobre el suelo",
+null,
+null
+],
+[
+"Hipoteca y aval del promotor",
+"Hipoteca y aval del promotor",
+null,
+null
+],
+[
+"Sin definir",
+"Sin definir",
+null,
+"Define el paquete de garantías"
+]
+]
+},
+"e_strategy": {
+"label": "Estrategia de salida",
+"question": "¿Cómo saldrás: quién comprará?",
+"why": "Los prestamistas cobran con la salida, así que la analizan primero.",
+"task": "Decide la vía y el momento de la salida",
+"doc": null,
+"chips": [
+[
+"Vender las viviendas sobre plano y al terminar",
+"Vender las viviendas sobre plano y al terminar",
+null,
+null
+],
+[
+"Vender todo el edificio a un solo inversor",
+"Venta en bloque a un inversor",
+null,
+null
+],
+[
+"Build to rent y después refinanciar",
+"Build to rent y después refinanciar",
+null,
+null
+]
+]
+},
+"e_presales": {
+"label": "Preventas",
+"question": "¿Cuántas viviendas están reservadas o vendidas sobre plano?",
+"why": "Las preventas son la prueba más sólida de que tus precios son reales.",
+"task": "Abre reservas con un acuerdo de depósito",
+"doc": null,
+"chips": [
+[
+"Ninguna todavía",
+"Ninguna todavía",
+null,
+"Abre reservas con un acuerdo de depósito"
+],
+[
+"3 de 12 reservadas",
+"3 de 12 reservadas",
+null,
+"Convierte las reservas y abre más"
+],
+[
+"6 de 12 firmadas",
+"6 de 12 firmadas",
+"Tener la mitad preadjudicada es una señal fuerte para un prestamista.",
+null
+]
+]
+},
+"e_comps": {
+"label": "Evidencia de precios",
+"question": "¿Tienes ventas comparables que respalden tus precios?",
+"why": "Los tasadores y los prestamistas contrastarán los precios con ventas recientes.",
+"task": "Reúne 5–10 ventas comparables recientes",
+"doc": "Evidencia de ventas comparables",
+"chips": [
+[
+"5+ comparables recientes",
+"5+ comparables recientes",
+null,
+null
+],
+[
+"Unos pocos anuncios",
+"Solo unos pocos anuncios",
+null,
+"Reúne 5–10 ventas comparables recientes"
+]
+]
+},
+"e_timeline": {
+"label": "Calendario de ventas",
+"question": "¿Cuál es el calendario de ventas tras terminar la obra?",
+"why": "Determina cuánto tiempo seguirá vivo el préstamo.",
+"task": "Redacta el calendario de ventas",
+"doc": null,
+"chips": [
+[
+"Vender todo en 6 meses",
+"Vender todo en los 6 meses siguientes a la finalización",
+null,
+null
+],
+[
+"12 meses",
+"Vender todo en los 12 meses siguientes a la finalización",
+null,
+null
+]
+]
+}
+}
+}

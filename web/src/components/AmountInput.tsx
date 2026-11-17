@@ -1,9 +1,10 @@
+import { getLang } from '../i18n'
 import { useEffect, useState } from 'react'
 import { parseEuros } from '../lib/budget'
 
 /** An amount in euros that is shown with thousands separators and read back when the field is left. Text that is not an amount is put back. */
 export function AmountInput({ value, onChange, label, disabled, empty = '' }: { value: number | null | undefined; onChange: (n: number | null) => void; label: string; disabled?: boolean; empty?: string }) {
-  const show = (n: number | null | undefined) => (n == null ? empty : Math.round(n).toLocaleString('en-GB'))
+  const show = (n: number | null | undefined) => (n == null ? empty : Math.round(n).toLocaleString(getLang() === 'es' ? 'es-ES' : 'en-GB'))
   const [text, setText] = useState(show(value))
   useEffect(() => { setText(show(value)) }, [value]) // eslint-disable-line react-hooks/exhaustive-deps
   const leave = () => {

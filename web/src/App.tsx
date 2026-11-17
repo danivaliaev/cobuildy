@@ -5,7 +5,7 @@ import { configured } from './lib/supabase'
 import { Login } from './pages/Login'
 import { PrivacyPolicy } from './pages/PrivacyPolicy'
 import { Funnel } from './pages/Funnel'
-import { detectLang } from './i18n'
+import { detectLang, tr, useT } from './i18n'
 import { Onboarding } from './pages/Onboarding'
 import { peekWelcome } from './lib/carry'
 import { Admin } from './pages/Admin'
@@ -21,6 +21,7 @@ const HOME: Record<Role, string> = { admin: '/admin', expert: '/admin', develope
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { profile } = useAuth()
+  const t = useT()
   const path = useLocation().pathname
   const wide = path.startsWith('/developer') || path.startsWith('/investor')
   const admin = path.startsWith('/admin')
@@ -31,8 +32,8 @@ function Shell({ children }: { children: React.ReactNode }) {
         <a className="logo" href="/" aria-label="Cobuildy">Cobuildy</a>
         <nav className="nav">
           {staff && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'on' : '')}>Admin</NavLink>}
-          {profile?.role === 'developer' && <NavLink to="/developer" className={({ isActive }) => (isActive ? 'on' : '')}>My projects</NavLink>}
-          {profile?.role === 'investor' && <NavLink to="/investor" className={({ isActive }) => (isActive ? 'on' : '')}>Investor workspace</NavLink>}
+          {profile?.role === 'developer' && <NavLink to="/developer" className={({ isActive }) => (isActive ? 'on' : '')}>{t('My projects', 'Mis proyectos')}</NavLink>}
+          {profile?.role === 'investor' && <NavLink to="/investor" className={({ isActive }) => (isActive ? 'on' : '')}>{t('Investor workspace', 'Espacio de inversor')}</NavLink>}
         </nav>
         <Bell />
         <AccountMenu />
@@ -55,7 +56,7 @@ function SignedOut() {
   const returning = /[?&#](code|access_token|error)=/.test(search + hash)
   const toLanding = pathname !== '/login' && !returning
   useEffect(() => { if (toLanding) window.location.replace((/^\/es(\/|$)/.test(pathname) || detectLang() === 'es' ? '/landing-es.html' : '/landing.html') + search) }, [toLanding]) // eslint-disable-line react-hooks/exhaustive-deps
-  return toLanding ? <div className="login"><span className="muted">Loading…</span></div> : <Login />
+  return toLanding ? <div className="login"><span className="muted">{tr('Loading…', 'Cargando…')}</span></div> : <Login />
 }
 
 export function App() {
@@ -64,7 +65,7 @@ export function App() {
   // The ad funnel is public and has no menu, so nothing pulls the visitor away from the questions.
   if (/^\/(es\/)?(meta|start)\/?$/.test(window.location.pathname)) return <Funnel />
   if (/^\/(es\/)?privacy\/?$/.test(window.location.pathname)) return <PrivacyPolicy />
-  if (loading) return <div className="login"><span className="muted">Loading…</span></div>
+  if (loading) return <div className="login"><span className="muted">{tr('Loading…', 'Cargando…')}</span></div>
   if (!session) return <SignedOut />
   if (!profile) return <Onboarding />
   const home = HOME[profile.role]

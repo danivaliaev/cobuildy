@@ -48,6 +48,7 @@ const TOOL = {
   },
 }
 
+const langHint = (l?: string) => l === 'es' ? '\n\nThe user interface is in Spanish. Write the reply in Spanish (tú form) unless the user clearly wrote in another language. Keep every "display" value in English exactly as the rules above require.' : ''
 const system = (cur: Field | undefined, fields: Record<string, State>) => `You are the intake agent in a real-estate developer's workspace for projects in Spain and Portugal. You read what the developer writes and extract the facts into project profile fields.
 
 Rules:
@@ -129,7 +130,7 @@ Criteria and what is recorded so far:
 ${JSON.stringify(MANDATE_KEYS.map(k => ({ key: k, meaning: MANDATE_QUESTIONS[k] })))}
 ${JSON.stringify(state)}`
 
-async function mandateMode(sb: ReturnType<typeof createClient>, userId: string, body: { text?: string; current_key?: string | null }, apiKey: string) {
+async function mandateMode(sb: ReturnType<typeof createClient>, userId: string, body: { text?: string; current_key?: string | null; lang?: string }, apiKey: string) {
   const text = typeof body.text === 'string' ? body.text.trim().slice(0, MAX_TEXT) : ''
   if (!text) return json({ error: 'Invalid request.' }, 400)
   // Row-level security returns only the signed-in investor's own row.
@@ -143,7 +144,7 @@ async function mandateMode(sb: ReturnType<typeof createClient>, userId: string, 
     method: 'POST',
     headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
     body: JSON.stringify({
-      model: MODEL, max_tokens: 700, system: mandateSystem(body.current_key ?? undefined, inv), tools: [MANDATE_TOOL], tool_choice: { type: 'auto' },
+      model: MODEL, max_tokens: 700, system: mandateSystem(body.current_key ?? undefined, inv) + langHint(body.lang), tools: [MANDATE_TOOL], tool_choice: { type: 'auto' },
       messages: [{ role: 'user', content: text }],
     }),
   })
@@ -160,7 +161,7 @@ async function mandateMode(sb: ReturnType<typeof createClient>, userId: string, 
     if (!updates.some(y => y.key === x.key)) updates.push({ key: x.key, status: String(x.status), value: x.value ?? null })
   }
   await sb.from('agent_calls').insert({ user_id: userId, input_tokens: out.usage?.input_tokens ?? 0, output_tokens: out.usage?.output_tokens ?? 0 })
-  const reply = typeof raw.reply === 'string' && raw.reply.trim() ? raw.reply.trim().slice(0, 600) : updates.length ? 'Saved.' : 'I did not get that. Could you say it another way?'
+  const reply = typeof raw.reply === 'string' && raw.reply.trim() ? raw.reply.trim().slice(0, 600) : updates.length ? (body.lang === 'es' ? 'Guardado.' : 'Saved.') : (body.lang === 'es' ? 'No lo he entendido. ¿Puedes decirlo de otra forma?' : 'I did not get that. Could you say it another way?')
   return json({ reply, updates })
 }
 
@@ -175,7 +176,7 @@ Deno.serve(async (req: Request) => {
   const { data: u, error: ue } = await sb.auth.getUser()
   if (ue || !u.user) return json({ error: 'Please sign in again.' }, 401)
 
-  let body: { mode?: string; project_id?: string; text?: string; current_key?: string | null }
+  let body: { mode?: string; project_id?: string; text?: string; current_key?: string | null; lang?: string }
   try { body = await req.json() } catch { return json({ error: 'Invalid request.' }, 400) }
   if (body.mode === 'mandate') return mandateMode(sb, u.user.id, body, apiKey)
   const text = typeof body.text === 'string' ? body.text.trim().slice(0, MAX_TEXT) : ''
@@ -197,7 +198,7 @@ Deno.serve(async (req: Request) => {
     method: 'POST',
     headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
     body: JSON.stringify({
-      model: MODEL, max_tokens: 900, system: system(cur, saved), tools: [TOOL], tool_choice: { type: 'auto' },
+      model: MODEL, max_tokens: 900, system: system(cur, saved) + langHint(body.lang), tools: [TOOL], tool_choice: { type: 'auto' },
       messages: [{ role: 'user', content: text }],
     }),
   })
@@ -222,6 +223,6 @@ Deno.serve(async (req: Request) => {
   }
 
   await sb.from('agent_calls').insert({ user_id: u.user.id, project_id: body.project_id, input_tokens: out.usage?.input_tokens ?? 0, output_tokens: out.usage?.output_tokens ?? 0 })
-  const reply = typeof raw.reply === 'string' && raw.reply.trim() ? raw.reply.trim().slice(0, 600) : updates.length ? 'Saved.' : 'I did not get that. Could you say it another way?'
+  const reply = typeof raw.reply === 'string' && raw.reply.trim() ? raw.reply.trim().slice(0, 600) : updates.length ? (body.lang === 'es' ? 'Guardado.' : 'Saved.') : (body.lang === 'es' ? 'No lo he entendido. ¿Puedes decirlo de otra forma?' : 'I did not get that. Could you say it another way?')
   return json({ reply, updates })
 })

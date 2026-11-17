@@ -1,15 +1,20 @@
+import { getLang, tr } from '../i18n'
 export type Kind = 'fund' | 'family_office' | 'crowdfunding' | 'hnwi' | 'bank'
 
-export const KINDS: Array<{ k: Kind; label: string; hint: string; nameLabel: string; type: 'priv' | 'inst' }> = [
-  { k: 'fund', label: 'Fund', hint: 'Debt, real-estate or private-equity fund', nameLabel: 'Fund name', type: 'inst' },
-  { k: 'family_office', label: 'Family office', hint: 'Manages a family’s capital', nameLabel: 'Family office name', type: 'priv' },
-  { k: 'crowdfunding', label: 'Crowdfunding platform', hint: 'Raises from many small investors', nameLabel: 'Platform name', type: 'inst' },
-  { k: 'hnwi', label: 'Private investor (HNWI)', hint: 'High-net-worth individual', nameLabel: 'Your full name', type: 'priv' },
-  { k: 'bank', label: 'Bank or lender', hint: 'Bank, credit fund or direct lender', nameLabel: 'Bank or lender name', type: 'inst' },
+const kind = (k: Kind, type: 'priv' | 'inst', en: [string, string, string], es: [string, string, string]) => ({
+  k, type,
+  get label() { return tr(en[0], es[0]) }, get hint() { return tr(en[1], es[1]) }, get nameLabel() { return tr(en[2], es[2]) },
+})
+export const KINDS = [
+  kind('fund', 'inst', ['Fund', 'Debt, real-estate or private-equity fund', 'Fund name'], ['Fondo', 'Fondo de deuda, inmobiliario o de capital privado', 'Nombre del fondo']),
+  kind('family_office', 'priv', ['Family office', 'Manages a family’s capital', 'Family office name'], ['Family office', 'Gestiona el patrimonio de una familia', 'Nombre del family office']),
+  kind('crowdfunding', 'inst', ['Crowdfunding platform', 'Raises from many small investors', 'Platform name'], ['Plataforma de crowdfunding', 'Capta de muchos pequeños inversores', 'Nombre de la plataforma']),
+  kind('hnwi', 'priv', ['Private investor (HNWI)', 'High-net-worth individual', 'Your full name'], ['Inversor privado (HNWI)', 'Persona de alto patrimonio', 'Tu nombre completo']),
+  kind('bank', 'inst', ['Bank or lender', 'Bank, credit fund or direct lender', 'Bank or lender name'], ['Banco o prestamista', 'Banco, fondo de crédito o prestamista directo', 'Nombre del banco o prestamista']),
 ]
 
-const LABEL: Record<string, string> = Object.fromEntries(KINDS.map(x => [x.k, x.label]))
-export const kindLabel = (k: string | null | undefined) => (k ? LABEL[k] ?? k : '—')
+const KEYS = KINDS.map(x => x.k as string)
+export const kindLabel = (k: string | null | undefined) => (k ? KINDS.find(x => x.k === k)?.label ?? k : '—')
 export const kindType = (k: string | null | undefined) => KINDS.find(x => x.k === k)?.type ?? null
 
 // ISO 3166-1 alpha-2 codes of countries; names come from the browser.
@@ -17,7 +22,7 @@ const CODES = 'AD AE AF AG AL AM AO AR AT AU AZ BA BB BD BE BF BG BH BI BJ BN BO
 
 export function countryName(code: string | null | undefined): string {
   if (!code) return '—'
-  try { return new Intl.DisplayNames(['en'], { type: 'region' }).of(code) ?? code } catch { return code }
+  try { return new Intl.DisplayNames([getLang()], { type: 'region' }).of(code) ?? code } catch { return code }
 }
 export const COUNTRIES = (): Array<{ code: string; name: string }> =>
   CODES.map(code => ({ code, name: countryName(code) })).sort((a, b) => a.name.localeCompare(b.name))
@@ -30,4 +35,4 @@ export function validPhone(p: string): boolean {
 
 /** True when an investor still has to give type, country or phone. */
 export const needsProfile = (i: { kind: string | null; country?: string | null; phone?: string | null }) =>
-  !i.kind || !LABEL[i.kind] || !i.country || !i.phone || !validPhone(i.phone)
+  !i.kind || !KEYS.includes(i.kind) || !i.country || !i.phone || !validPhone(i.phone)

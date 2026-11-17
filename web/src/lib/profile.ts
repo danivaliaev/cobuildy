@@ -1,4 +1,6 @@
 import data from './fields.json'
+import esData from '../i18n/fields.es.json'
+import { getLang, pick } from '../i18n'
 import { eur } from './format'
 import type { Project } from './types'
 
@@ -14,9 +16,37 @@ export interface FieldDef {
   question: string; why: string; chips: Chip[]; task: string; doc?: string
 }
 
-export const SECTIONS = data.sections as Array<{ id: string; title: string }>
-export const GATE_NAMES = data.gates as string[]
-export const FIELDS = data.fields as FieldDef[]
+// Text shown on screen follows the language; the codes, the stored values and the stage names the matching reads stay English.
+type EsField = { label: string; question: string; why: string; task: string; doc: string | null; chips: Array<[string, string, string | null, string | null]> }
+const ES = esData as unknown as { sections: Record<string, string>; gates: string[]; stageOptions: Record<string, string[]>; fields: Record<string, EsField> }
+const es = () => getLang() === 'es'
+export const SECTIONS = (data.sections as Array<{ id: string; title: string }>).map(s => Object.defineProperty({ ...s }, 'title', { enumerable: true, get: () => (es() ? ES.sections[s.id] ?? s.title : s.title) })) as Array<{ id: string; title: string }>
+export const GATE_NAMES = new Proxy(data.gates as string[], { get: (t, k) => (es() && typeof k === 'string' && /^\d+$/.test(k) ? ES.gates[+k] : (t as never)[k as never]) })
+const localise = (raw: FieldDef): FieldDef => {
+  const x = ES.fields[raw.key]
+  const str = (k: 'label' | 'question' | 'why' | 'task') => ({ enumerable: true, get: () => (es() && x ? x[k] : raw[k]) })
+  return Object.defineProperties({ ...raw }, {
+    label: str('label'), question: str('question'), why: str('why'), task: str('task'),
+    doc: { enumerable: true, get: () => (es() && x && x.doc ? x.doc : raw.doc) },
+    chips: { enumerable: true, get: () => (es() && x ? raw.chips.map((c, i) => ({ ...c, label: x.chips[i]?.[0] ?? c.label, note: x.chips[i]?.[2] ?? c.note, task: x.chips[i]?.[3] ?? c.task })) : raw.chips) },
+  })
+}
+export const FIELDS = (data.fields as FieldDef[]).map(localise)
+/** A stored answer in the language on screen. Answers chosen from the lists are stored in English; free text is shown as it was typed. */
+let SHOW: Map<string, string> | null = null
+export function showValue(v: string): string {
+  if (!es() || !v) return v
+  if (!SHOW) {
+    SHOW = new Map([['Identified, not yet secured', 'Identificado, aún sin asegurar'], ['Reserved (option)', 'Reservado (opción)'], ['Owned', 'En propiedad']])
+    for (const f of data.fields as FieldDef[]) f.chips.forEach((c, i) => { const e = ES.fields[f.key]?.chips[i]; if (e) SHOW!.set(c.value, e[1]) })
+    for (const [code, labels] of Object.entries((data as { stageOptions: Record<string, string[]> }).stageOptions)) labels.forEach((l, i) => SHOW!.set(l, ES.stageOptions[code][i]))
+  }
+  const hit = SHOW.get(v)
+  if (hit) return hit
+  const money = v.match(/^€(\d+(?:\.\d+)?)(M|k)$/)
+  if (money) return `${money[1].replace('.', ',')} ${money[2]}€`
+  return v.replace(/^(\d+) months$/, '$1 meses').replace(/^(\d+) units$/, '$1 viviendas').replace(/^(\d+)% pre-sold$/, '$1 % vendido sobre plano')
+}
 export const FK: Record<string, FieldDef> = Object.fromEntries(FIELDS.map(f => [f.key, f]))
 
 /** The stages a project can be at depend on its type: the options are listed per type in fields.json. */
@@ -26,12 +56,12 @@ export function chipsFor(d: FieldDef, f: Fields): Chip[] {
   const s = f.a_strategy
   const code = s && s.st !== 'empty' ? strategyCode(s.v) : null
   const labels = code ? STAGE_OPTIONS[code] : null
-  return labels ? labels.map(l => ({ label: l, value: l, partial: false, unknown: false })) : d.chips
+  return labels ? labels.map((l, i) => ({ label: es() ? ES.stageOptions[code!][i] : l, value: l, partial: false, unknown: false })) : d.chips
 }
 /** What the stage says about the land: only an identified or reserved site is not yet fully the developer's. */
 export function landFromStage(label: string): { st: 'filled' | 'partial'; v: string } {
-  if (/identified/i.test(label)) return { st: 'partial', v: 'Identified, not yet secured' }
-  if (/reserved|offer accepted/i.test(label)) return { st: 'filled', v: 'Reserved (option)' }
+  if (/identified|identificad/i.test(label)) return { st: 'partial', v: 'Identified, not yet secured' }
+  if (/reserved|offer accepted|reservad|oferta aceptada/i.test(label)) return { st: 'filled', v: 'Reserved (option)' }
   return { st: 'filled', v: 'Owned' }
 }
 
@@ -123,38 +153,39 @@ export const geoCode = (t: string): string | null => {
 const round = (n: number, d: number) => Math.round(n * 10 ** d) / 10 ** d
 
 export function assetCode(v: string): string | null {
-  if (/rent|btr/i.test(v)) return 'BTR'
-  if (/hospital|hotel/i.test(v)) return 'HOS'
-  if (/residential|apartment|villa|house|flat/i.test(v)) return 'RES'
+  if (/rent|btr|alquiler/i.test(v)) return 'BTR'
+  if (/hospital|hotel|hostele/i.test(v)) return 'HOS'
+  if (/residential|residencial|apartment|apartamento|villa|house|casa|flat|piso|vivienda/i.test(v)) return 'RES'
   return null
 }
 /** What the developer is doing with the project: land development, work in progress, refurbishment. */
 export function strategyCode(v: string): 'land' | 'wip' | 'refurb' | null {
-  if (/land/i.test(v)) return 'land'
-  if (/progress|construction|under way|underway/i.test(v)) return 'wip'
-  if (/refurb|renovat/i.test(v)) return 'refurb'
+  if (/land|suelo|solar|terreno/i.test(v)) return 'land'
+  if (/progress|construction|under way|underway|obra|construcci/i.test(v)) return 'wip'
+  if (/refurb|renovat|rehabilit|reforma/i.test(v)) return 'refurb'
   return null
 }
 export function instrumentCodes(v: string): string[] {
   const out: string[] = []
-  if (/senior|loan|debt/i.test(v)) out.push('senior')
-  if (/mezz/i.test(v)) out.push('mezz')
-  if (/equity|partner/i.test(v)) out.push('equity')
+  if (/senior|s[eé]nior|loan|debt|pr[eé]stamo|deuda/i.test(v)) out.push('senior')
+  if (/mezz|mezanin/i.test(v)) out.push('mezz')
+  if (/open to any|cualquier|abiert/i.test(v)) return out
+  if (/equity|partner|socio|capital (propio|social)|fondos propios/i.test(v)) out.push('equity')
   return out
 }
 export function licenseCode(v: string): 'none' | 'submitted' | 'granted' | null {
-  if (/not required/i.test(v)) return 'granted'
-  if (/not (yet )?(submitted|applied)|no licen[cs]e|none/i.test(v)) return 'none'
-  if (/grant|approved|obtained/i.test(v)) return 'granted'
-  if (/submit|filed|applied|waiting|pending/i.test(v)) return 'submitted'
+  if (/not required|no (es )?necesari|no requier/i.test(v)) return 'granted'
+  if (/not (yet )?(submitted|applied)|no licen[cs]e|none|no (solicitad|presentad)|a[uú]n no|sin licencia|ninguna/i.test(v)) return 'none'
+  if (/grant|approved|obtained|concedid|otorgad|aprobad|obtenid/i.test(v)) return 'granted'
+  if (/submit|filed|applied|waiting|pending|solicitad|presentad|a la espera|pendiente|tr[aá]mite/i.test(v)) return 'submitted'
   return null
 }
 function presalesFraction(v: string, units: number | null): number | null {
-  const of = v.match(/(\d+)\s*(?:of|\/)\s*(\d+)/i)
+  const of = v.match(/(\d+)\s*(?:of|de|\/)\s*(\d+)/i)
   if (of && +of[2] > 0) return round(+of[1] / +of[2], 3)
   const pc = v.match(/(\d+(?:[.,]\d+)?)\s*%/)
   if (pc) return round(+pc[1].replace(',', '.') / 100, 3)
-  if (/none|no pre-?sales|zero/i.test(v)) return 0
+  if (/none|no pre-?sales|zero|ninguna|sin preventas/i.test(v)) return 0
   const n = firstInt(v)
   return n != null && units ? round(Math.min(1, n / units), 3) : null
 }
@@ -244,15 +275,22 @@ export function applyUpdates(f: Fields, updates: Update[], src: FieldState['src'
   return { next, keys }
 }
 
-export const MILESTONES = [
+const MILESTONES_EN = [
   '',
   'Milestone: the project is now teaser-ready. You can submit it for review.',
   'Milestone: the project is ready for lender outreach.',
   'Milestone: the data room is complete. Ask a Cobuildy expert to review before sharing.',
 ]
+const MILESTONES_ES = [
+  '',
+  'Hito: el proyecto ya tiene el teaser listo. Puedes enviarlo a revisión.',
+  'Hito: el proyecto está listo para el contacto con prestamistas.',
+  'Hito: el data room está completo. Pide a un experto de Cobuildy que lo revise antes de compartirlo.',
+]
+export const MILESTONES = new Proxy(MILESTONES_EN, { get: (t, k) => (es() && typeof k === 'string' && /^\d+$/.test(k) ? MILESTONES_ES[+k] : (t as never)[k as never]) })
 
 /** What a save changes in the figures investors see in the teaser. Used to ask for confirmation once a project is live. */
-const KEY_LABEL: Record<string, string> = { ask_eur: 'Capital sought', cost_eur: 'Total cost', gdv_eur: 'Sales value (GDV)', margin: 'Margin', ltc: 'Loan to cost', units: 'Units', geo: 'Region', asset: 'Asset type', instrument: 'Instrument', license: 'Licence' }
+const KEY_LABEL = pick<Record<string, string>>({ ask_eur: 'Capital sought', cost_eur: 'Total cost', gdv_eur: 'Sales value (GDV)', margin: 'Margin', ltc: 'Loan to cost', units: 'Units', geo: 'Region', asset: 'Asset type', instrument: 'Instrument', license: 'Licence' }, { ask_eur: 'Capital buscado', cost_eur: 'Coste total', gdv_eur: 'Valor de venta (GDV)', margin: 'Margen', ltc: 'Préstamo sobre coste', units: 'Viviendas', geo: 'Zona', asset: 'Tipo de activo', instrument: 'Instrumento', license: 'Licencia' })
 export function keyChanges(prev: Fields, next: Fields): string[] {
   const a = columnsFor(prev) as Record<string, unknown>, b = columnsFor(next) as Record<string, unknown>
   const show = (k: string, v: unknown) => (v == null || (Array.isArray(v) && !v.length) ? '—' : k.endsWith('_eur') ? `€${Math.round(Number(v) / 1e4) / 100}M` : k === 'margin' || k === 'ltc' ? `${Math.round(Number(v) * 100)}%` : Array.isArray(v) ? v.join('/') : String(v))

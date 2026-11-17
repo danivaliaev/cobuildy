@@ -1,6 +1,7 @@
 import data from './budget.json'
 import { eur } from './format'
 import type { Source, Update } from './profile'
+import { getLang, tr } from '../i18n'
 
 /** The development budget: one list of lines, each filed under a category. The categories depend on the project type. */
 export type StrategyCode = 'land' | 'wip' | 'refurb'
@@ -10,12 +11,20 @@ export interface Econ { budget: BudgetLine[] }
 
 const T = data as Record<StrategyCode, { base: string; cats: Cat[] }>
 const tpl = (s: StrategyCode | null) => T[s ?? 'land']
-export const catsFor = (s: StrategyCode | null): Cat[] => tpl(s).cats
-export const catLabel = (s: StrategyCode | null, id: string) => catsFor(s).find(c => c.id === id)?.label ?? 'Other costs'
+const CAT_ES: Record<string, string> = {
+  'Construction': 'Construcción', 'Finance fees and interest': 'Comisiones e intereses de financiación', 'Land (already acquired)': 'Suelo (ya adquirido)', 'Other costs': 'Otros costes', 'VAT': 'IVA',
+  'Purchase taxes and fees': 'Impuestos y gastos de compra', 'Sales and letting costs': 'Costes de venta y alquiler', 'Acquisition price': 'Precio de adquisición', 'Design, permits and fees': 'Diseño, licencias y honorarios',
+  'Contingency': 'Imprevistos', 'Renovation works': 'Obras de reforma', 'Insurance and guarantees': 'Seguros y garantías', 'Sales and marketing': 'Ventas y marketing', 'Holding costs': 'Costes de tenencia',
+  'Land, taxes and deal costs': 'Suelo, impuestos y gastos de la operación', 'Design, project management and fees': 'Diseño, dirección de proyecto y honorarios', 'Licences and planning fees': 'Licencias y tasas urbanísticas',
+}
+const loc = (c: Cat): Cat => Object.defineProperty({ ...c }, 'label', { enumerable: true, get: () => (getLang() === 'es' ? CAT_ES[c.label] ?? c.label : c.label) })
+const LOCALISED = new Map<Cat[], Cat[]>()
+export const catsFor = (s: StrategyCode | null): Cat[] => { const c = tpl(s).cats; let l = LOCALISED.get(c); if (!l) { l = c.map(loc); LOCALISED.set(c, l) } return l }
+export const catLabel = (s: StrategyCode | null, id: string) => catsFor(s).find(c => c.id === id)?.label ?? tr('Other costs', 'Otros costes')
 export const isCat = (s: StrategyCode | null, id: string) => catsFor(s).some(c => c.id === id)
 
 /** Whole euros with thousands separators, for the budget table. */
-export const money = (n: number | null | undefined) => (n == null ? '—' : `€${Math.round(n).toLocaleString('en-GB')}`)
+export const money = (n: number | null | undefined) => (n == null ? '—' : getLang() === 'es' ? `${Math.round(n).toLocaleString('es-ES')} €` : `€${Math.round(n).toLocaleString('en-GB')}`)
 export const newLineId = () => crypto.randomUUID()
 export const emptyEcon = (): Econ => ({ budget: [] })
 
@@ -53,7 +62,7 @@ export function contingencyShare(lines: BudgetLine[], s: StrategyCode | null): n
   return base > 0 ? (t.byCat.contingency ?? 0) / base : null
 }
 
-export const pctText = (n: number) => `${Math.round(n * 1000) / 10}%`
+export const pctText = (n: number) => (getLang() === 'es' ? `${String(Math.round(n * 1000) / 10).replace('.', ',')} %` : `${Math.round(n * 1000) / 10}%`)
 
 /** Things an investor would notice in this budget, in plain words. */
 export function budgetFlags(lines: BudgetLine[], s: StrategyCode | null): string[] {
@@ -61,13 +70,13 @@ export function budgetFlags(lines: BudgetLine[], s: StrategyCode | null): string
   const out: string[] = []
   const t = totals(lines, s)
   const share = contingencyShare(lines, s)
-  const baseLabel = s === 'refurb' ? 'works cost' : 'build cost'
-  if (!(t.byCat.contingency > 0)) out.push(`There is no contingency line. Lenders usually expect about 5% of the ${baseLabel}.`)
-  else if (share != null && share < 0.05) out.push(`Contingency is ${pctText(share)} of the ${baseLabel}, below the 5% lenders usually expect.`)
-  if (t.cost > 0 && (t.byCat.other ?? 0) / t.cost > 0.1) out.push(`"Other costs" is ${pctText((t.byCat.other ?? 0) / t.cost)} of the cost. Split it so investors can see what it covers.`)
+  const baseLabel = s === 'refurb' ? tr('works cost', 'coste de las obras') : tr('build cost', 'coste de construcción')
+  if (!(t.byCat.contingency > 0)) out.push(tr(`There is no contingency line. Lenders usually expect about 5% of the ${baseLabel}.`, `No hay partida de imprevistos. Los prestamistas suelen esperar un 5 % del ${baseLabel}.`))
+  else if (share != null && share < 0.05) out.push(tr(`Contingency is ${pctText(share)} of the ${baseLabel}, below the 5% lenders usually expect.`, `Los imprevistos son el ${pctText(share)} del ${baseLabel}, por debajo del 5 % que suelen esperar los prestamistas.`))
+  if (t.cost > 0 && (t.byCat.other ?? 0) / t.cost > 0.1) out.push(tr(`"Other costs" is ${pctText((t.byCat.other ?? 0) / t.cost)} of the cost. Split it so investors can see what it covers.`, `«Otros costes» es el ${pctText((t.byCat.other ?? 0) / t.cost)} del coste. Desglósalo para que los inversores vean qué incluye.`))
   if (s === 'wip') {
     const over = lines.filter(l => (l.spent ?? 0) > l.amount).map(l => l.label)
-    if (over.length) out.push(`Spent is already above the budget on: ${over.slice(0, 3).join(', ')}.`)
+    if (over.length) out.push(tr(`Spent is already above the budget on: ${over.slice(0, 3).join(', ')}.`, `El gasto ya supera el presupuesto en: ${over.slice(0, 3).join(', ')}.`))
   }
   return out
 }

@@ -4,9 +4,11 @@ import { useAuth } from '../auth'
 import { ErrorLine, Field, Pill, useAction, useLoad } from './ui'
 import { toNum } from '../lib/format'
 import type { Company } from '../lib/types'
+import { useT } from '../i18n'
 
 export function CompanyForm() {
   const { profile } = useAuth()
+  const t = useT()
   const co = useLoad(async () => {
     const { data, error } = await supabase.from('companies').select('*').eq('owner_id', profile!.id).maybeSingle()
     if (error) throw error
@@ -32,20 +34,20 @@ export function CompanyForm() {
   const num = (k: keyof typeof f, label: string) => <Field label={label}><input inputMode="decimal" value={f[k]} onChange={set(k)} /></Field>
   return (
     <form className="card" onSubmit={save}>
-      <h2>Company</h2>
-      <p className="muted">Investors see these facts about you. Verification badges are set by Cobuildy.</p>
+      <h2>{t('Company', 'Empresa')}</h2>
+      <p className="muted">{t('Investors see these facts about you. Verification badges are set by Cobuildy.', 'Los inversores ven estos datos sobre ti. Las insignias de verificación las asigna Cobuildy.')}</p>
       <div className="grid2">
-        <Field label="Company name"><input required value={f.name} onChange={set('name')} /></Field>
-        <Field label="Website"><input value={f.website} onChange={set('website')} placeholder="https://" /></Field>
-        {num('founded', 'Founded (year)')}{num('delivered', 'Projects delivered')}{num('volume_m', 'Volume delivered (€M)')}
-        {num('units', 'Units delivered')}{num('active', 'Active projects')}{num('team', 'Team size')}{num('refs', 'References available')}
+        <Field label={t('Company name', 'Nombre de la empresa')}><input required value={f.name} onChange={set('name')} /></Field>
+        <Field label={t('Website', 'Sitio web')}><input value={f.website} onChange={set('website')} placeholder="https://" /></Field>
+        {num('founded', t('Founded (year)', 'Fundada (año)'))}{num('delivered', t('Projects delivered', 'Proyectos entregados'))}{num('volume_m', t('Volume delivered (€M)', 'Volumen entregado (M€)'))}
+        {num('units', t('Units delivered', 'Viviendas entregadas'))}{num('active', t('Active projects', 'Proyectos activos'))}{num('team', t('Team size', 'Tamaño del equipo'))}{num('refs', t('References available', 'Referencias disponibles'))}
       </div>
       {co.data && <div className="row">
-        <Pill tone={co.data.ver_registry ? 'good' : undefined}>Registry</Pill><Pill tone={co.data.ver_web ? 'good' : undefined}>Website</Pill>
-        <Pill tone={co.data.ver_fin ? 'good' : undefined}>Financials</Pill><Pill tone={co.data.ver_refs ? 'good' : undefined}>References</Pill>
+        <Pill tone={co.data.ver_registry ? 'good' : undefined}>{t('Registry', 'Registro')}</Pill><Pill tone={co.data.ver_web ? 'good' : undefined}>{t('Website', 'Web')}</Pill>
+        <Pill tone={co.data.ver_fin ? 'good' : undefined}>{t('Financials', 'Cuentas')}</Pill><Pill tone={co.data.ver_refs ? 'good' : undefined}>{t('References', 'Referencias')}</Pill>
       </div>}
       <ErrorLine error={act.error ?? co.error} />
-      <div className="row"><button className="btn pri" disabled={act.busy || !f.name.trim()} type="submit">Save company</button>{saved && <span className="ok">Saved</span>}</div>
+      <div className="row"><button className="btn pri" disabled={act.busy || !f.name.trim()} type="submit">{t('Save company', 'Guardar empresa')}</button>{saved && <span className="ok">{t('Saved', 'Guardado')}</span>}</div>
     </form>
   )
 }
