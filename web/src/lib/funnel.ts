@@ -50,15 +50,15 @@ export const complete = (a: Answers): a is Complete =>
 export type Unit = 'k' | 'm'
 /** `unit` is what a bare number means when it is small: with unit 'm', "5" is five million. A bare number of 1,000 or more is taken as euros. */
 export function parseMoney(text: string, allowZero = false, unit?: Unit): number | null {
-  const t = text.toLowerCase().replace(/[€\s]/g, '').replace(/eur(os?)?/, '')
-  const m = t.match(/^(\d+(?:[.,]\d+)?|\d{1,3}(?:[.,]\d{3})+)(k|m|mm|mln)?$/)
+  const t = text.toLowerCase().replace(/[€\s]/g, '').replace(/(de)?eur(os?)?/, '')
+  const m = t.match(/^(\d+(?:[.,]\d+)?|\d{1,3}(?:[.,]\d{3})+)(millones|millon|mill|mil|mln|mm|k|m)?$/)
   if (!m) return null
   let num = m[1]
   if (m[2]) num = num.replace(',', '.')                       // "1,5m" means 1.5 million
   else if (/^\d{1,3}([.,]\d{3})+$/.test(num)) num = num.replace(/[.,]/g, '') // "4,500,000" or "4.500.000"
   else num = num.replace(',', '.')
   const bare = !m[2] && unit && parseFloat(num) < 1000 ? (unit === 'k' ? 1e3 : 1e6) : 1
-  const x = parseFloat(num) * (m[2] === 'k' ? 1e3 : m[2] ? 1e6 : bare)
+  const x = parseFloat(num) * (m[2] === 'k' || m[2] === 'mil' ? 1e3 : m[2] ? 1e6 : bare)
   if (!Number.isFinite(x) || x > 5e9) return null
   if (x === 0) return allowZero ? 0 : null
   if (x < 1000) return null // nobody finances a project of a few euros: the amount was meant in thousands or millions
@@ -102,9 +102,12 @@ export function score(a: Complete): { total: number; parts: { stage: number; per
   return { total: stage + permits + equity + margin, parts: { stage, permits, equity, margin } }
 }
 
+export type VerdictKey = 'good' | 'moderate' | 'early'
+export const verdictKey = (total: number): VerdictKey => (total >= 75 ? 'good' : total >= 50 ? 'moderate' : 'early')
 export function verdict(total: number): string {
-  if (total >= 75) return 'Your project demonstrates good financing readiness.'
-  if (total >= 50) return 'Your project shows moderate financing readiness. A few gaps are worth closing before you approach investors.'
+  const k = verdictKey(total)
+  if (k === 'good') return 'Your project demonstrates good financing readiness.'
+  if (k === 'moderate') return 'Your project shows moderate financing readiness. A few gaps are worth closing before you approach investors.'
   return 'Your project is at an early stage. Closing the main gaps will raise its chances with investors.'
 }
 

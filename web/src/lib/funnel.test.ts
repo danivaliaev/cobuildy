@@ -127,3 +127,10 @@ describe('describeAnswers', () => {
     expect(ENTRY_LABEL.meta).toBe('Meta page')
   })
 })
+
+describe('parseMoney in Spanish', () => {
+  it('reads millones, mil and de euros', () => {
+    expect(parseMoney('4,5 millones')).toBe(4_500_000); expect(parseMoney('750 mil')).toBe(750_000); expect(parseMoney('2 millones de euros')).toBe(2_000_000)
+    expect(parseMoney('1,2M')).toBe(1_200_000); expect(parseMoney('4.500.000 €')).toBe(4_500_000)
+  })
+})

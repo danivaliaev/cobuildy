@@ -318,3 +318,6 @@ table.bt{min-width:780px}table.rv select{min-width:170px}table.rv input[aria-lab
 .fn-foot{display:grid;gap:6px;justify-items:center;text-align:center;padding:18px 16px 28px;color:var(--ink-2);font-size:12.5px;line-height:1.45}.fn-foot a{color:var(--ink-2)}
 .legal-page{max-width:720px;margin:0 auto;padding:0 18px 60px}.legal-page main{display:grid;gap:10px}.legal-page h1{font-size:34px;margin:18px 0 0}.legal-page h2{font-size:20px;margin:18px 0 0}
 .legal-page p,.legal-page li{line-height:1.55}.legal-table{width:100%;border-collapse:collapse;font-size:14px}.legal-table th,.legal-table td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+
+.fn-top{position:relative}.fn-lang{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;gap:10px;font:500 12px var(--f-mono);letter-spacing:.06em}
+.fn-lang a{color:var(--ink-2);text-decoration:none;padding:6px 2px}.fn-lang a:hover{color:var(--ink);text-decoration:underline}.fn-lang b{color:var(--ink);padding:6px 2px;border-bottom:2px solid var(--plan)}

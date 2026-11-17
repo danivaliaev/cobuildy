@@ -1,33 +1,26 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { CARRY_KEY } from '../lib/carry'
-import { eur } from '../lib/format'
+import { eurFor } from '../lib/format'
+import { FUNNEL } from '../i18n/funnel'
+import { otherLangHref, useLang } from '../i18n'
 import { geoCode } from '../lib/profile'
 import { loadPlaces, type Place, type Places } from '../lib/places'
 import { ConsentBanner } from '../components/ConsentBanner'
 import { getConsent } from '../lib/consent'
 import { save, sessionId, trafficSource, validName, validPhone } from '../lib/funnelTrack'
 import {
-  COUNTRIES, PERMITS, REGIONS, STAGES, cleanCity, STRATEGY, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdict,
+  COUNTRIES, PERMITS, REGIONS, STAGES, cleanCity, STRATEGY, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdictKey,
   type Answers, type Complete, type Matches, type Strategy, type Unit,
 } from '../lib/funnel'
 
 type Step = 'strategy' | 'geo' | 'stage' | 'gdv' | 'ask' | 'equity' | 'permit'
 const STEPS: Step[] = ['strategy', 'geo', 'stage', 'gdv', 'ask', 'equity', 'permit']
-const MONEY_HINT = 'For example 4.5 or 750'
-const CHECKS = ['Evaluating project stage', 'Checking financing readiness', 'Assessing capital structure', 'Identifying potential funding options']
-
-const QUESTION: Record<Step, string> = {
-  strategy: 'What type of project are you developing?',
-  geo: 'Where is your project located?',
-  stage: 'What is the current project stage?',
-  gdv: 'What is the estimated Gross Development Value (GDV)?',
-  ask: 'How much capital do you need?',
-  equity: 'How much of your own capital goes in, including the land?',
-  permit: 'Do you have the necessary permits?',
-}
-
 export function Funnel() {
+  const lang = useLang()
+  const L = FUNNEL[lang]
+  const eur = (n: number) => eurFor(n, lang)
+  const regionLabel = (v: string, city?: string) => (city && L.island[city]) || L.region[v] || REGIONS.find(r => r.v === v)?.label || v
   const [a, setA] = useState<Answers>({})
   const [i, setI] = useState(0)
   const [text, setText] = useState('')
@@ -50,26 +43,26 @@ export function Funnel() {
   const suggestions = step === 'geo' && !pending && places ? places.suggest(text) : []
 
   useEffect(() => {
-    document.title = 'Is your project ready for financing? · Cobuildy'
+    document.title = L.title
     const m = document.createElement('meta'); m.name = 'robots'; m.content = 'noindex'; document.head.appendChild(m)
     if (getConsent() === 'granted') { initPixel(); track('ViewContent') }
-    void save(sid, { step: 0, source: { ...trafficSource(), entry: 'meta' } })
+    void save(sid, { step: 0, source: { ...trafficSource(), entry: 'meta', lang } })
     void loadPlaces().then(setPlaces, () => setPlaces(null))
     void supabase.rpc('funnel_stats').then(({ data }) => { const n = (data as { investors?: number } | null)?.investors; if (typeof n === 'number' && n > 0) setInvestors(n) })
     return () => { m.remove() }
-  }, [])
+  }, [lang])
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }) }, [i, phase, shown, matches, suggestions.length])
 
   const stages = a.strategy ? STAGES[a.strategy] : []
   const label = (s: Step): string | null => {
     switch (s) {
-      case 'strategy': return STRATEGY.find(x => x.v === a.strategy)?.label ?? null
-      case 'geo': return a.city ?? (a.geo ? REGIONS.find(x => x.v === a.geo)?.label ?? null : null)
-      case 'stage': return stages.find(x => x.v === a.stage)?.label ?? null
+      case 'strategy': return a.strategy ? L.strategy[a.strategy] ?? null : null
+      case 'geo': return a.city ? (L.island[a.city] ?? a.city) : (a.geo ? regionLabel(a.geo) : null)
+      case 'stage': return a.strategy && a.stage ? L.stages[a.strategy]?.[a.stage] ?? null : null
       case 'gdv': return a.gdv ? eur(a.gdv) : null
       case 'ask': return a.ask ? eur(a.ask) : null
-      case 'equity': return a.equity == null ? null : a.equity === 0 ? 'No own equity' : eur(a.equity)
-      case 'permit': return PERMITS.find(x => x.v === a.permit)?.label ?? null
+      case 'equity': return a.equity == null ? null : a.equity === 0 ? L.noEquity : eur(a.equity)
+      case 'permit': return a.permit ? L.permits[a.permit] ?? null : null
     }
   }
 
@@ -106,8 +99,8 @@ export function Funnel() {
     const lic = PERMITS.find(p => p.v === done.permit)!.license
     try { localStorage.setItem(CARRY_KEY, JSON.stringify(toCarry(done, sc.total, { sid, ...contact }))) } catch { /* private mode: the answers are simply not carried over */ }
     setPhase('think'); setShown(0)
-    const timer = window.setInterval(() => setShown(s => Math.min(CHECKS.length, s + 1)), 750)
-    const wait = new Promise(r => window.setTimeout(r, 750 * CHECKS.length + 500))
+    const timer = window.setInterval(() => setShown(s => Math.min(L.checks.length, s + 1)), 750)
+    const wait = new Promise(r => window.setTimeout(r, 750 * L.checks.length + 500))
     const call = supabase.rpc('funnel_match', { p_geo: done.geo, p_ask: done.ask, p_license: lic, p_ltc: Math.round(n.ltc * 1000) / 1000, p_margin: Math.round(n.margin * 1000) / 1000 })
       .then(({ data }) => (data as Matches | null) ?? null, () => null)
     void Promise.all([wait, call]).then(([, m]) => { window.clearInterval(timer); setMatches(m); setPhase('result'); track('FunnelCompleted', true, { score: sc.total }); void save(sid, { result: { score: sc.total, matches: m } }) })
@@ -133,8 +126,7 @@ export function Funnel() {
 
   const typed = parseMoney(text, true, unit)
   const result = useMemo(() => (phase === 'result' && complete(a) ? score(a) : null), [phase, a])
-  const heading = investors ? `${investors} investors are waiting.` : 'Investors are waiting.'
-
+  
   async function unlock() {
     track('UnlockClicked', true)
     await Promise.race([save(sid, { cta: true }), new Promise(r => window.setTimeout(r, 800))])
@@ -144,15 +136,16 @@ export function Funnel() {
 
   return (
     <div className="fn">
-      <header className="fn-top"><span className="fn-logo">Cobuildy</span></header>
+      <header className="fn-top"><span className="fn-logo">Cobuildy</span>
+        <nav className="fn-lang" aria-label="Language">
+          {(['en', 'es'] as const).map(l => l === lang ? <b key={l} aria-current="true">{l.toUpperCase()}</b> : <a key={l} href={otherLangHref(l)} hrefLang={l}>{l.toUpperCase()}</a>)}
+        </nav></header>
       <main className="fn-main">
         <div className={`fn-intro${phase === 'ask' && i === 0 ? '' : ' later'}`}>
-          <h1>Find out if your project is ready for financing</h1>
-          <p>Answer 7 questions and get an initial assessment of your project’s funding readiness. {heading}</p>
+          <h1>{L.h1}</h1>
+          <p>{L.sub(investors)}</p>
           <ul className="fn-trust">
-            <li>Matched against real investor mandates</li>
-            <li>7 questions, about 2 minutes</li>
-            <li>Free initial assessment of your project</li>
+            {L.trust.map(x => <li key={x}>{x}</li>)}
           </ul>
         </div>
         <div className="fn-col">
@@ -161,7 +154,7 @@ export function Funnel() {
             const answered = k < i || phase !== 'ask'
             return (
               <div key={s} className="fn-turn">
-                <div className="fn-q"><span className="fn-n">{k + 1} / 7</span>{QUESTION[s]}</div>
+                <div className="fn-q"><span className="fn-n">{k + 1} / 7</span>{L.q[s]}</div>
                 {answered && <div className="fn-a">{label(s)}</div>}
               </div>
             )
@@ -170,64 +163,64 @@ export function Funnel() {
           {phase === 'ask' && (
             <div className="fn-input">
               {(step === 'strategy' || (step === 'geo' && !pending && !text.trim()) || step === 'stage' || step === 'permit') && (
-                <div className="fn-chips" role="group" aria-label={QUESTION[step]}>
-                  {step === 'strategy' && STRATEGY.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ strategy: o.v as Strategy })}>{o.label}</button>)}
-                  {step === 'geo' && REGIONS.map(o => <button key={o.label} className="fn-chip" onClick={() => next({ geo: o.v, city: o.city })}>{o.label}</button>)}
-                  {step === 'stage' && stages.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ stage: o.v })}>{o.label}</button>)}
-                  {step === 'permit' && PERMITS.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ permit: o.v })}>{o.label}</button>)}
+                <div className="fn-chips" role="group" aria-label={L.q[step]}>
+                  {step === 'strategy' && STRATEGY.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ strategy: o.v as Strategy })}>{L.strategy[o.v]}</button>)}
+                  {step === 'geo' && REGIONS.map(o => <button key={o.label} className="fn-chip" onClick={() => next({ geo: o.v, city: o.city })}>{regionLabel(o.v, o.city)}</button>)}
+                  {step === 'stage' && stages.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ stage: o.v })}>{L.stages[a.strategy!]?.[o.v] ?? o.label}</button>)}
+                  {step === 'permit' && PERMITS.map(o => <button key={o.v} className="fn-chip" onClick={() => next({ permit: o.v })}>{L.permits[o.v]}</button>)}
                 </div>
               )}
               {step === 'geo' && !pending && (
                 <form className="fn-money" onSubmit={submitCity}>
-                  <input autoComplete="off" autoCapitalize="words" aria-label="Type your city or town" placeholder="Or type the city or town" maxLength={80} value={text}
+                  <input autoComplete="off" autoCapitalize="words" aria-label={L.cityAria} placeholder={L.cityPlaceholder} maxLength={80} value={text}
                     onChange={e => { setText(e.target.value); setBad(false) }} aria-invalid={bad} />
-                  <button className="fn-go" type="submit" disabled={cleanCity(text).length < 2}>Next</button>
-                  {bad && <span className="fn-bad" role="alert">Enter the name of the city or town.</span>}
-                  {suggestions.length > 0 && <div className="fn-units" role="listbox" aria-label="Suggestions">
+                  <button className="fn-go" type="submit" disabled={cleanCity(text).length < 2}>{L.next}</button>
+                  {bad && <span className="fn-bad" role="alert">{L.cityBad}</span>}
+                  {suggestions.length > 0 && <div className="fn-units" role="listbox" aria-label={L.suggestions}>
                     {suggestions.map(p => <button key={p.label} type="button" role="option" aria-selected={false} className="fn-chip" onClick={() => pick(p)}>{p.label}</button>)}
                   </div>}
                 </form>
               )}
               {step === 'geo' && pending && (
                 <div className="fn-input">
-                  <div className="fn-q">Which country is {pending} in?</div>
-                  <div className="fn-chips" role="group" aria-label="Country">
-                    {COUNTRIES.map(c => <button key={c.v} className="fn-chip" onClick={() => next({ geo: c.v, city: c.v === 'XX' ? `${pending}, other country` : `${pending}, ${c.label}` })}>{c.label}</button>)}
+                  <div className="fn-q">{L.country(pending)}</div>
+                  <div className="fn-chips" role="group" aria-label={L.countryAria}>
+                    {COUNTRIES.map(c => <button key={c.v} className="fn-chip" onClick={() => next({ geo: c.v, city: c.v === 'XX' ? `${pending}, other country` : `${pending}, ${c.label}` })}>{L.countries[c.v]}</button>)}
                   </div>
-                  <button type="button" className="fn-link" onClick={() => { setPending(null); setText(pending) }}>← Change the place</button>
+                  <button type="button" className="fn-link" onClick={() => { setPending(null); setText(pending) }}>{L.changePlace}</button>
                 </div>
               )}
               {(step === 'gdv' || step === 'ask' || step === 'equity') && (
                 <form className="fn-money" onSubmit={submitMoney}>
-                  <input autoFocus inputMode="decimal" autoComplete="off" aria-label={QUESTION[step]} placeholder={MONEY_HINT} value={text}
+                  <input autoFocus inputMode="decimal" autoComplete="off" aria-label={L.q[step]} placeholder={L.moneyHint} value={text}
                     onChange={e => { setText(e.target.value); setBad(false) }} aria-invalid={bad} />
-                  <button className="fn-go" type="submit" disabled={!text.trim()}>Next</button>
-                  <div className="fn-units" role="group" aria-label="Unit">
-                    <button type="button" className={`fn-chip${unit === 'k' ? ' on' : ''}`} aria-pressed={unit === 'k'} onClick={() => setUnit('k')}>thousand</button>
-                    <button type="button" className={`fn-chip${unit === 'm' ? ' on' : ''}`} aria-pressed={unit === 'm'} onClick={() => setUnit('m')}>million</button>
-                    {text.trim() && typed != null && <span className="fn-pre" aria-live="polite">= {typed === 0 ? '€0' : eur(typed)}</span>}
+                  <button className="fn-go" type="submit" disabled={!text.trim()}>{L.next}</button>
+                  <div className="fn-units" role="group" aria-label={L.unitAria}>
+                    <button type="button" className={`fn-chip${unit === 'k' ? ' on' : ''}`} aria-pressed={unit === 'k'} onClick={() => setUnit('k')}>{L.thousand}</button>
+                    <button type="button" className={`fn-chip${unit === 'm' ? ' on' : ''}`} aria-pressed={unit === 'm'} onClick={() => setUnit('m')}>{L.million}</button>
+                    {text.trim() && typed != null && <span className="fn-pre" aria-live="polite">= {typed === 0 ? (lang === 'es' ? '0 €' : '€0') : eur(typed)}</span>}
                   </div>
-                  {bad && <span className="fn-bad" role="alert">{step === 'equity' ? 'Enter an amount, or 0 if you have none. ' : 'Enter an amount in euros. '}{MONEY_HINT}.</span>}
-                  {step === 'equity' && <button type="button" className="fn-link" onClick={() => next({ equity: 0 })}>I have no equity to contribute</button>}
+                  {bad && <span className="fn-bad" role="alert">{step === 'equity' ? L.moneyBadEquity : L.moneyBad}{L.moneyHint}.</span>}
+                  {step === 'equity' && <button type="button" className="fn-link" onClick={() => next({ equity: 0 })}>{L.noEquityBtn}</button>}
                 </form>
               )}
-              {i > 0 && <button type="button" className="fn-link" onClick={back}>← Back</button>}
+              {i > 0 && <button type="button" className="fn-link" onClick={back}>{L.back}</button>}
             </div>
           )}
 
           {phase === 'contact' && (
             <div className="fn-input">
-              <div className="fn-q"><span className="fn-n">Last step</span>Where should we save your results? Leave your name and phone, so your answers are not lost while you create your account. Our team can also call you if anything goes wrong.</div>
+              <div className="fn-q"><span className="fn-n">{L.lastStep}</span>{L.lastStepBody}</div>
               <form className="fn-contact" onSubmit={submitContact}>
-                <input autoFocus autoComplete="name" autoCapitalize="words" aria-label="Your name" placeholder="Your name" maxLength={120} value={name}
+                <input autoFocus autoComplete="name" autoCapitalize="words" aria-label={L.nameAria} placeholder={L.namePh} maxLength={120} value={name}
                   onChange={e => { setName(e.target.value); setContactBad(null) }} aria-invalid={contactBad === 'name'} />
-                <input type="tel" inputMode="tel" autoComplete="tel" aria-label="Your phone" placeholder="Phone, e.g. +34 600 123 456" maxLength={24} value={phone}
+                <input type="tel" inputMode="tel" autoComplete="tel" aria-label={L.phoneAria} placeholder={L.phonePh} maxLength={24} value={phone}
                   onChange={e => { setPhone(e.target.value); setContactBad(null) }} aria-invalid={contactBad === 'phone'} />
-                {contactBad && <span className="fn-bad" role="alert">{contactBad === 'name' ? 'Enter your name.' : 'Enter a phone number with the country code, for example +34 600 123 456.'}</span>}
-                <button className="fn-cta" type="submit">Show my assessment</button>
-                <span className="fn-fine">We use your details only to help you with this project. <a href="/privacy">Privacy policy</a></span>
+                {contactBad && <span className="fn-bad" role="alert">{contactBad === 'name' ? L.nameBad : L.phoneBad}</span>}
+                <button className="fn-cta" type="submit">{L.showAssessment}</button>
+                <span className="fn-fine">{L.fine} <a href={lang === 'es' ? '/es/privacy' : '/privacy'}>{L.privacy}</a></span>
               </form>
-              <button type="button" className="fn-link" onClick={back}>← Back</button>
+              <button type="button" className="fn-link" onClick={back}>{L.back}</button>
             </div>
           )}
 
@@ -235,27 +228,27 @@ export function Funnel() {
 
           {phase === 'think' && (
             <div className="fn-think" role="status">
-              <b>Analysing your project…</b>
-              <ul>{CHECKS.map((c, k) => <li key={c} className={k < shown ? 'on' : ''}><span aria-hidden="true">{k < shown ? '✓' : '·'}</span>{c}</li>)}</ul>
+              <b>{L.thinking}</b>
+              <ul>{L.checks.map((c, k) => <li key={c} className={k < shown ? 'on' : ''}><span aria-hidden="true">{k < shown ? '✓' : '·'}</span>{c}</li>)}</ul>
             </div>
           )}
 
           {phase === 'result' && result && (
-            <section className="fn-result" aria-label="Your Project Funding Assessment">
-              <h2>Your Project Funding Assessment</h2>
-              <div className="fn-score"><span className="fn-big">{result.total}</span><span className="fn-of">/100</span><span className="fn-lbl">Project Readiness</span></div>
+            <section className="fn-result" aria-label={L.resultTitle}>
+              <h2>{L.resultTitle}</h2>
+              <div className="fn-score"><span className="fn-big">{result.total}</span><span className="fn-of">/100</span><span className="fn-lbl">{L.readiness}</span></div>
               <div className="fn-bar" aria-hidden="true"><i style={{ width: `${result.total}%` }} /></div>
-              <p>{verdict(result.total)}</p>
+              <p>{L.verdict[verdictKey(result.total)]}</p>
               {matches && <>
-                <h3>Potential Investor Matches</h3>
+                <h3>{L.matchesTitle}</h3>
                 <ul className="fn-matches">
-                  <li><b>{matches.high}</b> strong fit: your project meets their criteria today</li>
-                  <li><b>{matches.medium}</b> possible fit: close, a few details to confirm</li>
-                  <li><b>{matches.low}</b> within reach: a bigger or smaller raise, or a gap closed, would fit</li>
+                  <li><b>{matches.high}</b> {L.strong}</li>
+                  <li><b>{matches.medium}</b> {L.possible}</li>
+                  <li><b>{matches.low}</b> {L.within}</li>
                 </ul>
               </>}
-              <button className="fn-cta" onClick={() => void unlock()}>Unlock Your Investor Matches</button>
-              <p className="fn-fine">Free. Your answers are saved to your new account.</p>
+              <button className="fn-cta" onClick={() => void unlock()}>{L.unlock}</button>
+              <p className="fn-fine">{L.unlockFine}</p>
             </section>
           )}
           <div ref={endRef} />
@@ -263,10 +256,10 @@ export function Funnel() {
         </div>
       </main>
       <footer className="fn-foot">
-        <span>Cobuildy S.L. is an introducer between developers and investors. It is not a financial adviser and does not give investment advice.</span>
-        <a href="/privacy">Privacy and cookies</a>
+        <span>{L.footer}</span>
+        <a href={lang === 'es' ? '/es/privacy' : '/privacy'}>{L.footerLink}</a>
       </footer>
-      {!asked && <ConsentBanner onChoose={granted => { setAsked(true); if (granted) { initPixel(); track('ViewContent') } }} />}
+      {!asked && <ConsentBanner lang={lang} onChoose={granted => { setAsked(true); if (granted) { initPixel(); track('ViewContent') } }} />}
     </div>
   )
 }
