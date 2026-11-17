@@ -5,6 +5,7 @@ import { configured } from './lib/supabase'
 import { Login } from './pages/Login'
 import { PrivacyPolicy } from './pages/PrivacyPolicy'
 import { Funnel } from './pages/Funnel'
+import { detectLang } from './i18n'
 import { Onboarding } from './pages/Onboarding'
 import { peekWelcome } from './lib/carry'
 import { Admin } from './pages/Admin'
@@ -53,7 +54,7 @@ function SignedOut() {
   const { pathname, search, hash } = useLocation()
   const returning = /[?&#](code|access_token|error)=/.test(search + hash)
   const toLanding = pathname !== '/login' && !returning
-  useEffect(() => { if (toLanding) window.location.replace('/landing.html' + search) }, [toLanding]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (toLanding) window.location.replace((/^\/es(\/|$)/.test(pathname) || detectLang() === 'es' ? '/landing-es.html' : '/landing.html') + search) }, [toLanding]) // eslint-disable-line react-hooks/exhaustive-deps
   return toLanding ? <div className="login"><span className="muted">Loading…</span></div> : <Login />
 }
 

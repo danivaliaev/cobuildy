@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cobuildy: find the right capital for your development project</title>
 <meta name="description" content="Cobuildy matches real estate development projects in Spain and Portugal with debt and equity investors.">
+<link rel="alternate" hreflang="es" href="https://cobuildy.com/es">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -347,6 +348,8 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
   .cchips{padding:12px 14px 10px;gap:10px}
 }
 @media (prefers-reduced-motion:reduce){.cchips .step .arr{animation:none}}
+
+.langsw{font:500 12px var(--f-mono);letter-spacing:.06em;color:var(--ink-2);text-decoration:none;padding:6px 4px}a.langsw:hover{color:var(--ink);text-decoration:underline}b.langsw.on{color:var(--ink);border-bottom:2px solid var(--plan);margin-right:6px}
 </style>
 
 <header>
@@ -360,6 +363,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
       <a href="#faq">FAQ</a>
     </nav>
     <span class="sp"></span>
+    <b class="langsw on" aria-current="true">EN</b><a class="langsw" href="/landing-es.html" hreflang="es" lang="es" aria-label="Español" onclick="try{localStorage.setItem('cb.lang','es')}catch(e){}">ES</a>
     <a class="btn ghost sm" id="login" onclick="saveCarry()" href="/login">Log in</a>
     <button class="btn sm hide-s" type="button" data-signup="">Get started free</button>
   </div>
