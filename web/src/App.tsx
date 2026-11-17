@@ -3,6 +3,7 @@ import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
 import { configured } from './lib/supabase'
 import { Login } from './pages/Login'
+import { PrivacyPolicy } from './pages/PrivacyPolicy'
 import { Funnel } from './pages/Funnel'
 import { Onboarding } from './pages/Onboarding'
 import { peekWelcome } from './lib/carry'
@@ -61,6 +62,7 @@ export function App() {
   if (!configured) return <div className="login"><div className="card"><h2>Configuration missing</h2><p className="muted">Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY. See web/.env.example.</p></div></div>
   // The ad funnel is public and has no menu, so nothing pulls the visitor away from the questions.
   if (/^\/(meta|start)\/?$/.test(window.location.pathname)) return <Funnel />
+  if (/^\/privacy\/?$/.test(window.location.pathname)) return <PrivacyPolicy />
   if (loading) return <div className="login"><span className="muted">Loading…</span></div>
   if (!session) return <SignedOut />
   if (!profile) return <Onboarding />

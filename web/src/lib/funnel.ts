@@ -121,10 +121,11 @@ export function toCarry(a: Complete, total: number, who?: { sid?: string; name?:
   }
 }
 
-/** Meta Pixel, only when VITE_META_PIXEL_ID is set. Everything here is a no-op otherwise. */
+/** Meta Pixel (dataset "Quiz INV 26.11"). The id is public by design; VITE_META_PIXEL_ID overrides it. Loaded only after the visitor accepts marketing cookies. */
+const PIXEL_ID = '1175324041380880'
 type Fbq = (...args: unknown[]) => void
 export function initPixel(): void {
-  const id = import.meta.env.VITE_META_PIXEL_ID as string | undefined
+  const id = (import.meta.env.VITE_META_PIXEL_ID as string | undefined) || PIXEL_ID
   if (!id || !/^\d{6,20}$/.test(id) || (window as unknown as { fbq?: Fbq }).fbq) return
   const w = window as unknown as { fbq: Fbq & { queue?: unknown[]; callMethod?: (...a: unknown[]) => void; loaded?: boolean; version?: string; push?: unknown } }
   const f = function (...args: unknown[]) { if (f.callMethod) f.callMethod(...args); else f.queue!.push(args) } as Fbq & { queue: unknown[]; callMethod?: (...a: unknown[]) => void; loaded: boolean; version: string; push: unknown }

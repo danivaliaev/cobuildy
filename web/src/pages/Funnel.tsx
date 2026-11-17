@@ -4,6 +4,8 @@ import { CARRY_KEY } from '../lib/carry'
 import { eur } from '../lib/format'
 import { geoCode } from '../lib/profile'
 import { loadPlaces, type Place, type Places } from '../lib/places'
+import { ConsentBanner } from '../components/ConsentBanner'
+import { getConsent } from '../lib/consent'
 import { save, sessionId, trafficSource, validName, validPhone } from '../lib/funnelTrack'
 import {
   COUNTRIES, PERMITS, REGIONS, STAGES, cleanCity, STRATEGY, complete, initPixel, numbers, parseMoney, score, toCarry, track, verdict,
@@ -42,6 +44,7 @@ export function Funnel() {
   const [shown, setShown] = useState(0)
   const [matches, setMatches] = useState<Matches | null>(null)
   const [investors, setInvestors] = useState<number | null>(null)
+  const [asked, setAsked] = useState(() => getConsent() !== null)
   const endRef = useRef<HTMLDivElement>(null)
   const step = STEPS[i]
   const suggestions = step === 'geo' && !pending && places ? places.suggest(text) : []
@@ -49,7 +52,7 @@ export function Funnel() {
   useEffect(() => {
     document.title = 'Is your project ready for financing? · Cobuildy'
     const m = document.createElement('meta'); m.name = 'robots'; m.content = 'noindex'; document.head.appendChild(m)
-    initPixel()
+    if (getConsent() === 'granted') { initPixel(); track('ViewContent') }
     void save(sid, { step: 0, source: { ...trafficSource(), entry: 'meta' } })
     void loadPlaces().then(setPlaces, () => setPlaces(null))
     void supabase.rpc('funnel_stats').then(({ data }) => { const n = (data as { investors?: number } | null)?.investors; if (typeof n === 'number' && n > 0) setInvestors(n) })
@@ -93,7 +96,7 @@ export function Funnel() {
     if (!complete(a)) return
     setContactBad(null); setWho({ name: n, phone: ph })
     void save(sid, { step: 8, answers: a, name: n, phone: ph })
-    track('Contact')
+    track('Lead')
     finish(a, { name: n, phone: ph })
   }
 
@@ -133,7 +136,7 @@ export function Funnel() {
   const heading = investors ? `${investors} investors are waiting.` : 'Investors are waiting.'
 
   async function unlock() {
-    track('Lead')
+    track('UnlockClicked', true)
     await Promise.race([save(sid, { cta: true }), new Promise(r => window.setTimeout(r, 800))])
     const { data } = await supabase.auth.getSession()
     window.location.assign(data.session ? '/' : '/login?role=developer')
@@ -222,7 +225,7 @@ export function Funnel() {
                   onChange={e => { setPhone(e.target.value); setContactBad(null) }} aria-invalid={contactBad === 'phone'} />
                 {contactBad && <span className="fn-bad" role="alert">{contactBad === 'name' ? 'Enter your name.' : 'Enter a phone number with the country code, for example +34 600 123 456.'}</span>}
                 <button className="fn-cta" type="submit">Show my assessment</button>
-                <span className="fn-fine">We use your details only to help you with this project.</span>
+                <span className="fn-fine">We use your details only to help you with this project. <a href="/privacy">Privacy policy</a></span>
               </form>
               <button type="button" className="fn-link" onClick={back}>← Back</button>
             </div>
@@ -259,6 +262,11 @@ export function Funnel() {
         </div>
         </div>
       </main>
+      <footer className="fn-foot">
+        <span>Cobuildy S.L. is an introducer between developers and investors. It is not a financial adviser and does not give investment advice.</span>
+        <a href="/privacy">Privacy and cookies</a>
+      </footer>
+      {!asked && <ConsentBanner onChoose={granted => { setAsked(true); if (granted) { initPixel(); track('ViewContent') } }} />}
     </div>
   )
 }
