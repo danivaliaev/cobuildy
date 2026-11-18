@@ -380,7 +380,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
     <h1 id="h-title"></h1>
     <p class="lede" id="h-lede"></p>
     <ul class="proof" id="proof" aria-label="Datos clave">
-      <li><b>Desde el 1 %</b> de comisión, solo si hay resultados</li>
+      <li><b>Solo comisión de éxito</b>, se paga cuando llega el capital</li>
       <li><b>24/7</b> un agente de tu lado</li>
       <li><b>Más del 90 %</b> del trabajo rutinario, automatizado</li>
       <li>Tú apruebas cada envío</li>
@@ -456,7 +456,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
       <div class="row" role="row"><div role="cell">Conocimiento del mercado</div><div role="cell">Contactos en manos de personas concretas</div><div role="cell">Todo el mercado, actualizado por el agente</div></div>
       <div class="row" role="row"><div role="cell">Primera preselección</div><div role="cell">De días a semanas de investigación manual</div><div role="cell">Minutos. Pruébalo arriba.</div></div>
       <div class="row" role="row"><div role="cell">Coste al crecer el volumen</div><div role="cell">Sube con la plantilla</div><div role="cell">Baja con cada proyecto del que aprende el agente</div></div>
-      <div class="row" role="row"><div role="cell">Lo que pagas</div><div role="cell">Cuotas fijas más comisiones</div><div role="cell">1,5 % hasta 3 M€ y luego 1 %. Nada más.</div></div>
+      <div class="row" role="row"><div role="cell">Lo que pagas</div><div role="cell">Cuotas fijas más comisiones</div><div role="cell">Solo por resultados. Sin pago inicial.</div></div>
     </div>
   </div>
 </div>
@@ -465,13 +465,13 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
   <div class="fee">
     <div>
       <span class="eyebrow mono">Cómo cobramos</span>
-      <h2 class="h2">Más barato que un intermediario. Más rápido que hacerlo tú.</h2>
-      <p class="sub">Una sola comisión de éxito, que se paga únicamente cuando llega el capital: 1,5 % sobre los primeros 3 M€ captados y 1 % sobre todo lo que supere esa cifra. Podemos cobrar menos porque un único agente atiende todos los proyectos a la vez, así que cada proyecto nuevo nos cuesta muy poco más.</p>
+      <h2 class="h2">Pagas cuando llega el capital.</h2>
+      <p class="sub">Una sola comisión de éxito, que se paga únicamente cuando llega el capital. Como un único agente atiende todos los proyectos a la vez, cada proyecto nuevo nos cuesta muy poco más.</p>
       <div class="cta-row" style="margin-top:26px"><button class="btn soft" type="button" data-signup="">Empieza gratis</button></div>
     </div>
     <ul>
-      <li><b>1,5 % hasta 3 M€ y luego 1 %</b><span>Si captas 5 M€, la comisión es de 65.000 €. Sin cuota fija, sin pago inicial, sin mínimo.</span></li>
-      <li><b>Condiciones por escrito antes</b><span>Ves las cifras antes de empezar a trabajar.</span></li>
+      <li><b>Solo comisión de éxito</b><span>Sin cuota fija, sin pago inicial, sin mínimo.</span></li>
+      <li><b>Condiciones por escrito antes</b><span>Ves las condiciones antes de empezar a trabajar.</span></li>
       <li><b>Si no se capta capital, no se cobra</b><span>Nuestro incentivo es el mismo que el tuyo.</span></li>
     </ul>
   </div>
@@ -507,7 +507,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 <div class="wrap" id="faq" style="padding-block:84px 40px">
   <div class="center"><span class="eyebrow mono">Preguntas frecuentes</span><h2 class="h2">Lo primero que suelen preguntar</h2></div>
   <div class="faq">
-    <details class="q" open><summary>¿Cuánto pago?</summary><p>Los promotores pagan una comisión de éxito solo cuando se capta capital: 1,5 % sobre los primeros 3 M€ y 1 % sobre cualquier importe por encima. Por ejemplo, captar 5 M€ cuesta 65.000 €. No hay cuota fija ni pago inicial. Las condiciones se ponen por escrito y se acuerdan antes de empezar a trabajar.</p></details>
+    <details class="q" open><summary>¿Cuánto pago?</summary><p>Los promotores pagan una comisión de éxito solo cuando se capta capital. No hay cuota fija ni pago inicial. Las condiciones se ponen por escrito y se acuerdan antes de empezar a trabajar.</p></details>
     <details class="q"><summary>¿Qué hace exactamente el agente de IA?</summary><p>Construye tu perfil a partir de lo que le cuentas, encuentra los huecos por los que preguntarán los inversores, te empareja con prestamistas e inversores cuyos criterios encajan, redacta los documentos y los mensajes y hace el seguimiento. Trabaja para ti las 24 horas.</p></details>
     <details class="q"><summary>¿Qué se queda en manos de personas?</summary><p>Toda decisión que implica riesgo. Tú apruebas lo que dice el proyecto y quién lo ve, y confirmas cada envío. Nuestro equipo revisa los materiales, negocia las condiciones y coordina el trabajo legal. No se envía nada en tu nombre sin tu aprobación.</p></details>
     <details class="q"><summary>¿De dónde salen los inversores?</summary><p>De nuestra red de prestamistas, fondos, family offices e inversores privados activos en España y Portugal. El agente mantiene sus criterios al día. Los inversores se califican antes de ver los detalles de un proyecto y aceptan cada presentación.</p></details>
@@ -871,7 +871,7 @@ $('c-chips').addEventListener('pointerdown',stopHint);
 /* ---------- audience switch ---------- */
 let aud='dev';
 const COPY={
- dev:{chips:[],t:'Descubre si tu proyecto está <em>listo para financiarse</em>',l:'Trabajo para ti <b>24/7</b>: conecto tu proyecto con prestamistas e inversores institucionales y me ocupo del trabajo rutinario. Pagas <b>solo cuando llega el capital</b>: 1,5 % sobre los primeros 3 M€ y 1 % sobre el resto.',n:'Prueba el agente en el chat. Sin registro.',
+ dev:{chips:[],t:'Descubre si tu proyecto está <em>listo para financiarse</em>',l:'Trabajo para ti <b>24/7</b>: conecto tu proyecto con prestamistas e inversores institucionales y me ocupo del trabajo rutinario. Pagas <b>solo cuando llega el capital</b>.',n:'Prueba el agente en el chat. Sin registro.',
   ah:'Un agente que nunca se desconecta',ap:'Mientras tú construyes, vigila el mercado, mantiene tu perfil listo y hace avanzar el contacto con inversores. Sabe qué exige cada uno y qué les debes todavía.',know:['Mandatos de prestamistas y fondos','Tamaños de ticket y límites de LTC','Requisitos de licencias','Tus documentos y sus huecos','Preguntas abiertas de inversores','Comparables de mercado'],
   sh:'Del primer mensaje al term sheet',steps:[['Cuéntaselo al agente','Describe el proyecto con tus palabras o sube lo que tengas. El perfil se construye junto al chat y muestra lo que falta.','Paso 1 · Tú'],['Aprueba el plan','El agente redacta el teaser, elige a los inversores y escribe los mensajes. Tú revisas y confirmas antes de que se envíe nada.','Paso 2 · El agente redacta, tú apruebas'],['Te presentan','Los inversores interesados reciben el data room. Tu equipo y el nuestro se ocupan de llamadas, condiciones y cierre. El agente sigue reclamando los detalles.','Paso 3 · El agente persigue, las personas cierran']],
   fh:'Pon hoy un agente a trabajar en tu proyecto',
