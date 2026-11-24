@@ -271,7 +271,6 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 .cchips button{min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 14px var(--f-body);cursor:pointer;text-align:left}
 .cchips button:hover{border-color:var(--ink-2)}
 .cchips button.go{border-color:var(--plan);background:var(--plan-soft);color:var(--plan)}
-.cchips button.ex{border-style:dashed;color:var(--ink-2)}
 .cchips button[aria-pressed="true"]{background:var(--plan);border-color:var(--plan);color:var(--bg)}
 .cchips button:disabled{opacity:.45;cursor:default}
 /* first-view hint: the question and its answers breathe three times, once per visit */
@@ -678,7 +677,7 @@ const Q={
   {k:'equity',tag:'Propio',q:'¿Cuánto capital propio aportas, incluido el suelo?',chips:[{l:'Sin capital propio',v:0},{l:'0,5 M€',v:5e5},{l:'1 M€',v:1e6},{l:'2 M€',v:2e6}],money:1,hint:'Indica un importe, por ejemplo 1 millón, o 0 si no aportas nada.'},
   {k:'permit',tag:'Licencias',q:'¿Tienes los permisos necesarios?',chips:PERM.map(x=>({l:x.l,v:x.v})),hint:'Concedidos, solicitados, en trámite, aún no solicitados o no necesarios.'}],
  inv:[
-  {k:'geo',tag:'Zonas',q:'¿En qué zonas inviertes? Elige todas las que apliquen o escríbelas.',chips:GEOCH,multi:1,ex:'Costa del Sol, Lisboa y Oporto, cualquier instrumento, tickets de 1–3 millones, cualquier activo, licencia solicitada o mejor',hint:'Indica una o más zonas, por ejemplo Costa del Sol y Lisboa.'},
+  {k:'geo',tag:'Zonas',q:'¿En qué zonas inviertes? Elige todas las que apliquen o escríbelas.',chips:GEOCH,multi:1,hint:'Indica una o más zonas, por ejemplo Costa del Sol y Lisboa.'},
   {k:'ins',tag:'Instrumento',q:'¿Qué instrumentos financias?',chips:[{l:'Préstamo sénior',v:'senior'},{l:'Mezzanine',v:'mezz'},{l:'Capital',v:'equity'},{l:'Cualquiera',v:'any'}],hint:'Préstamo sénior, mezzanine, capital o cualquiera.'},
   {k:'tk',tag:'Ticket',q:'¿Qué tamaño de ticket te encaja?',chips:Object.keys(TKL).map(k=>({l:TKL[k],v:k})),hint:'Indica un tamaño, por ejemplo 1–3 millones.'},
   {k:'as',tag:'Activo',q:'¿Qué tipos de activo?',chips:[{l:'Cualquiera',v:'any'},{l:'Residencial',v:'RES'},{l:'Build-to-rent',v:'BTR'},{l:'Hotelero',v:'HOS'}],hint:'Residencial, build-to-rent, hotelero o cualquiera.'},
@@ -732,7 +731,7 @@ function paintChips(){
   else if(q){const c=curChips();
     h=`<span class="step"><b>${s.qi+1} / ${Qs.length}</b>${q.multi?'Toca una o más y pulsa Continuar':'Toca tu respuesta'}${s.qi===0?'<span class="arr" aria-hidden="true">↓</span>':''}</span><div class="set">`+c.map((x,i)=>{const on=q.multi&&s.tmp.includes(x.v);return `<button type="button" data-i="${i}" ${q.multi?`aria-pressed="${on}"`:''}>${esc(x.l)}</button>`}).join('')+
     (q.multi?`<button class="go" type="button" data-act="cont" ${s.tmp.length?'':'disabled'}>Continuar →</button>`:'')+
-    (q.ex?`<button class="ex" type="button" data-act="ex">O escríbelo con tus palabras</button>`:'')+'</div>'}
+    '</div>'}
   $('c-chips').innerHTML=h;$('c-chips').hidden=!h;
   $('c-in').placeholder=aud==='dev'&&s.contact==='name'?'Tu nombre':aud==='dev'&&s.contact==='phone'?'Teléfono, p. ej. +34 600 123 456':aud==='dev'&&q&&q.k==='geo'&&!s.done&&!s.gated?'O escribe la ciudad o localidad':'O escribe tu respuesta';
   $('c-back').hidden=!(((s.hist&&s.hist.length)||s.pc)&&!s.done&&!s.gated&&!(aud==='dev'&&s.contact));
@@ -851,7 +850,6 @@ $('c-reset').onclick=()=>{if(busy)return;resetChat(aud);renderChat()};
 $('c-chips').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||b.dataset.signup!==undefined||busy||flying)return;const s=ST[aud],q=Q[aud][s.qi];
   if(b.dataset.act==='reset'){resetChat(aud);renderChat();return}
-  if(b.dataset.act==='ex'){submit(q.ex);return}
   if(b.dataset.act==='cont'){if(s.tmp.length)submit(labelOf('geo',s.tmp),[...s.tmp]);return}
   if(b.dataset.i===undefined||!q)return;const c=curChips()[+b.dataset.i];
   if(q.multi){const v=c.v;s.tmp=s.tmp.includes(v)?s.tmp.filter(x=>x!==v):[...s.tmp,v];renderChat();return}

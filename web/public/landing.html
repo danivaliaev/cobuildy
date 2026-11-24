@@ -271,7 +271,6 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 .cchips button{min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 14px var(--f-body);cursor:pointer;text-align:left}
 .cchips button:hover{border-color:var(--ink-2)}
 .cchips button.go{border-color:var(--plan);background:var(--plan-soft);color:var(--plan)}
-.cchips button.ex{border-style:dashed;color:var(--ink-2)}
 .cchips button[aria-pressed="true"]{background:var(--plan);border-color:var(--plan);color:var(--bg)}
 .cchips button:disabled{opacity:.45;cursor:default}
 /* first-view hint: the question and its answers breathe three times, once per visit */
@@ -676,7 +675,7 @@ const Q={
   {k:'equity',tag:'Equity',q:'How much of your own capital goes in, including the land?',chips:[{l:'No own equity',v:0},{l:'€0.5M',v:5e5},{l:'€1M',v:1e6},{l:'€2M',v:2e6}],money:1,hint:'Give an amount, for example 1M, or 0 if you have none.'},
   {k:'permit',tag:'Permits',q:'Do you have the necessary permits?',chips:PERM.map(x=>({l:x.l,v:x.v})),hint:'Granted, submitted, in process, not yet applied, or not required.'}],
  inv:[
-  {k:'geo',tag:'Regions',q:'Which regions do you invest in? Pick all that apply, or type them.',chips:GEOCH,multi:1,ex:'Costa del Sol, Lisbon and Porto, any instrument, tickets of €1–3M, any asset, permit submitted or better',hint:'Name one or more regions, for example Costa del Sol and Lisbon.'},
+  {k:'geo',tag:'Regions',q:'Which regions do you invest in? Pick all that apply, or type them.',chips:GEOCH,multi:1,hint:'Name one or more regions, for example Costa del Sol and Lisbon.'},
   {k:'ins',tag:'Instrument',q:'Which instruments do you write?',chips:[{l:'Senior loan',v:'senior'},{l:'Mezzanine',v:'mezz'},{l:'Equity',v:'equity'},{l:'Any',v:'any'}],hint:'Senior loan, mezzanine, equity, or any.'},
   {k:'tk',tag:'Ticket',q:'What ticket size fits?',chips:Object.keys(TKL).map(k=>({l:TKL[k],v:k})),hint:'Give a size such as €1–3M.'},
   {k:'as',tag:'Asset',q:'Which asset types?',chips:[{l:'Any',v:'any'},{l:'Residential',v:'RES'},{l:'Build-to-rent',v:'BTR'},{l:'Hospitality',v:'HOS'}],hint:'Residential, build-to-rent, hospitality, or any.'},
@@ -730,7 +729,7 @@ function paintChips(){
   else if(q){const c=curChips();
     h=`<span class="step"><b>${s.qi+1} / ${Qs.length}</b>${q.multi?'Tap one or more, then press Continue':'Tap your answer'}${s.qi===0?'<span class="arr" aria-hidden="true">↓</span>':''}</span><div class="set">`+c.map((x,i)=>{const on=q.multi&&s.tmp.includes(x.v);return `<button type="button" data-i="${i}" ${q.multi?`aria-pressed="${on}"`:''}>${esc(x.l)}</button>`}).join('')+
     (q.multi?`<button class="go" type="button" data-act="cont" ${s.tmp.length?'':'disabled'}>Continue →</button>`:'')+
-    (q.ex?`<button class="ex" type="button" data-act="ex">Or write it in your own words</button>`:'')+'</div>'}
+    '</div>'}
   $('c-chips').innerHTML=h;$('c-chips').hidden=!h;
   $('c-in').placeholder=aud==='dev'&&s.contact==='name'?'Your name':aud==='dev'&&s.contact==='phone'?'Phone, e.g. +34 600 123 456':aud==='dev'&&q&&q.k==='geo'&&!s.done&&!s.gated?'Or type the city or town':'Or type your answer here';
   $('c-back').hidden=!(((s.hist&&s.hist.length)||s.pc)&&!s.done&&!s.gated&&!(aud==='dev'&&s.contact));
@@ -849,7 +848,6 @@ $('c-reset').onclick=()=>{if(busy)return;resetChat(aud);renderChat()};
 $('c-chips').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||b.dataset.signup!==undefined||busy||flying)return;const s=ST[aud],q=Q[aud][s.qi];
   if(b.dataset.act==='reset'){resetChat(aud);renderChat();return}
-  if(b.dataset.act==='ex'){submit(q.ex);return}
   if(b.dataset.act==='cont'){if(s.tmp.length)submit(labelOf('geo',s.tmp),[...s.tmp]);return}
   if(b.dataset.i===undefined||!q)return;const c=curChips()[+b.dataset.i];
   if(q.multi){const v=c.v;s.tmp=s.tmp.includes(v)?s.tmp.filter(x=>x!==v):[...s.tmp,v];renderChat();return}
