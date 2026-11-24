@@ -291,6 +291,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
 .m.u .b.pop{animation:pop .22s ease-out}
 @keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
 .cin{display:flex;gap:8px;margin-top:10px}
+.cback{margin-top:6px}.cback .link{font-size:15px;padding:6px 2px}.cback .link[hidden]{display:none}
 .cin input{flex:1;min-width:0;height:46px;border-radius:999px;padding:0 18px}
 .send{width:46px;height:46px;border-radius:50%;border:0;background:var(--brand);color:var(--on-brand-accent);font-size:20px;cursor:pointer;flex:none}
 @media (max-width:640px){.cmsgs{max-height:min(300px,42vh)}.prog em{display:none}}
@@ -405,6 +406,7 @@ footer{border-top:1px solid var(--line);padding-block:44px 56px;font-size:14px;c
       <input id="c-in" type="text" aria-label="Mensaje al agente" placeholder="O escribe tu respuesta">
       <button class="send" type="submit" aria-label="Enviar">↑</button>
     </form>
+    <div class="cback"><button class="link" type="button" id="c-back" aria-label="Volver a la pregunta anterior" hidden>← Atrás</button></div>
   </div>
 </div>
 
@@ -609,12 +611,29 @@ const TKL={'0.3,1':'0,3–1 M€','1,3':'1–3 M€','3,6':'3–6 M€','6,20':'
 const code=v=>v==='VIL'?'RES':v;
 const GEORX=[[/costa del sol|marbella|estepona|m[aá]laga|mijas|benahav|fuengirola|sotogrande/i,'CS'],[/barcelona|sitges|girona|catalu/i,'BCN'],[/madrid/i,'MAD'],[/valencia|alicante|denia/i,'VLC'],[/mallorca|ibiza|palma|balear|tenerife|canar/i,'ISL'],[/lisbon|lisboa|cascais|sintra/i,'LIS'],[/porto|oporto/i,'OPO'],[/algarve|faro|lagos|albufeira|vilamoura/i,'ALG']];
 const geosIn=t=>GEORX.filter(([r])=>r.test(t)).map(x=>x[1]);
+
+/* ---------- every town of Spain and Portugal with 1,000+ inhabitants (the same list as /meta), loaded when the place question appears ---------- */
+const PCODE={C:'CS',B:'BCN',M:'MAD',V:'VLC',I:'ISL',K:'ISL',L:'LIS',O:'OPO',A:'ALG',E:'XES',P:'XPT'};
+const PISL={I:'Islas Baleares',K:'Islas Canarias'};
+const PALIAS={lisboa:'lisbon',seville:'sevilla',gerona:'girona',saragossa:'zaragoza',majorca:'palma',oporto:'porto','la coruna':'a coruna',corunna:'a coruna'};
+const pnorm=t=>String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+let PLX=null,PLP=null,SUG=[];
+function loadPlaces(){return PLP||(PLP=fetch('/places.json').then(r=>r.ok?r.json():null).then(d=>{
+  if(!d)return null;const names=d.n.split('|'),keys=names.map(pnorm);
+  const mk=i=>{const c=d.c[i],g=PCODE[c],rg=PISL[c]||(g==='XES'?'España':g==='XPT'?'Portugal':GEO[g]);
+    return {name:names[i],geo:g,label:pnorm(names[i])===pnorm(rg)||(g==='LIS'&&pnorm(names[i])==='lisbon')?names[i]:names[i]+', '+rg}};
+  const find=t=>{const k=pnorm(t),i=keys.indexOf(PALIAS[k]||k);return i<0?null:mk(i)};
+  const suggest=(t,max=6)=>{const k=PALIAS[pnorm(t)]||pnorm(t);if(k.length<2)return [];const out=[];
+    for(let i=0;i<keys.length&&out.length<max;i++)if(keys[i].startsWith(k))out.push(mk(i));
+    for(let i=0;i<keys.length&&out.length<max;i++)if(!keys[i].startsWith(k)&&keys[i].split(' ').some(w=>w.length>2&&w.startsWith(k)))out.push(mk(i));
+    return out};
+  return PLX={find,suggest}}).catch(()=>null))}
 function money(t){const m=String(t).replace(/€|(de\s+)?eur(os)?/ig,'').match(/(\d+(?:[.,]\d+)?)\s*(millones|mill[oó]n|mm|m|million|k|mil)?\b/i);if(!m)return null;let v=+m[1].replace(',','.');const u=(m[2]||'').toLowerCase();if(u==='k'||u==='mil')v*=1e3;else if(u)v*=1e6;else if(v<100)v*=1e6;return Math.round(v)}
 
 function xDev(t){
   const s=ST.dev,q=Q.dev[s.qi],o={};if(!q)return o;
   if(q.k==='strategy'){if(/land|plot|terreno|solar|suelo|parcela/i.test(t))o.strategy='land';else if(/progress|under construction|building|on site|en curso|en obra|obra|construcci[oó]n/i.test(t))o.strategy='wip';else if(/refurb|renovat|reform|rehabilit/i.test(t))o.strategy='refurb'}
-  else if(q.k==='geo'){const g=geosIn(t);if(g.length){o.geo=g[0];o.city=t.trim().slice(0,80)}else if(/spain|espa/i.test(t))o.geo='XES';else if(/portugal/i.test(t))o.geo='XPT'}
+  else if(q.k==='geo'){const p=PLX&&PLX.find(t),g=geosIn(t);if(p){o.geo=p.geo;o.city=p.label}else if(g.length){o.geo=g[0];o.city=t.trim().slice(0,80)}else if(/spain|espa/i.test(t)){o.geo='XES';o.city=t.trim().slice(0,80)}else if(/portugal/i.test(t)){o.geo='XPT';o.city=t.trim().slice(0,80)}}
   else if(q.k==='fstage'){const hit=(STAGES[s.a.strategy]||[]).find(([v])=>SRX[v].test(t));if(hit)o.fstage=hit[0]}
   else if(q.k==='permit'){const hit=PRX.find(([,r])=>r.test(t));if(hit)o.permit=hit[0]}
   else if(q.money){const m=moneyF(t,q.k==='equity');if(m!==null)o[q.k]=m}
@@ -640,7 +659,7 @@ async function refreshCount(){
 const STRAT=[{l:'Desarrollo de suelo',v:'land'},{l:'Obra en curso',v:'wip'},{l:'Rehabilitación / Reforma',v:'refurb'}];
 const STAGES={land:[['identified','Suelo identificado',5],['reserved','Suelo reservado',12],['purchased','Suelo comprado',19],['licensed','Licencia de obra concedida',25]],wip:[['started','Obra iniciada',18],['partial','Obra parcialmente completada',22],['near','Obra casi terminada',25]],refurb:[['identified','Inmueble identificado',5],['acquired','Inmueble adquirido',14],['started','Reforma iniciada',20],['done','Reforma terminada',25]]};
 const PERM=[{v:'granted',l:'Sí, todos los permisos concedidos',lic:'granted',st:'granted',pts:25},{v:'submitted',l:'Solicitud presentada',lic:'submitted',st:'submitted',pts:17},{v:'process',l:'En trámite',lic:'none',st:'prep',pts:10},{v:'none',l:'Aún no solicitados',lic:'none',st:'none',pts:3},{v:'notreq',l:'No son necesarios',lic:'granted',st:'notreq',pts:25}];
-const DGEO=[['CS','Costa del Sol'],['BCN','Barcelona'],['MAD','Madrid'],['VLC','Valencia'],['ISL','Islas Baleares'],['ISL','Islas Canarias'],['LIS','Lisboa'],['OPO','Oporto'],['ALG','Algarve'],['XES','Otra zona de España'],['XPT','Otra zona de Portugal']].map(([v,l])=>({l,v}));
+const DGEO=[['CS','Costa del Sol'],['BCN','Barcelona'],['MAD','Madrid'],['VLC','Valencia'],['ISL','Islas Baleares'],['ISL','Islas Canarias'],['LIS','Lisboa'],['OPO','Oporto'],['ALG','Algarve']].map(([v,l])=>({l,v}));
 const SRX={identified:/identific|localiz|encontr|busc|identif/i,reserved:/reserv|opci[oó]n|arras|se[ñn]al/i,purchased:/compr|adquir|soy due|propiedad/i,licensed:/licenci|licen[cs]e|permiso/i,started:/inici|empez|comenz|arranc|start/i,partial:/parcial|mitad|en curso|avanzad/i,near:/casi|final|cerca/i,acquired:/adquir|compr/i,done:/complet|finaliz|termin|acab|hecho/i};
 const PRX=[['notreq',/no (es )?necesari|no requier|no hace falta|n\/a/i],['none',/a[uú]n no|todav[ií]a no|no (he|hay|tengo)|ninguno|sin licencia|no\b/i],['submitted',/solicit|present|tramit/i],['process',/proceso|prepar|en curso/i],['granted',/concedid|otorgad|s[ií]\b|todos/i]];
 function moneyF(t,zero){const x0=String(t).toLowerCase().replace(/[€\s]/g,'').replace(/(de)?eur(os?)?/,'');if(zero&&/^(0|none|no|nil)$/.test(x0))return 0;
@@ -652,7 +671,7 @@ const GEOCH=Object.keys(GEO).map(k=>({l:GEO[k],v:k}));
 const Q={
  dev:[
   {k:'strategy',tag:'Tipo',q:'¿Qué tipo de proyecto estás desarrollando?',chips:STRAT,hint:'Desarrollo de suelo, obra en curso o rehabilitación.'},
-  {k:'geo',tag:'Mercado',q:'¿Dónde está tu proyecto?',chips:DGEO,hint:'Elige una zona o escribe una ciudad, por ejemplo Marbella o Lisboa.'},
+  {k:'geo',tag:'Mercado',q:'¿Dónde está tu proyecto?',chips:DGEO,hint:'Elige una zona o escribe la ciudad o localidad, por ejemplo Marbella o Lisboa.'},
   {k:'fstage',tag:'Fase',q:'¿En qué fase está el proyecto ahora?',chips:'stage',hint:'Elige la fase más cercana a la situación actual del proyecto.'},
   {k:'gdv',tag:'GDV',q:'¿Cuál es el valor bruto de desarrollo (GDV) estimado?',chips:[{l:'3 M€',v:3e6},{l:'6 M€',v:6e6},{l:'10 M€',v:1e7}],money:1,hint:'Indica un importe, por ejemplo 6 millones, 750 mil o 4.500.000.'},
   {k:'ask',tag:'Captación',q:'¿Cuánto capital necesitas?',chips:'ask',money:1,hint:'Indica un importe, por ejemplo 2,5 millones u 800 mil.'},
@@ -687,6 +706,9 @@ function stat(){
 }
 function curChips(){
   const s=ST[aud],q=Q[aud][s.qi];if(s.done||!q)return [];
+  if(aud==='dev'&&q.k==='geo'){
+    if(s.pc)return [{l:'España',v:'XES',city:s.pc+', España'},{l:'Portugal',v:'XPT',city:s.pc+', Portugal'}];
+    if(SUG.length)return SUG.map(p=>({l:p.label,v:p.geo,city:p.label}))}
   let c=q.chips;
   if(c==='ask'){const g=s.a.gdv||6e6;c=[.25,.4,.55].map(p=>{const v=Math.max(5e4,Math.round(g*p/5e4)*5e4);return {l:eur(v),v}})}
   else if(c==='stage')c=(STAGES[s.a.strategy]||[]).map(([v,l])=>({l,v}));
@@ -699,6 +721,10 @@ function renderChat(){
   const dots='<div class="m a"><span class="who"><i></i>Agente Cobuildy</span><div class="b typing"><i></i><i></i><i></i></div></div>';
   $('c-msgs').innerHTML=s.msgs.map(m=>m.r==='u'?`<div class="m u"><div class="b${m.hold?' hold':''}">${esc(m.t)}</div></div>`:`<div class="m a"><span class="who"><i></i>Agente Cobuildy</span><div class="b ${m.html?'rich':''}">${m.html?m.t:esc(m.t)}</div></div>`).join('')+(s.typing?dots:'');
   const box=$('c-msgs');box.scrollTop=box.scrollHeight;
+  paintChips();
+}
+function paintChips(){
+  const s=ST[aud],Qs=Q[aud],q=Qs[s.qi];
   let h='';
   if(s.gated&&!s.done){h=`<span class="mono muted lbl">Crea tu cuenta gratuita para continuar</span><div class="set"><button class="go" type="button" data-signup="${aud}" data-auto="google">Continuar con Google →</button><button type="button" data-signup="${aud}">Usar correo</button><button type="button" data-act="reset">Cambiar mis respuestas</button></div>`}
   else if(s.done){h=`<span class="mono muted lbl">Siguiente paso</span><div class="set">${aud==='dev'?'<button class="go" type="button" data-signup="dev" data-auto="google">Continuar con Google →</button><button type="button" data-signup="dev">Usar correo</button>':'<button class="go" type="button" data-signup="inv">Recibir avisos de nuevas coincidencias →</button>'}<button type="button" data-act="reset">Cambiar mis respuestas</button></div>`}
@@ -708,7 +734,9 @@ function renderChat(){
     (q.multi?`<button class="go" type="button" data-act="cont" ${s.tmp.length?'':'disabled'}>Continuar →</button>`:'')+
     (q.ex?`<button class="ex" type="button" data-act="ex">O escríbelo con tus palabras</button>`:'')+'</div>'}
   $('c-chips').innerHTML=h;$('c-chips').hidden=!h;
-  $('c-in').placeholder=aud==='dev'&&s.contact==='name'?'Tu nombre':aud==='dev'&&s.contact==='phone'?'Teléfono, p. ej. +34 600 123 456':'O escribe tu respuesta';
+  $('c-in').placeholder=aud==='dev'&&s.contact==='name'?'Tu nombre':aud==='dev'&&s.contact==='phone'?'Teléfono, p. ej. +34 600 123 456':aud==='dev'&&q&&q.k==='geo'&&!s.done&&!s.gated?'O escribe la ciudad o localidad':'O escribe tu respuesta';
+  $('c-back').hidden=!(((s.hist&&s.hist.length)||s.pc)&&!s.done&&!s.gated&&!(aud==='dev'&&s.contact));
+  if(aud==='dev'&&q&&q.k==='geo')loadPlaces();
 }
 async function say(s,t,html,ms){s.typing=true;renderChat();await sleep(ms??520);s.typing=false;s.msgs.push({r:'a',t,html:!!html});renderChat()}
 function nextQ(s){const Qs=Q[aud];const i=Qs.findIndex(q=>s.a[q.k]===undefined);s.qi=i<0?Qs.length:i;return i}
@@ -753,25 +781,28 @@ async function contactStep(s,text){
   await say(s,`<span>Gracias, ${esc(s.who.split(' ')[0])}. Tu proyecto obtiene <b>${sc}/100</b> en preparación para la financiación. ${esc(verdictOf(sc))}</span>${fit!=null?`<ul class="sl"><li><b>${fit}</b> de ${m.total} inversores encajan con tu proyecto.</li></ul>`:''}<span>Crea tu cuenta gratuita para desbloquear tus coincidencias con inversores. Todo lo que me has contado queda guardado.</span>`,true,650);
 }
 let busy=false;
-async function submit(text,direct){
+async function submit(text,direct,city){
   if(busy)return;const s=ST[aud],q=Q[aud][s.qi];
   if(aud==='dev'&&s.contact&&!s.done){busy=true;s.msgs.push({r:'u',t:s.contact==='phone'?text:text});renderChat();await contactStep(s,text);busy=false;renderChat();return}
   if(s.done||!q)return;
   if(s.gated){busy=true;s.msgs.push({r:'u',t:text});renderChat();await say(s,'Para continuar, crea tu cuenta gratuita con el botón de abajo. Todo lo que me has contado queda guardado en tu proyecto.');busy=false;renderChat();return}
-  busy=true;s.msgs.push({r:'u',t:text});renderChat();
+  busy=true;const mlen=s.msgs.length;SUG=[];$('c-in').value='';s.msgs.push({r:'u',t:text});renderChat();
+  if(aud==='dev'&&q.k==='geo'&&direct===undefined&&!PLX)await loadPlaces();
   let found={};
-  if(direct!==undefined){found[q.k]=direct}
+  if(direct!==undefined){found[q.k]=direct;if(city&&q.k==='geo')found.city=city}
   else{found=aud==='dev'?xDev(text):xInv(text);
     if(q.money&&aud==='inv'&&found[q.k]===undefined){const m=money(text);if(m)found[q.k]=m}
     if(q.k==='geo'&&aud==='dev'&&found.geo===undefined){}
   }
   const keys=Object.keys(found).filter(k=>Q[aud].some(x=>x.k===k));
-  if(!keys.length){await say(s,`No lo he entendido. ${q.hint}`);busy=false;renderChat();return}
+  if(!keys.length){
+    if(aud==='dev'&&q.k==='geo'&&direct===undefined&&/[a-zà-ÿ]{3}/i.test(text)){s.pc=text.trim().slice(0,60);s.pcLen=mlen;await say(s,`No he encontrado «${s.pc}» en mi lista. ¿Está en España o en Portugal?`);busy=false;renderChat();return}
+    await say(s,`No lo he entendido. ${q.hint}`);busy=false;renderChat();return}
   const notes=[];
   if(aud==='dev'&&found.city)s.a.city=found.city;
   if(aud==='dev'&&q.k==='geo'&&direct==='ISL')s.a.city=text;
   keys.forEach(k=>{s.a[k]=found[k];notes.push(`${Q[aud].find(x=>x.k===k).tag.toLowerCase()}: ${labelOf(k,found[k])}`)});
-  s.tmp=[];
+  const pc0=s.pc;s.tmp=[];s.pc=null;(s.hist=s.hist||[]).push({keys:[...keys],mlen,pc:pc0,pcLen:s.pcLen});
   if(aud==='dev'&&(keys.includes('geo')||keys.includes('ask')))await refreshCount();
   if(aud==='dev')saveStep(Object.keys(s.a).filter(k=>k!=='city').length);
   const st=stat(),more=nextQ(s)>=0;
@@ -826,11 +857,28 @@ $('c-chips').addEventListener('click',e=>{
   if(q.multi){const v=c.v;s.tmp=s.tmp.includes(v)?s.tmp.filter(x=>x!==v):[...s.tmp,v];renderChat();return}
   pickFly(b,c);
 });
+
+/* Typing a place shows matching towns as buttons; Back undoes the last answer (or the unknown-place question). */
+$('c-in').addEventListener('input',()=>{
+  const s=ST[aud],q=Q[aud][s.qi];
+  if(aud!=='dev'||!q||q.k!=='geo'||s.pc||s.done||s.gated||s.contact){if(SUG.length){SUG=[];paintChips()}return}
+  const v=$('c-in').value;
+  if(!PLX){loadPlaces().then(()=>{if($('c-in').value===v)$('c-in').dispatchEvent(new Event('input'))});return}
+  SUG=PLX.suggest(v);paintChips()});
+$('c-in').addEventListener('focus',()=>{if(aud==='dev')loadPlaces()});
+$('c-back').addEventListener('click',async()=>{
+  if(busy||flying)return;const s=ST[aud];SUG=[];$('c-in').value='';
+  if(s.pc){s.pc=null;s.msgs.length=s.pcLen;renderChat();return}
+  const h=s.hist&&s.hist.pop();if(!h)return;
+  busy=true;h.keys.forEach(k=>delete s.a[k]);if(aud==='dev'&&h.keys.includes('geo'))delete s.a.city;
+  s.msgs.length=h.mlen;if(h.pc){s.pc=h.pc;s.pcLen=h.pcLen}s.tmp=[];s.typing=false;nextQ(s);
+  if(aud==='dev'&&(h.keys.includes('geo')||h.keys.includes('ask')))await refreshCount();
+  busy=false;renderChat()});
 /* A chosen answer turns green with a tick for a moment, then flies into the user's message bubble. */
 let flying=false;
 const REDUCED=matchMedia('(prefers-reduced-motion:reduce)').matches;
 function pickFly(btn,c){
-  if(REDUCED||!btn.animate){submit(c.l,c.v);return}
+  if(REDUCED||!btn.animate){submit(c.l,c.v,c.city);return}
   flying=true;stopHint();btn.classList.add('picked');
   setTimeout(()=>{
     try{
@@ -839,7 +887,7 @@ function pickFly(btn,c){
       fly.innerHTML='<span class="ck">\u2713</span><span></span>';fly.lastChild.textContent=c.l;
       Object.assign(fly.style,{left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px'});
       document.body.appendChild(fly);
-      submit(c.l,c.v);                       // the user's message is added synchronously
+      submit(c.l,c.v,c.city);                // the user's message is added synchronously
       const s=ST[aud],m=[...s.msgs].reverse().find(x=>x.r==='u');
       if(m){m.hold=true;renderChat()}
       const target=[...document.querySelectorAll('#c-msgs .b.hold')].pop();
