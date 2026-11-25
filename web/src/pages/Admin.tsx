@@ -5,6 +5,7 @@ import { Overview } from './admin/Overview'
 import { Inbox } from './admin/Inbox'
 import { Projects } from './admin/Projects'
 import { Companies, Funnel, Invitations, Investors } from './admin/sections'
+import { DigestPage } from './admin/Digest'
 import { PageHead } from './admin/ui'
 
 const ICON: Record<string, string> = {
@@ -14,6 +15,7 @@ const ICON: Record<string, string> = {
   investors: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
   companies: 'M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16M16 9h2a2 2 0 0 1 2 2v10M2 21h20M8 7h4M8 11h4M8 15h4',
   funnel: 'M3 4h18l-7 8.5V20l-4-2v-5.5z',
+  digest: 'M4 4h13a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2zM19 8h2v10a2 2 0 0 1-2 2M8 8h7M8 12h7M8 16h4',
   access: 'M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4',
 }
 const Icon = ({ name }: { name: string }) => (
@@ -28,6 +30,7 @@ function Nav() {
     { title: 'Data', items: [
       { to: '/admin/projects', label: 'Projects', icon: 'projects' }, { to: '/admin/investors', label: 'Investors', icon: 'investors' },
       { to: '/admin/companies', label: 'Companies', icon: 'companies' }, { to: '/admin/funnel', label: 'Ad funnel', icon: 'funnel' }] },
+    { title: 'Content', items: [{ to: '/admin/digest', label: 'Weekly digest', icon: 'digest' }] },
     { title: 'Settings', items: [{ to: '/admin/access', label: 'Access', icon: 'access' }] },
   ]
   return (
@@ -61,6 +64,7 @@ export function Admin() {
             <Route path="investors" element={<><PageHead title="Investors" sub="What each investor looks for. An empty criterion means no restriction, so the investor fits any project on that point. Open a row to see the original CRM text." /><Investors /></>} />
             <Route path="companies" element={<><PageHead title="Companies" sub="Sponsor verification: four checks that only Cobuildy can set. Investors see the count on every teaser. A note is required, and every change is logged. The developer is notified when a check passes." /><Companies /></>} />
             <Route path="funnel" element={<><PageHead title="Ad funnel" sub="Everyone who opens the funnel page is counted, including your own tests. The steps show how many reached each question." /><Funnel /></>} />
+            <Route path="digest" element={<><PageHead title="Weekly digest" sub="The Intelligence Hub reads your sources, analyses the articles, picks the best of the week for small developers and drafts the digest. You edit and approve it. Nothing is sent from here." /><DigestPage /></>} />
             <Route path="access" element={<><PageHead title="Access" sub={isAdmin ? 'Developers and investors can sign up on their own. An approved invitation is how staff roles (admin, expert) are created, and it also pre-assigns a role to an address. Approving here only unlocks it; the invitation email is sent separately.' : 'Invitations. Only an admin can approve or revoke them.'} /><Invitations reloadKey={0} /></>} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Routes>
