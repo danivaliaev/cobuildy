@@ -8,7 +8,7 @@ import { digestToMarkdown, mdToHtml, parseSourceList, type DigestContent, type D
 
 const hub = () => supabase.schema('hub')
 
-type Source = { id: string; name: string; url: string; source_type: string; language: string | null; is_active: boolean; last_scan_at: string | null; last_success_at: string | null; error_message: string | null; consecutive_failures: number }
+type Source = { id: string; name: string; url: string; source_type: string; language: string | null; is_active: boolean; last_scan_at: string | null; last_success_at: string | null; error_message: string | null; consecutive_failures: number; config: { kind?: string; site?: string; note?: string } | null }
 type Job = { id: string; job_type: string; status: string; error: string | null; created_at: string; finished_at: string | null; result: Record<string, number> | null }
 type Item = { id: string; title: string; publisher: string | null; canonical_url: string | null; publication_date: string | null; ai_score: number | null; status: string; summary: string | null }
 type DigestRow = { id: string; title: string; status: string; language: string; content: DigestContent | null; error: string | null; created_at: string; approved_at: string | null; developer: { company_name: string } | null; campaign: { week_start: string } | null }
@@ -22,7 +22,7 @@ const STAGE_ORDER = ['Reading sites', 'Analysing articles', 'Choosing the best',
 
 function Sources() {
   const list = useLoad(async () => {
-    const { data, error } = await hub().from('research_sources').select('id,name,url,source_type,language,is_active,last_scan_at,last_success_at,error_message,consecutive_failures').order('created_at')
+    const { data, error } = await hub().from('research_sources').select('id,name,url,source_type,language,is_active,last_scan_at,last_success_at,error_message,consecutive_failures,config').order('created_at')
     if (error) throw error
     return data as Source[]
   })
@@ -92,8 +92,8 @@ function Sources() {
             <tr key={s.id} style={s.is_active ? undefined : { opacity: 0.55 }}>
               <td><input type="checkbox" aria-label={`Use ${s.name}`} checked={s.is_active} disabled={act.busy} style={{ width: 'auto', minHeight: 0 }}
                 onChange={e => void act.run(async () => { const { error } = await hub().from('research_sources').update({ is_active: e.target.checked }).eq('id', s.id); if (error) throw error })} /></td>
-              <td>{s.name}<div className="muted" style={{ fontSize: 12 }}>{s.source_type}</div></td>
-              <td style={{ wordBreak: 'break-all', maxWidth: 280 }}><a href={s.url} target="_blank" rel="noreferrer">{s.url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 70)}</a></td>
+              <td>{s.name}<div className="muted" style={{ fontSize: 12 }}>{s.config?.kind === 'sitemap' ? 'via sitemap' : s.source_type}{s.config?.note && !s.is_active ? ` · ${s.config.note}` : ''}</div></td>
+              <td style={{ wordBreak: 'break-all', maxWidth: 280 }}>{s.config?.kind === 'sitemap' && s.config.site ? <a href={s.config.site} target="_blank" rel="noreferrer">{s.config.site.replace(/^https?:\/\/(www\.)?/, '').slice(0, 70)}</a> : <a href={s.url} target="_blank" rel="noreferrer">{s.url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 70)}</a>}</td>
               <td>{s.last_scan_at ? <><Pill tone={tone(s)}>{s.error_message ? 'failed' : 'ok'}</Pill> <span className="muted">{when(s.last_scan_at)}</span>{s.error_message && <div className="muted" style={{ fontSize: 13 }}>{s.error_message}{s.consecutive_failures > 1 ? ` (${s.consecutive_failures} times)` : ''}</div>}</> : <span className="muted">not read yet</span>}</td>
               <td><button className="btn sm" disabled={act.busy} onClick={() => { if (confirm(`Remove ${s.name}? Articles already collected from it stay.`)) void act.run(async () => { const { error } = await hub().from('research_sources').delete().eq('id', s.id); if (error) throw new Error(error.message.includes('foreign key') ? 'This source has articles. Switch it off instead.' : error.message) }) }}>Remove</button></td>
             </tr>))}</tbody>
