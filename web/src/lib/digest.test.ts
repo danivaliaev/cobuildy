@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { digestToMarkdown, mdToHtml, parseSourceList } from './digest'
+import { digestToMarkdown, exportTitle, mdToHtml, parseSourceList, weekStartUtc } from './digest'
 
 describe('source list', () => {
   it('reads addresses and names, drops duplicates and junk', () => {
@@ -32,5 +32,26 @@ describe('digest text', () => {
     expect(html).toContain('<h1>Resumen semanal</h1>')
     expect(html).toContain('<a href="https://ex.com/a">Leer en Expansión</a>')
     expect(mdToHtml('<script>x</script>')).toBe('<p>&lt;script&gt;x&lt;/script&gt;</p>')
+  })
+})
+
+describe('newsletter extras', () => {
+  it('ends with a call to action in the digest language, tagged for the funnel report', () => {
+    const es = digestToMarkdown('T', 'es', {}, [])
+    expect(es).toContain('¿Desarrollas un proyecto y buscas financiación?')
+    expect(es).toContain('(https://cobuildy.com/?utm_source=substack&utm_medium=digest&utm_campaign=digest-es)')
+    const pt = digestToMarkdown('T', 'pt', {}, [])
+    expect(pt).toContain('Está a desenvolver um projeto e procura financiamento?')
+    expect(pt).toContain('utm_campaign=digest-pt')
+    expect(pt.indexOf('procura financiamento')).toBeLessThan(pt.indexOf('Resumo elaborado pela equipa'))
+  })
+  it('titles the text by market and day', () => {
+    expect(exportTitle('es', '2026-11-28T14:00:00Z')).toBe('Cobuildy Weekly España · 28 de noviembre de 2026')
+    expect(exportTitle('pt', '2026-11-28T14:00:00Z')).toBe('Cobuildy Weekly Portugal · 28 de novembro de 2026')
+  })
+  it('finds the Monday of the week like the hub does', () => {
+    expect(weekStartUtc(new Date('2026-11-28T10:00:00Z'))).toBe('2026-11-23')
+    expect(weekStartUtc(new Date('2026-11-29T23:59:00Z'))).toBe('2026-11-23')
+    expect(weekStartUtc(new Date('2026-11-30T00:00:00Z'))).toBe('2026-11-30')
   })
 })

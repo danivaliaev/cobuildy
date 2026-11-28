@@ -47,10 +47,25 @@ export type DigestItemRow = { section: string; position: number; headline: strin
 export type DigestContent = { title?: string; subtitle?: string; market_pulse?: string; insight?: string }
 
 const SECTION_ORDER = ['market_news', 'financing', 'regulatory', 'opportunities']
-const LABELS: Record<string, { sections: Record<string, string>; pulse: string; insight: string; why: string; impact: string; read: string; footer: string }> = {
-  es: { sections: { market_news: 'Mercado', financing: 'Financiación', regulatory: 'Normativa', opportunities: 'Oportunidades' }, pulse: 'Pulso del mercado', insight: 'La visión de Cobuildy', why: 'Por qué importa', impact: 'Impacto posible', read: 'Leer en', footer: 'Resumen elaborado por el equipo de Cobuildy a partir de fuentes públicas. Los enlaces llevan a los artículos originales.' },
-  en: { sections: { market_news: 'Market news', financing: 'Financing', regulatory: 'Regulation', opportunities: 'Opportunities' }, pulse: 'Market pulse', insight: 'Cobuildy insight', why: 'Why it matters', impact: 'Possible impact', read: 'Read on', footer: 'Summary prepared by the Cobuildy team from public sources. Links lead to the original articles.' },
-  pt: { sections: { market_news: 'Mercado', financing: 'Financiamento', regulatory: 'Regulação', opportunities: 'Oportunidades' }, pulse: 'Pulso do mercado', insight: 'A visão da Cobuildy', why: 'Porque importa', impact: 'Impacto possível', read: 'Ler em', footer: 'Resumo elaborado pela equipa da Cobuildy a partir de fontes públicas. As ligações levam aos artigos originais.' },
+const LABELS: Record<string, { sections: Record<string, string>; pulse: string; insight: string; why: string; impact: string; read: string; footer: string; cta: string; ctaLink: string; brand: string }> = {
+  es: { sections: { market_news: 'Mercado', financing: 'Financiación', regulatory: 'Normativa', opportunities: 'Oportunidades' }, pulse: 'Pulso del mercado', insight: 'La visión de Cobuildy', why: 'Por qué importa', impact: 'Impacto posible', read: 'Leer en', footer: 'Resumen elaborado por el equipo de Cobuildy a partir de fuentes públicas. Los enlaces llevan a los artículos originales.', cta: '**¿Desarrollas un proyecto y buscas financiación?** Cobuildy conecta a promotores con inversores y financiadores en España y Portugal. Cuéntanos tu proyecto y te decimos qué inversores encajan.', ctaLink: 'Cuéntanos tu proyecto en cobuildy.com', brand: 'Cobuildy Weekly España' },
+  en: { sections: { market_news: 'Market news', financing: 'Financing', regulatory: 'Regulation', opportunities: 'Opportunities' }, pulse: 'Market pulse', insight: 'Cobuildy insight', why: 'Why it matters', impact: 'Possible impact', read: 'Read on', footer: 'Summary prepared by the Cobuildy team from public sources. Links lead to the original articles.', cta: '**Developing a project and looking for funding?** Cobuildy connects developers with investors and lenders in Spain and Portugal. Tell us about your project and we show you which investors fit.', ctaLink: 'Tell us about your project at cobuildy.com', brand: 'Cobuildy Weekly' },
+  pt: { sections: { market_news: 'Mercado', financing: 'Financiamento', regulatory: 'Regulação', opportunities: 'Oportunidades' }, pulse: 'Pulso do mercado', insight: 'A visão da Cobuildy', why: 'Porque importa', impact: 'Impacto possível', read: 'Ler em', footer: 'Resumo elaborado pela equipa da Cobuildy a partir de fontes públicas. As ligações levam aos artigos originais.', cta: '**Está a desenvolver um projeto e procura financiamento?** A Cobuildy liga promotores a investidores e financiadores em Portugal e Espanha. Conte-nos o seu projeto e mostramos-lhe os investidores que se ajustam.', ctaLink: 'Conte-nos o seu projeto em cobuildy.com', brand: 'Cobuildy Weekly Portugal' },
+}
+
+/** The first line of the text, for a newsletter: brand, market and the day it was written. */
+export function exportTitle(language: string, generatedAt?: string | null): string {
+  const L = LABELS[language] ?? LABELS.en
+  const d = generatedAt ? new Date(generatedAt) : new Date()
+  const locale = language === 'pt' ? 'pt-PT' : language === 'es' ? 'es-ES' : 'en-GB'
+  return `${L.brand} · ${Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}`.replace(/ · $/, '')
+}
+
+/** Monday (UTC) of the week of d as YYYY-MM-DD: the same week the hub puts a digest in. */
+export function weekStartUtc(d = new Date()): string {
+  const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+  x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7))
+  return x.toISOString().slice(0, 10)
 }
 
 /** The digest as Markdown, ready to edit or paste. Removed items are left out. */
@@ -71,6 +86,7 @@ export function digestToMarkdown(title: string, language: string, content: Diges
     }
   }
   if (content.insight) out.push(`## ${L.insight}`, '', content.insight.trim(), '')
-  out.push('---', '', `*${L.footer}*`)
+  // The call to action links to the site with tags, so visits from the newsletter show up in the funnel report.
+  out.push('---', '', L.cta, '', `[${L.ctaLink}](https://cobuildy.com/?utm_source=substack&utm_medium=digest&utm_campaign=digest-${LABELS[language] ? language : 'en'})`, '', `*${L.footer}*`)
   return out.join('\n')
 }

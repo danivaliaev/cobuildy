@@ -1,12 +1,11 @@
-// Turns a site's sitemap into an RSS feed, for sites that publish no RSS of their own.
+// Turns a site's sitemap (kind "sitemap") or its news list pages (kind "listing") into an RSS feed, for sites that publish no RSS of their own.
 // The Intelligence Hub reads the result like any other RSS source (source_type "rss"), so the worker and its schedule are untouched.
-// The caller gives only a source id. The site to read comes from that source's row in hub.research_sources (config.sitemap_url),
+// The caller gives only a source id. The site to read comes from that source's row in hub.research_sources (config.sitemap_url or config.list_urls),
 // so this cannot be used to fetch an arbitrary address. It follows only addresses on the same site.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const UA = "Mozilla/5.0 (compatible; CobuildyIntelligenceHub/1.0; +https://cobuildy.com)";
-const BUDGET_MS = 14_000; // the hub gives a feed 20 seconds in total
 
 /** Public web addresses only (no private networks or local names). Staff type the addresses; this guards against mistakes. */
 function publicUrl(raw: string, base?: string): URL | null {
@@ -162,9 +161,79 @@ async function readArticles(sitemapUrl: string, opts: { days: number; maxPages: 
   return out.filter((a) => a && a.title);
 }
 
+/** Pages from a site's own news lists, for sites whose sitemap dates cannot be trusted and that have no feed.
+ *  Two kinds of list page are understood: a Next.js page (the articles are in __NEXT_DATA__ with title, address and date) and a plain page
+ *  (the article addresses are the links that match config.link_pattern; each article page is then read for its title and date). */
+async function readListing(listUrls: string[], opts: { days: number; maxPages: number; linkPattern: RegExp | null }): Promise<Article[]> {
+  const t0 = Date.now();
+  const firsts = listUrls.map((u) => publicUrl(u)).filter((u): u is URL => !!u);
+  if (!firsts.length) throw new Error("Not a public web address");
+  const site = bareHost(firsts[0]);
+  const cutoff = Date.now() - opts.days * 86400000;
+  const left = () => t0 + 17_000 - Date.now();
+  const get = (u: string, ms: number, maxChars: number) => {
+    if (left() < 600) throw new Error("The site is too slow to answer");
+    return getPublic(u, site, Math.min(ms, left()), maxChars);
+  };
+  const plain = (h: string) => xmlDecode(h.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ")).replace(/\s+/g, " ").trim();
+
+  const known = new Map<string, Article>();          // articles read straight from a list page (Next.js)
+  const links = new Map<string, true>();             // article addresses found as links (plain pages)
+  let lastError = "";
+  const walk = (node: unknown, base: URL, depth = 0) => {
+    if (!node || typeof node !== "object" || depth > 40) return;
+    const n = node as Record<string, any>;
+    const uri = n.canonicalUrl?.uri, ts = n.publishedAt?.timestamp, f = Array.isArray(n.channelFields) ? n.channelFields[0]?.fields : null;
+    if (typeof uri === "string" && typeof ts === "number" && f && typeof f.titulo === "string") {
+      const u = publicUrl(uri, base.origin);
+      if (u && bareHost(u) === site && u.pathname !== "/") {
+        known.set(u.toString(), { url: u.toString(), title: plain(f.titulo).slice(0, 300), snippet: typeof f.sinopse === "string" ? plain(f.sinopse).slice(0, 600) : "", published: isoOrNull(new Date(ts * 1000).toISOString()) });
+      }
+    }
+    for (const v of Array.isArray(node) ? node : Object.values(n)) walk(v, base, depth + 1);
+  };
+  await Promise.all(firsts.slice(0, 6).map(async (first) => {
+    try {
+      const r = await get(first.toString(), 8_000, 3_000_000);
+      if (r.status < 200 || r.status >= 300) { lastError = `HTTP ${r.status} fetching ${first.pathname}`; return; }
+      const nd = r.text.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i)?.[1];
+      if (nd) { try { walk(JSON.parse(nd), first); } catch { /* fall through to links */ } }
+      const pat = opts.linkPattern;
+      for (const m of r.text.matchAll(/<a\b[^>]*\bhref=["']([^"'#]+)["']/gi)) {
+        const u = publicUrl(xmlDecode(m[1]), r.url);
+        if (!u || bareHost(u) !== site || u.pathname === "/" || NOT_ARTICLE.test(u.pathname)) continue;
+        u.search = "";
+        if (!pat || !pat.test(u.pathname)) continue; // plain pages need a pattern: guessing which links are articles would pull in menus and tags
+        links.set(u.toString(), true);
+      }
+    } catch (e) { lastError = e instanceof Error ? e.message : "The site did not answer"; }
+  }));
+  for (const k of known.keys()) links.delete(k);
+  if (!known.size && !links.size) throw new Error(lastError || "No articles found on the list pages");
+
+  const found: Article[] = [...known.values()].filter((a) => !a.published || new Date(a.published).getTime() >= cutoff);
+  const todo = [...links.keys()].slice(0, Math.max(0, opts.maxPages * 2));
+  const read: Article[] = new Array(todo.length);
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(4, todo.length) }, async () => {
+    while (i < todo.length && left() > 1_500) {
+      const k = i++, url = todo[k];
+      try {
+        const p = await get(url, 5_000, 300_000);
+        if (p.status >= 200 && p.status < 300) {
+          const m = metaOf(p.text);
+          read[k] = { url, title: (m.title && m.title.length > 8 ? m.title : slugTitle(url)).slice(0, 300), snippet: (m.description ?? "").slice(0, 600), published: m.published };
+        }
+      } catch { /* skip this page */ }
+    }
+  }));
+  for (const a of read) if (a && a.title && (!a.published || new Date(a.published).getTime() >= cutoff)) found.push(a);
+  return found.sort((x, y) => (y.published ?? "").localeCompare(x.published ?? "")).slice(0, opts.maxPages);
+}
+
 function rss(name: string, link: string, items: Article[]): string {
   const body = items.map((a) => `<item><title>${esc(a.title)}</title><link>${esc(a.url)}</link><guid isPermaLink="true">${esc(a.url)}</guid>${a.published ? `<pubDate>${new Date(a.published).toUTCString()}</pubDate>` : ""}${a.snippet ? `<description>${esc(a.snippet)}</description>` : ""}</item>`).join("");
-  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${esc(name)}</title><link>${esc(link)}</link><description>Articles found in the site's sitemap</description>${body}</channel></rss>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${esc(name)}</title><link>${esc(link)}</link><description>Latest articles from the site</description>${body}</channel></rss>`;
 }
 
 const text = (body: string, status: number) => new Response(body, { status, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
@@ -175,12 +244,20 @@ Deno.serve(async (req: Request) => {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return text("Not found", 404);
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { db: { schema: "hub" }, auth: { persistSession: false } });
   const { data: src } = await sb.from("research_sources").select("name,config").eq("id", id).maybeSingle();
-  const cfg = (src?.config ?? {}) as { kind?: string; sitemap_url?: string; max_age_days?: number; max_pages?: number };
-  if (!src || cfg.kind !== "sitemap" || !cfg.sitemap_url) return text("Not found", 404);
+  const cfg = (src?.config ?? {}) as { kind?: string; sitemap_url?: string; list_urls?: string[]; link_pattern?: string; max_age_days?: number; max_pages?: number };
+  const days = Math.min(Number(cfg.max_age_days) || 10, 30), maxPages = Math.min(Number(cfg.max_pages) || 20, 30);
+  if (!src) return text("Not found", 404);
   try {
-    const items = await readArticles(cfg.sitemap_url, { days: Math.min(Number(cfg.max_age_days) || 10, 30), maxPages: Math.min(Number(cfg.max_pages) || 20, 30) });
-    return new Response(rss(src.name, cfg.sitemap_url, items), { status: 200, headers: { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "no-store" } });
+    let items: Article[], link: string;
+    if (cfg.kind === "sitemap" && cfg.sitemap_url) {
+      items = await readArticles(cfg.sitemap_url, { days, maxPages }); link = cfg.sitemap_url;
+    } else if (cfg.kind === "listing" && Array.isArray(cfg.list_urls) && cfg.list_urls.length) {
+      let linkPattern: RegExp | null = null;
+      if (cfg.link_pattern) { try { linkPattern = new RegExp(cfg.link_pattern, "i"); } catch { /* ignore a bad pattern */ } }
+      items = await readListing(cfg.list_urls.slice(0, 6).map(String), { days, maxPages, linkPattern }); link = String(cfg.list_urls[0]);
+    } else return text("Not found", 404);
+    return new Response(rss(src.name, link, items), { status: 200, headers: { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "no-store" } });
   } catch (e) {
-    return text(e instanceof Error ? e.message : "Could not read the sitemap", 502);
+    return text(e instanceof Error ? e.message : "Could not read the site", 502);
   }
 });
